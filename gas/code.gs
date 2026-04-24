@@ -28,7 +28,7 @@ const DEFAULT_FORM_FIELDS = [
 ];
 
 const DEFAULT_SETTINGS = {
-  namaSekolah: "SDN Harapan Bangsa",
+  namaSekolah: "SMAN 4 PAGAR ALAM",
   alamat: "Jl. Pendidikan No. 123, Kota Pelajar, Indonesia 12345",
   telepon: "(021) 1234-5678",
   email: "info@sdnharapanbangsa.sch.id",
