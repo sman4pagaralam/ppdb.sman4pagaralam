@@ -69,7 +69,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-slate-600 mb-10 leading-relaxed"
             >
-              Bergabunglah bersama {settings?.namaSekolah || 'SDN Harapan Bangsa'}. Kami berkomitmen memberikan pendidikan dasar terbaik dengan fasilitas modern dan tenaga pendidik profesional.
+              Bergabunglah bersama {settings?.namaSekolah || 'SMAN 4 PAGAR ALAM'}. Kami berkomitmen memberikan pendidikan terbaik dengan fasilitas modern dan tenaga pendidik profesional.
             </motion.p>
             
             <motion.div
