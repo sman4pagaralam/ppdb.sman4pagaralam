@@ -680,7 +680,7 @@ export default function AdminDashboard() {
                       <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Koordinat Sekolah (Latitude, Longitude)</label>
                       <input
                         type="text"
-                        value={localSettings.koordinatSekolah || ''}
+                        value={localSettings.koordinatSekolah || '-4.036154979986184, 103.27575516441763'}
                         onChange={e => setLocalSettings({...localSettings, koordinatSekolah: e.target.value})}
                         placeholder="Contoh: -6.200000, 106.816666"
                         className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
