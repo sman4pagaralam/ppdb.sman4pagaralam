@@ -1,0 +1,5 @@
+{
+  "name": "WEB PPDB",
+  "description": "",
+  "requestFramePermissions": ["geolocation"]
+}
