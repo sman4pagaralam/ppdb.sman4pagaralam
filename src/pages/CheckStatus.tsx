@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Search, CheckCircle, XCircle, Clock, Loader2, ArrowLeft, Printer } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Clock, Loader2, ArrowLeft, Printer, Download, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { checkStatus } from '../services/api';
+import { checkStatus, getRegistrationByNo } from '../services/api';
 import { cn } from '../lib/utils';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useSettings } from '../context/SettingsContext';
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
 
 export default function CheckStatus() {
   const { settings } = useSettings();
@@ -19,6 +29,8 @@ export default function CheckStatus() {
     alasanPenolakan?: string;
   } | null>(null);
   const [error, setError] = useState('');
+  const [registrationData, setRegistrationData] = useState<any>(null);
+  const [isLoadingForm, setIsLoadingForm] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,11 +39,16 @@ export default function CheckStatus() {
     setIsLoading(true);
     setError('');
     setResult(null);
+    setRegistrationData(null);
 
     try {
       const response = await checkStatus(noPendaftaran);
       if (response.status === 'success') {
         setResult(response.data);
+        // Jika status masih Proses, ambil data lengkap untuk unduh formulir
+        if (response.data.status === 'Proses') {
+          await fetchRegistrationData(noPendaftaran);
+        }
       } else {
         setError(response.message || 'Data tidak ditemukan');
       }
@@ -40,6 +57,138 @@ export default function CheckStatus() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchRegistrationData = async (noReg: string) => {
+    setIsLoadingForm(true);
+    try {
+      const data = await getRegistrationByNo(noReg);
+      if (data) {
+        setRegistrationData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching registration data:', error);
+    } finally {
+      setIsLoadingForm(false);
+    }
+  };
+
+  const downloadFormulir = () => {
+    if (!registrationData) {
+      console.error('No registration data available');
+      return;
+    }
+
+    const doc = new jsPDF();
+    let yPos = 20;
+
+    // Header
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, 210, 45, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("FORMULIR PENDAFTARAN PPDB", 105, 20, { align: "center" });
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(settings?.namaSekolah || "Sekolah Dasar", 105, 32, { align: "center" });
+    doc.text(`No. Pendaftaran: ${registrationData['No Pendaftaran'] || '-'}`, 105, 42, { align: "center" });
+
+    doc.setTextColor(0, 0, 0);
+    yPos = 60;
+
+    // Data Pribadi
+    doc.setFillColor(200, 200, 200);
+    doc.rect(14, yPos - 6, 182, 8, 'F');
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("DATA PRIBADI", 105, yPos - 1, { align: "center" });
+    
+    yPos += 10;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    const fields = [
+      { label: "Nama Lengkap", value: registrationData['Nama Lengkap'] },
+      { label: "NIK", value: registrationData['NIK'] },
+      { label: "Tempat, Tanggal Lahir", value: `${registrationData['Tempat Lahir'] || '-'}, ${formatDate(registrationData['Tanggal Lahir'])}` },
+      { label: "Jenis Kelamin", value: registrationData['Jenis Kelamin'] },
+      { label: "Alamat", value: registrationData['Alamat'] || registrationData['Alamat Domisili Lengkap'] },
+      { label: "Nama Orang Tua/Wali", value: registrationData['Nama Orang Tua'] },
+      { label: "No. WhatsApp", value: registrationData['No HP'] || registrationData['Nomor WA Aktif'] },
+    ];
+
+    fields.forEach((field, idx) => {
+      if (field.value) {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${field.label}:`, 20, yPos);
+        doc.setFont("helvetica", "normal");
+        const value = String(field.value);
+        const splitValue = doc.splitTextToSize(value, 120);
+        doc.text(splitValue, 70, yPos);
+        yPos += 7;
+      }
+    });
+
+    // Informasi Tambahan
+    const extraFields = ['NISN', 'Asal Sekolah', 'Jenis Seleksi', 'Koordinat Lokasi'];
+    let hasExtra = false;
+    extraFields.forEach(field => {
+      if (registrationData[field]) {
+        if (!hasExtra) {
+          yPos += 5;
+          doc.setFillColor(200, 200, 200);
+          doc.rect(14, yPos - 6, 182, 8, 'F');
+          doc.setFont("helvetica", "bold");
+          doc.text("INFORMASI TAMBAHAN", 105, yPos - 1, { align: "center" });
+          yPos += 10;
+          hasExtra = true;
+        }
+        doc.setFont("helvetica", "bold");
+        doc.text(`${field}:`, 20, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text(String(registrationData[field]), 70, yPos);
+        yPos += 7;
+      }
+    });
+
+    // Status
+    yPos += 5;
+    doc.setFillColor(200, 200, 200);
+    doc.rect(14, yPos - 6, 182, 8, 'F');
+    doc.setFont("helvetica", "bold");
+    doc.text("STATUS PENDAFTARAN", 105, yPos - 1, { align: "center" });
+    yPos += 10;
+    
+    const status = result?.status || 'Proses';
+    let statusColor = [255, 193, 7];
+    if (status === 'Lulus') statusColor = [40, 167, 69];
+    if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
+    
+    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+    doc.rect(70, yPos - 5, 70, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.text(status, 105, yPos, { align: "center" });
+    
+    doc.setTextColor(0, 0, 0);
+    yPos += 12;
+    
+    if (result?.alasanPenolakan) {
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(220, 53, 69);
+      doc.text(`Alasan: ${result.alasanPenolakan}`, 20, yPos);
+    }
+
+    // Footer
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 270, 190, 270);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Formulir ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
+    doc.text("Simpan formulir ini sebagai bukti pendaftaran.", 105, 287, { align: "center" });
+
+    doc.save(`Formulir_PPDB_${registrationData['No Pendaftaran']}.pdf`);
   };
 
   const printBuktiLulus = (data: any) => {
@@ -128,9 +277,9 @@ export default function CheckStatus() {
     doc.text('Status', 30, currentY + lineSpacing * 2);
     doc.text(':', 70, currentY + lineSpacing * 2);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 128, 0); // Green
+    doc.setTextColor(0, 128, 0);
     doc.text('LULUS', 75, currentY + lineSpacing * 2);
-    doc.setTextColor(0, 0, 0); // Reset to black
+    doc.setTextColor(0, 0, 0);
     
     // Requirements
     currentY += lineSpacing * 4;
@@ -197,8 +346,6 @@ export default function CheckStatus() {
     if (settings?.tanggalPengumuman) {
       const pengumumanDate = new Date(settings.tanggalPengumuman);
       const now = new Date();
-      // Reset hours to compare just dates, or compare exact time. Let's compare exact time or start of day.
-      // Usually it's start of day.
       pengumumanDate.setHours(0, 0, 0, 0);
       if (now < pengumumanDate) {
         displayStatus = 'Proses';
@@ -221,7 +368,7 @@ export default function CheckStatus() {
                 <p className="text-sm text-green-700 mb-2 font-medium">Tanggal Daftar Ulang: {new Date(settings.tanggalDaftarUlang).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
               )}
               <div className="text-sm text-green-700 whitespace-pre-line">
-                {settings?.persyaratanDaftarUlang || '1. Membawa Bukti Kelulusan yang dicetak\n2. Membawa Fotokopi Akta Kelahiran (2 lembar)\n3. Membawa Fotokopi Kartu Keluarga (2 lembar)\n4. Membawa Pas Foto 3x4 (4 lembar)\n5. Melakukan pembayaran administrasi awal'}
+                {settings?.persyaratanDaftarUlang || '1. Membawa Bukti Kelulusan yang dicetak\n2. Fotokopi Akta Kelahiran (2 lembar)\n3. Fotokopi Kartu Keluarga (2 lembar)\n4. Pas Foto 3x4 (4 lembar)\n5. Melakukan pembayaran administrasi awal'}
               </div>
             </div>
 
@@ -262,6 +409,34 @@ export default function CheckStatus() {
                 ? `Pengumuman kelulusan akan dibuka pada tanggal ${new Date(settings.tanggalPengumuman!).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}.` 
                 : 'Berkas Anda sedang dalam tahap verifikasi panitia.'}
             </p>
+            {/* TOMBOL UNDUH FORMULIR UNTUK STATUS PROSES */}
+            <div className="mt-6 pt-4 border-t border-amber-200">
+              <div className="flex items-center gap-2 text-amber-700 mb-3 justify-center">
+                <FileText size={18} />
+                <span className="font-semibold">Unduh Formulir Pendaftaran</span>
+              </div>
+              <p className="text-amber-600 text-sm mb-4">
+                Anda dapat mengunduh dan mencetak formulir pendaftaran kapan saja selama status masih "Proses".
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={downloadFormulir}
+                  disabled={isLoadingForm || !registrationData}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  <Download size={18} />
+                  {isLoadingForm ? 'Memuat Data...' : 'Unduh Formulir'}
+                </button>
+                <button
+                  onClick={() => registrationData && downloadFormulir()}
+                  disabled={isLoadingForm || !registrationData}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  <Printer size={18} />
+                  Cetak Formulir
+                </button>
+              </div>
+            </div>
           </div>
         );
     }
