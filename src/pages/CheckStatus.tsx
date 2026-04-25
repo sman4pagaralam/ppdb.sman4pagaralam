@@ -66,12 +66,12 @@ const printProof = (data: any, settings: any) => {
   // ========== TABEL DATA PRIBADI ==========
   const leftFields = [
     "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
-    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan"
+    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif"
   ];
   const rightFields = [
     "NISN", "Asal Sekolah",
     "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-    "Prestasi Akademik", "Prestasi Non Akademik"
+    "Prestasi Akademik", "Prestasi Non Akademik", "Alamat Domisili Lengkap"
   ];
 
   const formatValue = (field: string, val: any) => {
@@ -108,27 +108,6 @@ const printProof = (data: any, settings: any) => {
   });
 
   let finalY = (doc as any).lastAutoTable.finalY + 5;
-
-  // ALAMAT
-  if (data['Alamat Domisili Lengkap']) {
-    doc.setFont("helvetica", "bold");
-    doc.text("Alamat Domisili Lengkap:", 20, finalY);
-    finalY += 6;
-    doc.setFont("helvetica", "normal");
-    const alamat = String(data['Alamat Domisili Lengkap']);
-    const splitAlamat = doc.splitTextToSize(alamat, 160);
-    doc.text(splitAlamat, 22, finalY);
-    finalY += splitAlamat.length * 5 + 8;
-  }
-
-  // NOMOR WA
-  if (data['Nomor WA Aktif']) {
-    doc.setFont("helvetica", "bold");
-    doc.text("Nomor WA Aktif:", 20, finalY);
-    doc.setFont("helvetica", "normal");
-    doc.text(String(data['Nomor WA Aktif']), 70, finalY);
-    finalY += 12;
-  }
 
   // LOKASI DAN JARAK
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
