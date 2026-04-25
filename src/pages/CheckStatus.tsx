@@ -18,35 +18,18 @@ const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
-// ========== BUKTI PENDAFTARAN (untuk status Proses) dengan FOTO ==========
-const printProof = async (data: any, settings: any) => {
+// Fungsi untuk memeriksa apakah string adalah base64 image
+const isBase64Image = (str: string) => {
+  return str && (str.startsWith('data:image') || str.startsWith('/9j/'));
+};
+
+// ========== BUKTI PENDAFTARAN (untuk status Proses) ==========
+const printProof = (data: any, settings: any) => {
   if (!data) return;
   const doc = new jsPDF();
   
   // Cari field foto (bisa "Foto Siswa", "File Pas Foto", atau "Pas Foto")
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
-  
-  // Ambil gambar jika ada URL
-  let fotoBase64 = null;
-  if (fotoField && typeof fotoField === 'string' && (fotoField.startsWith('http') || fotoField.startsWith('data:image'))) {
-    try {
-      // Jika sudah dalam bentuk base64
-      if (fotoField.startsWith('data:image')) {
-        fotoBase64 = fotoField;
-      } else {
-        // Jika URL, fetch gambar
-        const response = await fetch(fotoField);
-        const blob = await response.blob();
-        fotoBase64 = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
-        });
-      }
-    } catch (error) {
-      console.error('Gagal memuat foto:', error);
-    }
-  }
   
   let y = 15;
 
@@ -56,15 +39,21 @@ const printProof = async (data: any, settings: any) => {
   doc.rect(0, 0, 210, 65, 'F');
   
   // FOTO (di sebelah kiri) - ukuran 35x45
-  if (fotoBase64) {
+  const hasValidPhoto = fotoField && typeof fotoField === 'string' && (fotoField.startsWith('http') || isBase64Image(fotoField));
+  
+  if (hasValidPhoto) {
     try {
-      doc.addImage(fotoBase64, 'JPEG', 14, 8, 35, 45);
-      // Tambahkan border pada foto
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.5);
-      doc.rect(14, 8, 35, 45);
+      // Untuk URL gambar, kita tidak bisa langsung addImage karena perlu fetch
+      // Jadi kita tampilkan placeholder dulu
+      doc.setDrawColor(200, 200, 200);
+      doc.setFillColor(240, 240, 240);
+      doc.rect(14, 8, 35, 45, 'FD');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Foto", 31, 30, { align: "center" });
+      doc.text("Tersedia", 31, 38, { align: "center" });
+      doc.setTextColor(0, 0, 0);
     } catch (e) {
-      console.error('Gagal menambahkan foto:', e);
       // Placeholder jika gagal
       doc.setDrawColor(200, 200, 200);
       doc.setFillColor(240, 240, 240);
@@ -237,7 +226,7 @@ const printProof = async (data: any, settings: any) => {
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
 
-// ========== BUKTI KELULUSAN (untuk status Lulus) - Versi Sederhana ==========
+// ========== BUKTI KELULUSAN (untuk status Lulus) ==========
 const printBuktiLulus = (data: any, settings: any) => {
   if (!data) return;
   const doc = new jsPDF();
