@@ -18,6 +18,140 @@ const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
+// Fungsi untuk mencetak Bukti Pendaftaran lengkap (sama seperti di RegistrationForm)
+const printProof = (data: any, settings: any) => {
+  if (!data) return;
+
+  const doc = new jsPDF();
+  let yPos = 20;
+
+  // Header
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, 210, 45, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("BUKTI PENDAFTARAN PPDB", 105, 20, { align: "center" });
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text(settings?.namaSekolah || "Sekolah Dasar", 105, 32, { align: "center" });
+  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 42, { align: "center" });
+
+  doc.setTextColor(0, 0, 0);
+  yPos = 60;
+
+  // Data Pribadi
+  doc.setFillColor(200, 200, 200);
+  doc.rect(14, yPos - 6, 182, 8, 'F');
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("DATA PRIBADI", 105, yPos - 1, { align: "center" });
+  
+  yPos += 10;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+
+  const fields = [
+    { label: "Nama Lengkap", value: data['Nama Lengkap'] },
+    { label: "NIK", value: data['NIK'] },
+    { label: "Tempat, Tanggal Lahir", value: `${data['Tempat Lahir'] || '-'}, ${formatDate(data['Tanggal Lahir'])}` },
+    { label: "Jenis Kelamin", value: data['Jenis Kelamin'] },
+    { label: "Alamat", value: data['Alamat'] || data['Alamat Domisili Lengkap'] },
+    { label: "Nama Orang Tua/Wali", value: data['Nama Orang Tua'] },
+    { label: "No. WhatsApp", value: data['No HP'] || data['Nomor WA Aktif'] },
+  ];
+
+  fields.forEach((field, idx) => {
+    if (field.value) {
+      doc.setFont("helvetica", "bold");
+      doc.text(`${field.label}:`, 20, yPos);
+      doc.setFont("helvetica", "normal");
+      const value = String(field.value);
+      const splitValue = doc.splitTextToSize(value, 120);
+      doc.text(splitValue, 70, yPos);
+      yPos += 7;
+    }
+  });
+
+  // Informasi Tambahan (NISN, Asal Sekolah, dll)
+  const extraFields = ['NISN', 'Asal Sekolah', 'Jenis Seleksi'];
+  let hasExtra = false;
+  extraFields.forEach(field => {
+    if (data[field]) {
+      if (!hasExtra) {
+        yPos += 5;
+        doc.setFillColor(200, 200, 200);
+        doc.rect(14, yPos - 6, 182, 8, 'F');
+        doc.setFont("helvetica", "bold");
+        doc.text("INFORMASI TAMBAHAN", 105, yPos - 1, { align: "center" });
+        yPos += 10;
+        hasExtra = true;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.text(`${field}:`, 20, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(String(data[field]), 70, yPos);
+      yPos += 7;
+    }
+  });
+
+  // Koordinat Lokasi dan Jarak
+  if (data['Koordinat Lokasi']) {
+    yPos += 5;
+    doc.setFillColor(200, 200, 200);
+    doc.rect(14, yPos - 6, 182, 8, 'F');
+    doc.setFont("helvetica", "bold");
+    doc.text("LOKASI DAN JARAK", 105, yPos - 1, { align: "center" });
+    yPos += 10;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Koordinat Rumah:", 20, yPos);
+    doc.setFont("helvetica", "normal");
+    doc.text(data['Koordinat Lokasi'], 70, yPos);
+    yPos += 7;
+
+    if (data['Jarak ke Sekolah (km)']) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Jarak ke Sekolah:", 20, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${data['Jarak ke Sekolah (km)']} km`, 70, yPos);
+      yPos += 7;
+    }
+  }
+
+  // Status
+  yPos += 5;
+  doc.setFillColor(200, 200, 200);
+  doc.rect(14, yPos - 6, 182, 8, 'F');
+  doc.setFont("helvetica", "bold");
+  doc.text("STATUS PENDAFTARAN", 105, yPos - 1, { align: "center" });
+  yPos += 10;
+  
+  const status = data.Status || 'Proses';
+  let statusColor = [255, 193, 7];
+  if (status === 'Lulus') statusColor = [40, 167, 69];
+  if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
+  
+  doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.rect(70, yPos - 5, 70, 8, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.text(status, 105, yPos, { align: "center" });
+  
+  doc.setTextColor(0, 0, 0);
+  yPos += 12;
+
+  // Footer
+  doc.setDrawColor(200, 200, 200);
+  doc.line(20, 270, 190, 270);
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
+  doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 287, { align: "center" });
+
+  doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
+};
+
 export default function CheckStatus() {
   const { settings } = useSettings();
   const [noPendaftaran, setNoPendaftaran] = useState('');
@@ -45,7 +179,7 @@ export default function CheckStatus() {
       const response = await checkStatus(noPendaftaran);
       if (response.status === 'success') {
         setResult(response.data);
-        // Jika status masih Proses, ambil data lengkap untuk unduh formulir
+        // Jika status masih Proses, ambil data lengkap untuk unduh bukti pendaftaran
         if (response.data.status === 'Proses') {
           await fetchRegistrationData(noPendaftaran);
         }
@@ -71,124 +205,6 @@ export default function CheckStatus() {
     } finally {
       setIsLoadingForm(false);
     }
-  };
-
-  const downloadFormulir = () => {
-    if (!registrationData) {
-      console.error('No registration data available');
-      return;
-    }
-
-    const doc = new jsPDF();
-    let yPos = 20;
-
-    // Header
-    doc.setFillColor(37, 99, 235);
-    doc.rect(0, 0, 210, 45, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("FORMULIR PENDAFTARAN PPDB", 105, 20, { align: "center" });
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(settings?.namaSekolah || "Sekolah Dasar", 105, 32, { align: "center" });
-    doc.text(`No. Pendaftaran: ${registrationData['No Pendaftaran'] || '-'}`, 105, 42, { align: "center" });
-
-    doc.setTextColor(0, 0, 0);
-    yPos = 60;
-
-    // Data Pribadi
-    doc.setFillColor(200, 200, 200);
-    doc.rect(14, yPos - 6, 182, 8, 'F');
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("DATA PRIBADI", 105, yPos - 1, { align: "center" });
-    
-    yPos += 10;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-
-    const fields = [
-      { label: "Nama Lengkap", value: registrationData['Nama Lengkap'] },
-      { label: "NIK", value: registrationData['NIK'] },
-      { label: "Tempat, Tanggal Lahir", value: `${registrationData['Tempat Lahir'] || '-'}, ${formatDate(registrationData['Tanggal Lahir'])}` },
-      { label: "Jenis Kelamin", value: registrationData['Jenis Kelamin'] },
-      { label: "Alamat", value: registrationData['Alamat'] || registrationData['Alamat Domisili Lengkap'] },
-      { label: "Nama Orang Tua/Wali", value: registrationData['Nama Orang Tua'] },
-      { label: "No. WhatsApp", value: registrationData['No HP'] || registrationData['Nomor WA Aktif'] },
-    ];
-
-    fields.forEach((field, idx) => {
-      if (field.value) {
-        doc.setFont("helvetica", "bold");
-        doc.text(`${field.label}:`, 20, yPos);
-        doc.setFont("helvetica", "normal");
-        const value = String(field.value);
-        const splitValue = doc.splitTextToSize(value, 120);
-        doc.text(splitValue, 70, yPos);
-        yPos += 7;
-      }
-    });
-
-    // Informasi Tambahan
-    const extraFields = ['NISN', 'Asal Sekolah', 'Jenis Seleksi', 'Koordinat Lokasi'];
-    let hasExtra = false;
-    extraFields.forEach(field => {
-      if (registrationData[field]) {
-        if (!hasExtra) {
-          yPos += 5;
-          doc.setFillColor(200, 200, 200);
-          doc.rect(14, yPos - 6, 182, 8, 'F');
-          doc.setFont("helvetica", "bold");
-          doc.text("INFORMASI TAMBAHAN", 105, yPos - 1, { align: "center" });
-          yPos += 10;
-          hasExtra = true;
-        }
-        doc.setFont("helvetica", "bold");
-        doc.text(`${field}:`, 20, yPos);
-        doc.setFont("helvetica", "normal");
-        doc.text(String(registrationData[field]), 70, yPos);
-        yPos += 7;
-      }
-    });
-
-    // Status
-    yPos += 5;
-    doc.setFillColor(200, 200, 200);
-    doc.rect(14, yPos - 6, 182, 8, 'F');
-    doc.setFont("helvetica", "bold");
-    doc.text("STATUS PENDAFTARAN", 105, yPos - 1, { align: "center" });
-    yPos += 10;
-    
-    const status = result?.status || 'Proses';
-    let statusColor = [255, 193, 7];
-    if (status === 'Lulus') statusColor = [40, 167, 69];
-    if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
-    
-    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-    doc.rect(70, yPos - 5, 70, 8, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.text(status, 105, yPos, { align: "center" });
-    
-    doc.setTextColor(0, 0, 0);
-    yPos += 12;
-    
-    if (result?.alasanPenolakan) {
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(220, 53, 69);
-      doc.text(`Alasan: ${result.alasanPenolakan}`, 20, yPos);
-    }
-
-    // Footer
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 270, 190, 270);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Formulir ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
-    doc.text("Simpan formulir ini sebagai bukti pendaftaran.", 105, 287, { align: "center" });
-
-    doc.save(`Formulir_PPDB_${registrationData['No Pendaftaran']}.pdf`);
   };
 
   const printBuktiLulus = (data: any) => {
@@ -221,6 +237,7 @@ export default function CheckStatus() {
         currentY += 4;
       } catch (e) {
         console.error("Error adding kop surat", e);
+        // fallback tanpa kop
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.text('BUKTI KELULUSAN PPDB', 105, currentY, { align: 'center' });
@@ -305,17 +322,13 @@ export default function CheckStatus() {
     if (settings?.stempelSekolah) {
       try {
         doc.addImage(settings.stempelSekolah, 'PNG', 120, currentY + 8, 30, 30);
-      } catch (e) {
-        console.error("Error adding stempel", e);
-      }
+      } catch (e) {}
     }
     
     if (settings?.tandaTanganKepalaSekolah) {
       try {
         doc.addImage(settings.tandaTanganKepalaSekolah, 'PNG', 140, currentY + 10, 40, 20);
-      } catch (e) {
-        console.error("Error adding tanda tangan", e);
-      }
+      } catch (e) {}
     }
     
     doc.setFont('helvetica', 'bold');
@@ -325,7 +338,6 @@ export default function CheckStatus() {
       doc.text(`NIP. ${settings.nipKepalaSekolah}`, 140, currentY + 40);
     }
     
-    // Catatan Tambahan
     if (settings?.catatanTambahan) {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'italic');
@@ -333,7 +345,6 @@ export default function CheckStatus() {
       doc.text(splitCatatan, 20, 260);
     }
     
-    // Footer
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.text(`Dicetak pada: ${dateStr}`, 20, 280);
@@ -409,34 +420,26 @@ export default function CheckStatus() {
                 ? `Pengumuman kelulusan akan dibuka pada tanggal ${new Date(settings.tanggalPengumuman!).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}.` 
                 : 'Berkas Anda sedang dalam tahap verifikasi panitia.'}
             </p>
-            {/* TOMBOL UNDUH FORMULIR UNTUK STATUS PROSES */}
-            <div className="mt-6 pt-4 border-t border-amber-200">
-              <div className="flex items-center gap-2 text-amber-700 mb-3 justify-center">
-                <FileText size={18} />
-                <span className="font-semibold">Unduh Formulir Pendaftaran</span>
-              </div>
-              <p className="text-amber-600 text-sm mb-4">
-                Anda dapat mengunduh dan mencetak formulir pendaftaran kapan saja selama status masih "Proses".
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
+            {/* TOMBOL UNDUH BUKTI PENDAFTARAN (LENGKAP) */}
+            {registrationData && (
+              <div className="mt-6 pt-4 border-t border-amber-200">
+                <div className="flex items-center gap-2 text-amber-700 mb-3 justify-center">
+                  <FileText size={18} />
+                  <span className="font-semibold">Unduh Bukti Pendaftaran</span>
+                </div>
+                <p className="text-amber-600 text-sm mb-4">
+                  Anda dapat mengunduh Bukti Pendaftaran lengkap yang mencakup data diri, koordinat rumah, dan jarak ke sekolah.
+                </p>
                 <button
-                  onClick={downloadFormulir}
-                  disabled={isLoadingForm || !registrationData}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                  onClick={() => printProof(registrationData, settings)}
+                  disabled={isLoadingForm}
+                  className="inline-flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-70"
                 >
                   <Download size={18} />
-                  {isLoadingForm ? 'Memuat Data...' : 'Unduh Formulir'}
-                </button>
-                <button
-                  onClick={() => registrationData && downloadFormulir()}
-                  disabled={isLoadingForm || !registrationData}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
-                >
-                  <Printer size={18} />
-                  Cetak Formulir
+                  {isLoadingForm ? 'Memuat Data...' : 'Unduh Bukti Pendaftaran'}
                 </button>
               </div>
-            </div>
+            )}
           </div>
         );
     }
