@@ -18,65 +18,73 @@ const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
-// Fungsi untuk memeriksa apakah string adalah base64 image
-const isBase64Image = (str: string) => {
-  return str && (str.startsWith('data:image') || str.startsWith('/9j/'));
+// Helper: ekstrak fileId dari URL Google Drive
+const extractFileId = (url: string) => {
+  if (!url) return null;
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
 };
 
-// ========== BUKTI PENDAFTARAN (untuk status Proses) ==========
-const printProof = (data: any, settings: any) => {
+// ========== BUKTI PENDAFTARAN (dengan foto asli) ==========
+const printProof = async (data: any, settings: any) => {
   if (!data) return;
   const doc = new jsPDF();
-  
-  // Cari field foto (bisa "Foto Siswa", "File Pas Foto", atau "Pas Foto")
+
+  // Ambil URL foto (sesuaikan dengan field foto Anda)
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
-  
+  let fotoBase64 = null;
+
+  if (fotoField && typeof fotoField === 'string') {
+    const fileId = extractFileId(fotoField);
+    if (fileId) {
+      try {
+        const proxyUrl = '/api/gas-proxy'; // endpoint proxy Vercel
+        const response = await fetch(`${proxyUrl}?action=getImage&fileId=${fileId}&t=${Date.now()}`);
+        const result = await response.json();
+        if (result.status === 'success' && result.data) {
+          fotoBase64 = `data:${result.mimeType};base64,${result.data}`;
+        } else {
+          console.warn('Gagal mengambil gambar:', result.message);
+        }
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
+    }
+  }
+
   let y = 15;
 
-  // ========== HEADER DENGAN FOTO DI SAMPING KIRI ==========
-  // Header putih
+  // HEADER
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 210, 65, 'F');
-  
-  // FOTO (di sebelah kiri) - ukuran 35x45
-  const hasValidPhoto = fotoField && typeof fotoField === 'string' && (fotoField.startsWith('http') || isBase64Image(fotoField));
-  
-  if (hasValidPhoto) {
+
+  // Tempat foto (kiri)
+  if (fotoBase64) {
     try {
-      // Untuk URL gambar, kita tidak bisa langsung addImage karena perlu fetch
-      // Jadi kita tampilkan placeholder dulu
-      doc.setDrawColor(200, 200, 200);
-      doc.setFillColor(240, 240, 240);
-      doc.rect(14, 8, 35, 45, 'FD');
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text("Foto", 31, 30, { align: "center" });
-      doc.text("Tersedia", 31, 38, { align: "center" });
-      doc.setTextColor(0, 0, 0);
+      doc.addImage(fotoBase64, 'JPEG', 14, 8, 35, 45);
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
+      doc.rect(14, 8, 35, 45);
     } catch (e) {
-      // Placeholder jika gagal
-      doc.setDrawColor(200, 200, 200);
-      doc.setFillColor(240, 240, 240);
-      doc.rect(14, 8, 35, 45, 'FD');
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text("Foto", 31, 30, { align: "center" });
-      doc.text("3x4", 31, 38, { align: "center" });
-      doc.setTextColor(0, 0, 0);
+      // fallback placeholder
+      drawPlaceholder(doc);
     }
   } else {
-    // Placeholder jika tidak ada foto
+    drawPlaceholder(doc);
+  }
+
+  function drawPlaceholder(doc: any) {
     doc.setDrawColor(200, 200, 200);
     doc.setFillColor(240, 240, 240);
     doc.rect(14, 8, 35, 45, 'FD');
     doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(100, 100, 100);
     doc.text("Foto", 31, 30, { align: "center" });
     doc.text("3x4", 31, 38, { align: "center" });
     doc.setTextColor(0, 0, 0);
   }
-  
-  // Teks header di sebelah kanan foto
+
+  // Teks judul di sebelah kanan foto
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
@@ -85,35 +93,27 @@ const printProof = (data: any, settings: any) => {
   doc.setFont("helvetica", "normal");
   doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
   doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 115, 46, { align: "center" });
-  
+
   y = 72;
 
   // JENIS SELEKSI
   const jenisSeleksi = data['Jenis Seleksi'] || '-';
-  
-  // Garis atas
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
   doc.line(14, y - 2, 196, y - 2);
-  
-  // Label JENIS SELEKSI
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.text("JENIS SELEKSI", 105, y + 6, { align: "center" });
-  
-  // Value Jenis Seleksi (warna biru)
   doc.setFontSize(22);
   doc.setTextColor(37, 99, 235);
   doc.setFont("helvetica", "bold");
   doc.text(jenisSeleksi, 105, y + 22, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  
-  // Garis bawah
   let garisBawahY = y + 30;
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 12;
 
-  // ========== TABEL DATA PRIBADI ==========
+  // TABEL DATA PRIBADI
   const leftFields = [
     "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
     "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "Alamat Domisili Lengkap"
@@ -164,7 +164,6 @@ const printProof = (data: any, settings: any) => {
     doc.setDrawColor(200, 200, 200);
     doc.line(14, finalY, 196, finalY);
     finalY += 8;
-    
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.text("LOKASI DAN JARAK", 105, finalY, { align: "center" });
@@ -194,17 +193,14 @@ const printProof = (data: any, settings: any) => {
   doc.setDrawColor(200, 200, 200);
   doc.line(14, finalY, 196, finalY);
   finalY += 8;
-  
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
   finalY += 10;
-  
   const status = data.Status || 'Proses';
   let statusColor = [255, 193, 7];
   if (status === 'Lulus') statusColor = [40, 167, 69];
   if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
-  
   doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
   doc.setTextColor(255, 255, 255);
@@ -226,13 +222,12 @@ const printProof = (data: any, settings: any) => {
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
 
-// ========== BUKTI KELULUSAN (untuk status Lulus) ==========
+// ========== BUKTI KELULUSAN (tidak berubah) ==========
 const printBuktiLulus = (data: any, settings: any) => {
   if (!data) return;
   const doc = new jsPDF();
   let y = 20;
 
-  // Header
   doc.setFillColor(37, 99, 235);
   doc.rect(0, 0, 210, 40, 'F');
   doc.setTextColor(255, 255, 255);
@@ -245,7 +240,6 @@ const printBuktiLulus = (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   y = 55;
 
-  // Isi
   doc.setFontSize(11);
   doc.text(`No. Pendaftaran: ${data.noPendaftaran || '-'}`, 20, y);
   y += 8;
@@ -253,21 +247,17 @@ const printBuktiLulus = (data: any, settings: any) => {
   y += 8;
   doc.text(`Status: LULUS`, 20, y);
   y += 15;
-
   doc.text("Persyaratan Daftar Ulang:", 20, y);
   y += 6;
   const reqText = settings?.persyaratanDaftarUlang || '1. Bukti Kelulusan ini (dicetak)\n2. Fotokopi Akta Kelahiran\n3. Fotokopi Kartu Keluarga\n4. Pas Foto 3x4\n5. Melakukan pembayaran administrasi awal';
   const splitReq = doc.splitTextToSize(reqText, 170);
   doc.text(splitReq, 25, y);
   y += splitReq.length * 6 + 15;
-
-  // Tanda tangan
   const today = new Date();
   const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
   doc.text(`Dicetak pada: ${dateStr}`, 20, y + 20);
   doc.text("Kepala Sekolah", 140, y);
   doc.text(settings?.namaKepalaSekolah || 'Kepala Sekolah', 140, y + 40);
-  
   doc.save(`Bukti_Kelulusan_${data.noPendaftaran}.pdf`);
 };
 
