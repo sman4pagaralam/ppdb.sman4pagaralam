@@ -22,21 +22,21 @@ const formatDate = (dateString: string) => {
 const printProof = (data: any, settings: any) => {
   if (!data) return;
   const doc = new jsPDF();
-  let y = 20;
+  let y = 15; // Mulai lebih tinggi
 
-  // HEADER
+  // HEADER - DINAILKAN POSISINYA
   doc.setFillColor(37, 99, 235);
-  doc.rect(0, 0, 210, 50, 'F');
+  doc.rect(0, 0, 210, 55, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text("BUKTI PENDAFTARAN PPDB", 105, 28, { align: "center" });
+  doc.text("BUKTI PENDAFTARAN PPDB", 105, 25, { align: "center" }); // Naik dari 28 ke 25
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 40, { align: "center" });
-  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 50, { align: "center" });
+  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 37, { align: "center" }); // Naik dari 40 ke 37
+  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 47, { align: "center" }); // Naik dari 50 ke 47
   doc.setTextColor(0, 0, 0);
-  y = 68;
+  y = 70; // Naik dari 68 ke 70
 
   // JENIS SELEKSI - Desain lebih rapi
   const jenisSeleksi = data['Jenis Seleksi'] || '-';
@@ -44,26 +44,24 @@ const printProof = (data: any, settings: any) => {
   // Garis atas
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
-  doc.line(14, y, 196, y);
-  y += 8;
+  doc.line(14, y - 2, 196, y - 2);
   
   // Label JENIS SELEKSI
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("JENIS SELEKSI", 105, y, { align: "center" });
-  y += 8;
+  doc.text("JENIS SELEKSI", 105, y + 4, { align: "center" });
   
   // Value Jenis Seleksi (warna biru, font lebih besar)
   doc.setFontSize(16);
   doc.setTextColor(37, 99, 235);
   doc.setFont("helvetica", "bold");
-  doc.text(jenisSeleksi, 105, y, { align: "center" });
+  doc.text(jenisSeleksi, 105, y + 16, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  y += 12;
   
-  // Garis bawah
+  // Garis bawah - DITURUNKAN AGAR TIDAK KENA TULISAN
+  y = y + 28; // Geser posisi garis bawah (dari 22 ke 28)
   doc.line(14, y, 196, y);
-  y += 12;
+  y = y + 12; // Jarak setelah garis
 
   // ========== TABEL DATA PRIBADI ==========
   const leftFields = [
