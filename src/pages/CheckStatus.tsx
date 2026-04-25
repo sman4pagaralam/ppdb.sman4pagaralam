@@ -3,9 +3,7 @@ import { motion } from 'motion/react';
 import { Search, CheckCircle, XCircle, Clock, Loader2, ArrowLeft, Printer, Download, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { checkStatus, getRegistrationByNo } from '../services/api';
-import { cn } from '../lib/utils';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { useSettings } from '../context/SettingsContext';
 
 const formatDate = (dateString: string) => {
@@ -18,10 +16,9 @@ const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
-// ========== BUKTI PENDAFTARAN LENGKAP (semua field + koordinat + jarak) ==========
+// =================== BUKTI PENDAFTARAN LENGKAP ===================
 const printProof = (data: any, settings: any) => {
   if (!data) return;
-
   const doc = new jsPDF();
   let y = 20;
 
@@ -39,7 +36,7 @@ const printProof = (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   y = 60;
 
-  // DATA PRIBADI (section)
+  // DATA PRIBADI
   doc.setFillColor(200, 200, 200);
   doc.rect(14, y - 6, 182, 8, 'F');
   doc.setFontSize(11);
@@ -49,11 +46,8 @@ const printProof = (data: any, settings: any) => {
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
 
-  // Kumpulkan semua field yang tersedia di data (kecuali yang khusus)
   const excludeFields = ["No Pendaftaran", "Timestamp", "Status", "Koordinat Lokasi", "Jarak ke Sekolah (km)", "Alasan Penolakan"];
   const allFields = Object.keys(data).filter(key => !excludeFields.includes(key) && data[key] !== undefined && data[key] !== null && data[key] !== "");
-
-  // Pisahkan menjadi dua kolom
   const mid = Math.ceil(allFields.length / 2);
   const leftCol = allFields.slice(0, mid);
   const rightCol = allFields.slice(mid);
@@ -70,16 +64,9 @@ const printProof = (data: any, settings: any) => {
     return splitVal.length * 5;
   };
 
-  let leftY = y;
-  let rightY = y;
-  leftCol.forEach(field => {
-    const added = drawField(field, 20, leftY);
-    leftY += Math.max(6, added);
-  });
-  rightCol.forEach(field => {
-    const added = drawField(field, 115, rightY);
-    rightY += Math.max(6, added);
-  });
+  let leftY = y, rightY = y;
+  leftCol.forEach(f => { leftY += Math.max(6, drawField(f, 20, leftY)); });
+  rightCol.forEach(f => { rightY += Math.max(6, drawField(f, 115, rightY)); });
   y = Math.max(leftY, rightY) + 5;
 
   // LOKASI DAN JARAK
@@ -92,16 +79,12 @@ const printProof = (data: any, settings: any) => {
     y += 10;
     doc.setFontSize(10);
     if (data['Koordinat Lokasi']) {
-      doc.setFont("helvetica", "bold");
       doc.text("Koordinat Rumah:", 20, y);
-      doc.setFont("helvetica", "normal");
       doc.text(data['Koordinat Lokasi'], 70, y);
       y += 6;
     }
     if (data['Jarak ke Sekolah (km)']) {
-      doc.setFont("helvetica", "bold");
       doc.text("Jarak ke Sekolah:", 20, y);
-      doc.setFont("helvetica", "normal");
       doc.text(`${data['Jarak ke Sekolah (km)']} km`, 70, y);
       y += 6;
     }
@@ -134,30 +117,40 @@ const printProof = (data: any, settings: any) => {
   doc.setTextColor(100, 100, 100);
   doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
   doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 287, { align: "center" });
-
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
 
-// ========== BUKTI KELULUSAN ==========
+// =================== BUKTI KELULUSAN ===================
 const printBuktiLulus = (data: any, settings: any) => {
   if (!data) return;
   const doc = new jsPDF();
-  let currentY = 20;
-  // (Kode bukti kelulusan tetap sama seperti sebelumnya...)
-  // Saya cukup ringkas di sini, tapi Anda bisa gunakan kode yang sudah ada di versi Anda.
-  // Untuk menghemat ruang, saya akan gunakan versi sederhana.
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text('BUKTI KELULUSAN', 105, currentY, { align: 'center' });
-  currentY += 10;
+  let y = 20;
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, 210, 45, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("BUKTI KELULUSAN PPDB", 105, 20, { align: "center" });
   doc.setFontSize(12);
-  doc.text(`No. Pendaftaran: ${data.noPendaftaran}`, 20, currentY);
-  currentY += 8;
-  doc.text(`Nama: ${data.namaLengkap}`, 20, currentY);
-  currentY += 8;
-  doc.text('Status: LULUS', 20, currentY);
-  currentY += 12;
-  doc.text('Dicetak pada: ' + new Date().toLocaleString(), 20, currentY);
+  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 32, { align: "center" });
+  doc.text(`No. Pendaftaran: ${data.noPendaftaran}`, 105, 42, { align: "center" });
+  doc.setTextColor(0, 0, 0);
+  y = 60;
+  doc.setFontSize(12);
+  doc.text("Dengan ini menyatakan bahwa:", 20, y);
+  y += 10;
+  doc.setFont("helvetica", "bold");
+  doc.text(`Nama: ${data.namaLengkap}`, 20, y);
+  y += 8;
+  doc.text(`No. Pendaftaran: ${data.noPendaftaran}`, 20, y);
+  y += 8;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(40, 167, 69);
+  doc.text("Status: LULUS", 20, y);
+  doc.setTextColor(0, 0, 0);
+  y += 15;
+  doc.setFontSize(10);
+  doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 20, 280);
   doc.save(`Bukti_Kelulusan_${data.noPendaftaran}.pdf`);
 };
 
@@ -165,12 +158,7 @@ export default function CheckStatus() {
   const { settings } = useSettings();
   const [noPendaftaran, setNoPendaftaran] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<{
-    noPendaftaran: string;
-    namaLengkap: string;
-    status: string;
-    alasanPenolakan?: string;
-  } | null>(null);
+  const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
   const [registrationData, setRegistrationData] = useState<any>(null);
   const [isLoadingForm, setIsLoadingForm] = useState(false);
@@ -187,34 +175,67 @@ export default function CheckStatus() {
       if (response.status === 'success') {
         setResult(response.data);
         if (response.data.status === 'Proses') {
-          await fetchRegistrationData(noPendaftaran);
+          const data = await getRegistrationByNo(noPendaftaran);
+          if (data) setRegistrationData(data);
         }
       } else {
         setError(response.message || 'Data tidak ditemukan');
       }
     } catch (err) {
-      setError('Terjadi kesalahan saat menghubungi server');
+      setError('Terjadi kesalahan');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchRegistrationData = async (noReg: string) => {
-    setIsLoadingForm(true);
-    try {
-      const data = await getRegistrationByNo(noReg);
-      if (data) setRegistrationData(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoadingForm(false);
+  const getStatusDisplay = () => {
+    if (!result) return null;
+    if (result.status === 'Lulus') {
+      return (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+          <CheckCircle className="text-green-600 w-16 h-16 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold text-green-800 mb-2">Selamat! Anda Lulus</h3>
+          <button onClick={() => printBuktiLulus(result, settings)} className="bg-green-600 text-white px-4 py-2 rounded-lg">Cetak Bukti Kelulusan</button>
+        </div>
+      );
     }
+    if (result.status === 'Tidak Lulus') {
+      return (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <XCircle className="text-red-600 w-16 h-16 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold text-red-800 mb-2">Mohon Maaf, Anda Tidak Lulus</h3>
+          {result.alasanPenolakan && <p className="text-red-700">{result.alasanPenolakan}</p>}
+        </div>
+      );
+    }
+    // Proses
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+        <Clock className="text-amber-600 w-16 h-16 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold text-amber-800 mb-2">Data Sedang Diproses</h3>
+        {registrationData && (
+          <button onClick={() => printProof(registrationData, settings)} className="bg-green-600 text-white px-4 py-2 rounded-lg mt-4">
+            <Download className="inline mr-2" size={18} /> Unduh Bukti Pendaftaran
+          </button>
+        )}
+      </div>
+    );
   };
 
-  const getStatusDisplay = (status: string, data?: any) => {
-    // ... (sama seperti kode Anda, namun panggil printBuktiLulus dengan settings)
-    // Saya ringkas karena panjang, intinya gunakan printBuktiLulus(data, settings)
-  };
-
-  // ... (rest of component, tapi pastikan semua pemanggilan printProof dan printBuktiLulus menggunakan settings)
+  return (
+    <div className="min-h-screen bg-slate-50 py-12 px-4">
+      <div className="max-w-md mx-auto">
+        <Link to="/" className="text-blue-600 inline-flex items-center mb-6"><ArrowLeft size={16} /> Kembali</Link>
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <h2 className="text-2xl font-bold text-center mb-6">Cek Status Kelulusan</h2>
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input type="text" value={noPendaftaran} onChange={e => setNoPendaftaran(e.target.value)} className="flex-1 border rounded-xl px-4 py-2" placeholder="No. Pendaftaran" />
+            <button type="submit" disabled={isLoading} className="bg-blue-600 text-white px-6 py-2 rounded-xl">Cek</button>
+          </form>
+          {error && <div className="text-red-600 text-center mt-4">{error}</div>}
+          {result && <div className="mt-6">{getStatusDisplay()}</div>}
+        </div>
+      </div>
+    </div>
+  );
 }
