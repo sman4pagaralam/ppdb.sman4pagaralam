@@ -24,20 +24,38 @@ const printProof = (data: any, settings: any) => {
   const doc = new jsPDF();
   let y = 20;
 
-  // Header
+  // HEADER
   doc.setFillColor(37, 99, 235);
-  doc.rect(0, 0, 210, 45, 'F');
+  doc.rect(0, 0, 210, 55, 'F'); // Tinggi header ditambah
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
+  doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text("BUKTI PENDAFTARAN PPDB", 105, 20, { align: "center" });
+  doc.text("BUKTI PENDAFTARAN PPDB", 105, 25, { align: "center" });
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 32, { align: "center" });
-  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 42, { align: "center" });
+  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 37, { align: "center" });
+  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 47, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  y = 60;
+  y = 65;
 
+  // JENIS SELEKSI - DIPERBESAR DENGAN GARIS
+  const jenisSeleksi = data['Jenis Seleksi'] || '-';
+  doc.setFillColor(240, 240, 240);
+  doc.rect(14, y - 5, 182, 12, 'F');
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.rect(14, y - 5, 182, 12);
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("JENIS SELEKSI", 105, y, { align: "center" });
+  y += 8;
+  doc.setFontSize(13);
+  doc.setTextColor(37, 99, 235);
+  doc.text(jenisSeleksi, 105, y, { align: "center" });
+  doc.setTextColor(0, 0, 0);
+  y += 12;
+
+  // ========== TABEL DATA PRIBADI ==========
   // Field kiri dan kanan
   const leftFields = [
     "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
@@ -45,7 +63,7 @@ const printProof = (data: any, settings: any) => {
     "Alamat Domisili Lengkap", "Nomor WA Aktif"
   ];
   const rightFields = [
-    "NISN", "Asal Sekolah", "Jenis Seleksi",
+    "NISN", "Asal Sekolah",
     "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
     "Prestasi Akademik", "Prestasi Non Akademik"
   ];
@@ -66,13 +84,12 @@ const printProof = (data: any, settings: any) => {
     tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
   }
 
-  // Menggunakan autoTable yang sudah di-import
   autoTable(doc, {
     startY: y,
     head: [],
     body: tableBody,
     theme: 'plain',
-    styles: { fontSize: 10, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
+    styles: { fontSize: 10, cellPadding: 3, overflow: 'linebreak', cellWidth: 'wrap' },
     columnStyles: {
       0: { cellWidth: 35, fontStyle: 'bold' },
       1: { cellWidth: 70 },
@@ -86,7 +103,7 @@ const printProof = (data: any, settings: any) => {
   // Dapatkan posisi Y setelah tabel
   let finalY = (doc as any).lastAutoTable.finalY + 5;
 
-  // Lokasi dan Jarak
+  // LOKASI DAN JARAK
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
     doc.setFillColor(200, 200, 200);
     doc.rect(14, finalY - 6, 182, 8, 'F');
@@ -96,6 +113,7 @@ const printProof = (data: any, settings: any) => {
     finalY += 10;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
+
     if (data['Koordinat Lokasi']) {
       doc.setFont("helvetica", "bold");
       doc.text("Koordinat Rumah:", 20, finalY);
@@ -113,7 +131,7 @@ const printProof = (data: any, settings: any) => {
     finalY += 5;
   }
 
-  // Status
+  // STATUS PENDAFTARAN
   doc.setFillColor(200, 200, 200);
   doc.rect(14, finalY - 6, 182, 8, 'F');
   doc.setFontSize(11);
@@ -132,13 +150,14 @@ const printProof = (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   finalY += 12;
 
-  // Footer
+  // FOOTER
   doc.setDrawColor(200, 200, 200);
   doc.line(20, 270, 190, 270);
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
   doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
   doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 287, { align: "center" });
+
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
 
