@@ -71,7 +71,6 @@ const calculateAge = (dateString: string) => {
   return `${years} Tahun ${months} Bulan ${days} Hari`;
 };
 
-// Helper function untuk mengamankan string
 const safeToString = (value: any): string => {
   if (value === null || value === undefined) return '';
   if (typeof value === 'string') return value;
@@ -93,7 +92,6 @@ export default function AdminDashboard() {
   const itemsPerPage = 10;
   const navigate = useNavigate();
 
-  // Settings State
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [localSettings, setLocalSettings] = useState(settings);
 
@@ -330,7 +328,6 @@ export default function AdminDashboard() {
     doc.save(`Kartu_PPDB_${student['No Pendaftaran']}.pdf`);
   };
 
-  // PERBAIKAN UTAMA: Filter data dengan safeToString
   const filteredData = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) {
       return [];
@@ -385,7 +382,6 @@ export default function AdminDashboard() {
     <div className={cn("min-h-screen transition-colors duration-300", isDarkMode ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-900")}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard Admin</h1>
@@ -395,7 +391,6 @@ export default function AdminDashboard() {
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className={cn("p-2 rounded-full transition-colors", isDarkMode ? "bg-slate-800 text-yellow-400 hover:bg-slate-700" : "bg-white text-slate-600 hover:bg-slate-100 shadow-sm border border-slate-200")}
-              title="Toggle Dark Mode"
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -408,7 +403,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b mb-6 border-slate-200 dark:border-slate-700">
           <button
             onClick={() => setActiveTab('dashboard')}
@@ -436,29 +430,27 @@ export default function AdminDashboard() {
 
         {activeTab === 'dashboard' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            {/* Statistics */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               {[
-                { label: 'Total Pendaftar', value: Array.isArray(data) ? data.length : 0, color: 'bg-blue-500 text-white border-blue-600 shadow-md' },
-                { label: 'Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Lulus').length : 0, color: 'bg-green-500 text-white border-green-600 shadow-md' },
-                { label: 'Tidak Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Tidak Lulus').length : 0, color: 'bg-red-500 text-white border-red-600 shadow-md' },
+                { label: 'Total Pendaftar', value: Array.isArray(data) ? data.length : 0, color: 'bg-blue-500 text-white' },
+                { label: 'Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Lulus').length : 0, color: 'bg-green-500 text-white' },
+                { label: 'Tidak Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Tidak Lulus').length : 0, color: 'bg-red-500 text-white' },
                 { label: 'Laki-laki', value: Array.isArray(data) ? data.filter(item => { 
                   const jk = item ? safeToString(getFieldValue(item, 'Jenis Kelamin')).toLowerCase() : ''; 
                   return jk.includes('laki'); 
-                }).length : 0, color: 'bg-indigo-500 text-white border-indigo-600 shadow-md' },
+                }).length : 0, color: 'bg-indigo-500 text-white' },
                 { label: 'Perempuan', value: Array.isArray(data) ? data.filter(item => { 
                   const jk = item ? safeToString(getFieldValue(item, 'Jenis Kelamin')).toLowerCase() : ''; 
                   return jk.includes('perempuan'); 
-                }).length : 0, color: 'bg-pink-500 text-white border-pink-600 shadow-md' },
+                }).length : 0, color: 'bg-pink-500 text-white' },
               ].map((stat, idx) => (
-                <div key={idx} className={cn("p-4 rounded-xl border flex flex-col items-center justify-center text-center", stat.color)}>
+                <div key={idx} className={cn("p-4 rounded-xl flex flex-col items-center justify-center text-center", stat.color)}>
                   <span className="text-sm font-medium opacity-90 mb-1">{stat.label}</span>
                   <span className="text-3xl font-bold">{stat.value}</span>
                 </div>
               ))}
             </div>
 
-            {/* Filters & Search */}
             <div className={cn("rounded-xl shadow-sm border p-4 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center", isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200")}>
               <div className="relative w-full md:w-96">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -468,10 +460,7 @@ export default function AdminDashboard() {
                   type="text"
                   placeholder="Cari Nama, NIK, atau No. Pendaftaran..."
                   value={searchTerm}
-                  onChange={(e) => { 
-                    setSearchTerm(e.target.value); 
-                    setCurrentPage(1); 
-                  }}
+                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                   className={cn("block w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors", 
                     isDarkMode ? "bg-slate-900 border-slate-700 text-white placeholder-slate-500" : "bg-white border-slate-300 text-slate-900"
                   )}
@@ -510,19 +499,18 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Table */}
             <div className={cn("rounded-xl shadow-sm border overflow-hidden", isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200")}>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                   <thead className={isDarkMode ? "bg-slate-700 text-slate-200" : "bg-blue-50 text-blue-800"}>
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">No. Pendaftaran</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Nama Lengkap</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Usia</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Jarak</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">NIK</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider">Status</th>
-                      <th scope="col" className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider">Aksi</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase">No. Pendaftaran</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase">Nama Lengkap</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase">Usia</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase">Jarak</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase">NIK</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold uppercase">Status</th>
+                      <th className="px-6 py-3 text-right text-xs font-bold uppercase">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className={cn("divide-y", isDarkMode ? "divide-slate-700" : "divide-slate-200")}>
@@ -530,26 +518,16 @@ export default function AdminDashboard() {
                       <tr>
                         <td colSpan={7} className="px-6 py-12 text-center">
                           <Loader2 className="animate-spin h-8 w-8 mx-auto text-blue-500 mb-4" />
-                          <p className={isDarkMode ? "text-slate-400" : "text-slate-500"}>Memuat data...</p>
+                          <p>Memuat data...</p>
                         </td>
                       </tr>
                     ) : !currentData || currentData.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-12 text-center">
-                          <div className="mx-auto h-12 w-12 text-slate-400 mb-4"><FileText size={48} /></div>
-                          <p className={isDarkMode ? "text-slate-400" : "text-slate-500"}>
-                            {searchTerm || statusFilter !== 'Semua' 
-                              ? "Tidak ada data yang sesuai dengan pencarian" 
-                              : "Tidak ada data ditemukan"}
-                          </p>
+                          <FileText size={48} className="mx-auto text-slate-400 mb-4" />
+                          <p>Tidak ada data ditemukan</p>
                           {(searchTerm || statusFilter !== 'Semua') && (
-                            <button 
-                              onClick={() => {
-                                setSearchTerm('');
-                                setStatusFilter('Semua');
-                              }}
-                              className="mt-2 text-blue-500 hover:underline text-sm"
-                            >
+                            <button onClick={() => { setSearchTerm(''); setStatusFilter('Semua'); }} className="mt-2 text-blue-500 hover:underline text-sm">
                               Reset filter
                             </button>
                           )}
@@ -557,98 +535,51 @@ export default function AdminDashboard() {
                       </tr>
                     ) : (
                       currentData.map((item, idx) => (
-                        <motion.tr 
-                          key={item?.['No Pendaftaran'] || idx} 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.2, delay: idx * 0.05 }}
-                          className={cn("hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors")}
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
-                            {safeToString(item?.['No Pendaftaran'])}
-                          </td>
+                        <tr key={item?.['No Pendaftaran'] || idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{safeToString(item?.['No Pendaftaran'])}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium">{getFieldValue(item, 'Nama Lengkap') || '-'}</div>
-                            <div className={cn("text-xs", isDarkMode ? "text-slate-400" : "text-slate-500")}>
-                              {getFieldValue(item, 'Tempat Lahir') || '-'}, {formatDate(getFieldValue(item, 'Tanggal Lahir'))}
-                            </div>
+                            <div className="text-xs text-slate-500">{getFieldValue(item, 'Tempat Lahir') || '-'}, {formatDate(getFieldValue(item, 'Tanggal Lahir'))}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            {calculateAge(getFieldValue(item, 'Tanggal Lahir'))}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            {item?.['Jarak ke Sekolah (km)'] ? `${item['Jarak ke Sekolah (km)']} km` : '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
-                            {getFieldValue(item, 'NIK') || '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {getStatusBadge(item?.Status)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">{calculateAge(getFieldValue(item, 'Tanggal Lahir'))}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">{item?.['Jarak ke Sekolah (km)'] ? `${item['Jarak ke Sekolah (km)']} km` : '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">{getFieldValue(item, 'NIK') || '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(item?.Status)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button 
-                                onClick={() => setSelectedStudent(item)} 
-                                className="text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 px-2 py-1 rounded transition-colors" 
-                                title="Lihat Detail"
-                              >
+                              <button onClick={() => setSelectedStudent(item)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700" title="Detail">
                                 <Eye size={18} />
                               </button>
                               {safeToString(item?.Status) !== 'Lulus' && (
-                                <button 
-                                  onClick={() => handleUpdateStatus(item['No Pendaftaran'], 'Lulus')} 
-                                  className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 px-2 py-1 rounded transition-colors" 
-                                  title="Ubah ke Lulus"
-                                >
+                                <button onClick={() => handleUpdateStatus(item['No Pendaftaran'], 'Lulus')} className="p-1 rounded text-green-600 hover:bg-green-50" title="Lulus">
                                   <CheckCircle size={18} />
                                 </button>
                               )}
                               {safeToString(item?.Status) !== 'Tidak Lulus' && (
-                                <button 
-                                  onClick={() => handleUpdateStatus(item['No Pendaftaran'], 'Tidak Lulus')} 
-                                  className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-2 py-1 rounded transition-colors" 
-                                  title="Ubah ke Tidak Lulus"
-                                >
+                                <button onClick={() => handleUpdateStatus(item['No Pendaftaran'], 'Tidak Lulus')} className="p-1 rounded text-red-600 hover:bg-red-50" title="Tidak Lulus">
                                   <XCircle size={18} />
                                 </button>
                               )}
-                              <button 
-                                onClick={() => printCard(item)} 
-                                className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 px-2 py-1 rounded transition-colors" 
-                                title="Cetak Kartu"
-                              >
+                              <button onClick={() => printCard(item)} className="p-1 rounded text-blue-600 hover:bg-blue-50" title="Cetak">
                                 <Printer size={18} />
                               </button>
                             </div>
                           </td>
-                        </motion.tr>
+                        </tr>
                       ))
                     )}
                   </tbody>
                 </table>
               </div>
               
-              {/* Pagination */}
               {!isLoading && filteredData.length > 0 && (
-                <div className={cn("px-6 py-4 border-t flex items-center justify-between", isDarkMode ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-white")}>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
-                    Menampilkan <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> hingga <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredData.length)}</span> dari <span className="font-medium">{filteredData.length}</span> data
+                <div className="px-6 py-4 border-t flex justify-between items-center">
+                  <div className="text-sm text-slate-500">
+                    Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} data
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      Sebelumnya
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      Selanjutnya
-                    </button>
+                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded disabled:opacity-50">Sebelumnya</button>
+                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded disabled:opacity-50">Selanjutnya</button>
                   </div>
                 </div>
               )}
@@ -657,15 +588,15 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'settings' && localSettings && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <div className={cn("rounded-xl shadow-sm border p-6", isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200")}>
-              <p className="text-center text-slate-500">Pengaturan tersedia di sini (sesuaikan dengan kebutuhan Anda)</p>
+              <p className="text-center text-slate-500">Pengaturan aplikasi akan muncul di sini</p>
             </div>
           </motion.div>
         )}
       </div>
 
-      {/* Detail Modal - Simplified */}
+      {/* DETAIL MODAL - FULL VERSION */}
       <AnimatePresence>
         {selectedStudent && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -681,8 +612,107 @@ export default function AdminDashboard() {
                   <X size={20} />
                 </button>
               </div>
+
               <div className="p-6">
-                <p>Detail pendaftar: {safeToString(selectedStudent['No Pendaftaran'])} - {getFieldValue(selectedStudent, 'Nama Lengkap')}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Data Section */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold border-b pb-2 mb-4 dark:border-slate-700">Data Pendaftar</h3>
+                      <dl className="grid grid-cols-1 gap-y-3 text-sm">
+                        <div className="grid grid-cols-3 gap-4">
+                          <dt className="text-slate-500 dark:text-slate-400">No. Pendaftaran</dt>
+                          <dd className="col-span-2 font-medium">{selectedStudent['No Pendaftaran']}</dd>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <dt className="text-slate-500 dark:text-slate-400">Status</dt>
+                          <dd className="col-span-2">{getStatusBadge(selectedStudent.Status)}</dd>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <dt className="text-slate-500 dark:text-slate-400">Waktu Daftar</dt>
+                          <dd className="col-span-2 font-medium">{selectedStudent.Timestamp ? new Date(selectedStudent.Timestamp).toLocaleString() : '-'}</dd>
+                        </div>
+                        
+                        {settings?.formFields?.filter(f => f.type !== 'file').map(field => {
+                          const value = getFieldValue(selectedStudent, field.id);
+                          return (
+                            <React.Fragment key={field.id}>
+                              <div className="grid grid-cols-3 gap-4">
+                                <dt className="text-slate-500 dark:text-slate-400">{field.label}</dt>
+                                <dd className="col-span-2 font-medium">
+                                  {field.id === 'Tanggal Lahir' ? formatDate(value) : (value || '-')}
+                                </dd>
+                              </div>
+                              {field.id === 'Tanggal Lahir' && (
+                                <div className="grid grid-cols-3 gap-4">
+                                  <dt className="text-slate-500 dark:text-slate-400">Usia</dt>
+                                  <dd className="col-span-2 font-medium">{calculateAge(value)}</dd>
+                                </div>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                        
+                        {selectedStudent['Koordinat Lokasi'] && (
+                          <div className="grid grid-cols-3 gap-4 mt-2">
+                            <dt className="text-slate-500 dark:text-slate-400">Koordinat Lokasi</dt>
+                            <dd className="col-span-2 font-medium">
+                              <a href={`https://www.google.com/maps/search/?api=1&query=${selectedStudent['Koordinat Lokasi']}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                {selectedStudent['Koordinat Lokasi']}
+                              </a>
+                            </dd>
+                          </div>
+                        )}
+                        
+                        {selectedStudent['Jarak ke Sekolah (km)'] && (
+                          <div className="grid grid-cols-3 gap-4">
+                            <dt className="text-slate-500 dark:text-slate-400">Jarak ke Sekolah</dt>
+                            <dd className="col-span-2 font-medium text-blue-700">{selectedStudent['Jarak ke Sekolah (km)']} km</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                    
+                    <div className="pt-4 flex gap-3">
+                      {safeToString(selectedStudent.Status) !== 'Lulus' && (
+                        <button onClick={() => handleUpdateStatus(selectedStudent['No Pendaftaran'], 'Lulus')} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium">
+                          Ubah ke Lulus
+                        </button>
+                      )}
+                      {safeToString(selectedStudent.Status) !== 'Tidak Lulus' && (
+                        <button onClick={() => handleUpdateStatus(selectedStudent['No Pendaftaran'], 'Tidak Lulus')} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium">
+                          Ubah ke Tidak Lulus
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Files Section */}
+                  <div>
+                    <h3 className="text-lg font-semibold border-b pb-2 mb-4 dark:border-slate-700">Berkas Upload</h3>
+                    <div className="space-y-4">
+                      {settings?.formFields?.filter(f => f.type === 'file').map(field => {
+                        const fileUrl = getFieldValue(selectedStudent, field.id);
+                        return (
+                          <div key={field.id} className={cn("p-4 rounded-xl border", isDarkMode ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-slate-50")}>
+                            <p className="text-sm font-medium mb-2">{field.label}</p>
+                            {fileUrl && fileUrl !== '-' ? (
+                              fileUrl.startsWith('data:image') ? (
+                                <img src={fileUrl} alt={field.label} className="w-full h-32 object-cover rounded-lg border" />
+                              ) : (
+                                <a href={fileUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline text-sm flex items-center gap-2">
+                                  <FileText size={16} /> Buka {field.label}
+                                </a>
+                              )
+                            ) : (
+                              <span className="text-sm text-slate-500">Tidak ada file</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </div>
