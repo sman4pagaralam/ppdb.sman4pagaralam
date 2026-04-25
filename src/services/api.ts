@@ -1,7 +1,7 @@
 // Service to interact with Google Apps Script Backend
 
 // Google Apps Script URL langsung
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyQWHUNmH61L4ebYlICStyJEb8CapBH8akdiTQ8SlPYj1jHuYnuZTDAn2vbswB9I1lTYw/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzrhKic6x3oLh1UfmjNvh8KYRaIPtiGNuxtI5q58JnzoaUmQFnHRJ_W8DJexRh2jI2Wgw/exec";
 
 // Helper function untuk fetch dengan fallback
 const fetchAPI = async (url: string, options: RequestInit = {}) => {
