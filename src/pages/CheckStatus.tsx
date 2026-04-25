@@ -22,23 +22,23 @@ const formatDate = (dateString: string) => {
 const printProof = (data: any, settings: any) => {
   if (!data) return;
   const doc = new jsPDF();
-  let y = 15; // Mulai lebih tinggi
+  let y = 15;
 
-  // HEADER - DINAILKAN POSISINYA
+  // HEADER
   doc.setFillColor(37, 99, 235);
   doc.rect(0, 0, 210, 55, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text("BUKTI PENDAFTARAN PPDB", 105, 25, { align: "center" }); // Naik dari 28 ke 25
+  doc.text("BUKTI PENDAFTARAN PPDB", 105, 25, { align: "center" });
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 37, { align: "center" }); // Naik dari 40 ke 37
-  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 47, { align: "center" }); // Naik dari 50 ke 47
+  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 37, { align: "center" });
+  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 47, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  y = 70; // Naik dari 68 ke 70
+  y = 70;
 
-  // JENIS SELEKSI - Desain lebih rapi
+  // JENIS SELEKSI
   const jenisSeleksi = data['Jenis Seleksi'] || '-';
   
   // Garis atas
@@ -51,17 +51,17 @@ const printProof = (data: any, settings: any) => {
   doc.setFont("helvetica", "bold");
   doc.text("JENIS SELEKSI", 105, y + 4, { align: "center" });
   
-  // Value Jenis Seleksi (warna biru, font lebih besar)
+  // Value Jenis Seleksi (warna biru)
   doc.setFontSize(16);
   doc.setTextColor(37, 99, 235);
   doc.setFont("helvetica", "bold");
-  doc.text(jenisSeleksi, 105, y + 16, { align: "center" });
+  doc.text(jenisSeleksi, 105, y + 18, { align: "center" });
   doc.setTextColor(0, 0, 0);
   
-  // Garis bawah - DITURUNKAN AGAR TIDAK KENA TULISAN
-  y = y + 28; // Geser posisi garis bawah (dari 22 ke 28)
-  doc.line(14, y, 196, y);
-  y = y + 12; // Jarak setelah garis
+  // Garis bawah - DITEMPATKAN DEKAT DENGAN TULISAN DOMISILI
+  let garisBawahY = y + 26; // Dari 28 diubah ke 26 (lebih naik)
+  doc.line(14, garisBawahY, 196, garisBawahY);
+  y = garisBawahY + 12; // Jarak setelah garis
 
   // ========== TABEL DATA PRIBADI ==========
   const leftFields = [
@@ -77,7 +77,6 @@ const printProof = (data: any, settings: any) => {
   const formatValue = (field: string, val: any) => {
     if (field === "Tanggal Lahir") return formatDate(val);
     if (val === undefined || val === null || val === "") return "-";
-    // Singkat URL jika ada
     if (typeof val === "string" && val.startsWith("http")) return "File terupload";
     return String(val);
   };
@@ -133,7 +132,6 @@ const printProof = (data: any, settings: any) => {
 
   // LOKASI DAN JARAK
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
-    // Garis pemisah
     doc.setDrawColor(200, 200, 200);
     doc.line(14, finalY, 196, finalY);
     finalY += 8;
