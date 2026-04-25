@@ -1,7 +1,7 @@
-// Service to interact with Google Apps Script Backend
+// Service to interact with Google Apps Script Backend via Vercel Proxy
 
-// To use the real backend, replace this URL with your deployed Google Apps Script Web App URL
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzrhKic6x3oLh1UfmjNvh8KYRaIPtiGNuxtI5q58JnzoaUmQFnHRJ_W8DJexRh2jI2Wgw/exec"; 
+// Ganti URL langsung dengan proxy
+const GAS_WEB_APP_URL = "/api/gas-proxy";  // ← Gunakan path ke proxy
 
 // Helper function untuk fetch dengan CORS yang benar
 const fetchWithCORS = async (url: string, options: RequestInit = {}) => {
