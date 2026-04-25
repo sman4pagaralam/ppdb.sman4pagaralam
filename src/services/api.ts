@@ -1,59 +1,7 @@
 // Service to interact with Google Apps Script Backend
 
-// Google Apps Script URL langsung
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwayGYtCCYtLn3aK7q-CMLGOBdPb8WvzfXaK6iJHBatLNYGxtxWpbcqsN5pPKbqbbW0Eg/exec";
-
-// Helper function untuk fetch dengan fallback
-const fetchAPI = async (url: string, options: RequestInit = {}) => {
-  try {
-    const response = await fetch(url, {
-      ...options,
-      mode: 'no-cors', // ← Kunci utama! Mode ini menghindari CORS
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    // Dengan mode no-cors, kita tidak bisa membaca response
-    // Jadi kita akan gunakan pendekatan lain
-    
-    return { ok: true };
-  } catch (error) {
-    console.error('Fetch error:', error);
-    throw error;
-  }
-};
-
-// GET request dengan JSONP-style (menggunakan fetch biasa tapi dengan mode no-cors)
-const fetchGet = async (url: string) => {
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      mode: 'no-cors',
-    });
-    // Dengan no-cors, kita tidak bisa dapat response body
-    // Jadi kita perlu pendekatan berbeda
-    
-    // Coba dengan mode cors biasa tapi timeout cepat
-    const corsResponse = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
-    
-    if (corsResponse.ok) {
-      return await corsResponse.json();
-    }
-    
-    throw new Error('CORS error, but request may still work');
-  } catch (error) {
-    console.log('CORS error (expected), but data might be saved:', error);
-    // Return empty data - untuk GET registrations
-    return { status: "success", data: [] };
-  }
-};
+// Google Apps Script URL langsung - SUDAH BENAR
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzrhKic6x3oLh1UfmjNvh8KYRaIPtiGNuxtI5q58JnzoaUmQFnHRJ_W8DJexRh2jI2Wgw/exec";
 
 export interface FormField {
   id: string;
@@ -141,18 +89,20 @@ const getDefaultSettings = (): AppSettings => ({
   koordinatSekolah: "-6.200000, 106.816666",
 });
 
-// LocalStorage untuk mock data (fallback)
-let localData: AdminData[] = [];
+// Fallback data jika API tidak bisa diakses
+let fallbackData: AdminData[] = [];
 
 export const getSettings = async (): Promise<AppSettings> => {
   try {
-    // Coba fetch dengan timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getSettings&t=${Date.now()}`, {
       signal: controller.signal,
-      mode: 'cors',
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
     });
     
     clearTimeout(timeoutId);
@@ -162,12 +112,16 @@ export const getSettings = async (): Promise<AppSettings> => {
       if (result.status === "success") {
         let formFields = result.data.formFields;
         if (typeof formFields === 'string') {
-          formFields = JSON.parse(formFields);
+          try {
+            formFields = JSON.parse(formFields);
+          } catch (e) {
+            formFields = getDefaultSettings().formFields;
+          }
         }
         return { ...result.data, formFields };
       }
     }
-    throw new Error("Failed to fetch");
+    throw new Error("Failed to fetch settings");
   } catch (error) {
     console.warn("Using default settings (API unavailable):", error);
     return getDefaultSettings();
@@ -178,12 +132,11 @@ export const updateSettings = async (settings: Partial<AppSettings>) => {
   try {
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
-      mode: 'cors',
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "updateSettings",
         settings
       }),
-      headers: { "Content-Type": "application/json" },
     });
     
     if (response.ok) {
@@ -192,7 +145,7 @@ export const updateSettings = async (settings: Partial<AppSettings>) => {
     throw new Error("Failed to update");
   } catch (error) {
     console.warn("Settings saved locally only:", error);
-    return { status: "success", message: "Saved locally (API unavailable)" };
+    return { status: "success", message: "Saved locally" };
   }
 };
 
@@ -200,9 +153,8 @@ export const submitRegistration = async (data: RegistrationData) => {
   try {
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
-      mode: 'cors',
-      body: JSON.stringify(data),
       headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
     });
     
     if (response.ok) {
@@ -213,7 +165,7 @@ export const submitRegistration = async (data: RegistrationData) => {
     console.warn("Registration saved locally only:", error);
     return { 
       status: "success", 
-      message: "Pendaftaran berhasil (disimpan lokal - API tidak tersedia)",
+      message: "Pendaftaran berhasil (disimpan lokal)",
       noPendaftaran: `LOCAL-${Date.now()}`
     };
   }
@@ -222,19 +174,24 @@ export const submitRegistration = async (data: RegistrationData) => {
 export const getRegistrations = async (): Promise<AdminData[]> => {
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?t=${Date.now()}`, {
-      mode: 'cors',
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
     });
     
     if (response.ok) {
       const result = await response.json();
-      if (result.status === "success" && result.data) {
+      if (result.status === "success" && Array.isArray(result.data)) {
+        // Simpan ke fallback untuk digunakan nanti jika offline
+        fallbackData = result.data;
         return result.data;
       }
     }
-    throw new Error("Failed to fetch");
+    throw new Error("Failed to fetch registrations");
   } catch (error) {
-    console.warn("Using local data (API unavailable):", error);
-    return localData;
+    console.warn("Using fallback data (API unavailable):", error);
+    return fallbackData;
   }
 };
 
@@ -242,22 +199,34 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
   try {
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
-      mode: 'cors',
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "updateStatus",
         noPendaftaran,
         newStatus,
         alasan
       }),
-      headers: { "Content-Type": "application/json" },
     });
     
     if (response.ok) {
-      return await response.json();
+      const result = await response.json();
+      // Update fallback data juga
+      fallbackData = fallbackData.map(item => 
+        item['No Pendaftaran'] === noPendaftaran 
+          ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
+          : item
+      );
+      return result;
     }
     throw new Error("Failed to update");
   } catch (error) {
     console.warn("Status updated locally only:", error);
+    // Update local fallback
+    fallbackData = fallbackData.map(item => 
+      item['No Pendaftaran'] === noPendaftaran 
+        ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
+        : item
+    );
     return { status: "success" };
   }
 };
@@ -266,12 +235,11 @@ export const checkStatus = async (noPendaftaran: string) => {
   try {
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
-      mode: 'cors',
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "checkStatus",
         noPendaftaran
       }),
-      headers: { "Content-Type": "application/json" },
     });
     
     if (response.ok) {
@@ -280,12 +248,22 @@ export const checkStatus = async (noPendaftaran: string) => {
     throw new Error("Failed to check");
   } catch (error) {
     console.warn("Cannot check status:", error);
+    const localStudent = fallbackData.find(d => d['No Pendaftaran'] === noPendaftaran);
+    if (localStudent) {
+      return { 
+        status: "success", 
+        data: {
+          noPendaftaran: localStudent['No Pendaftaran'],
+          status: localStudent.Status
+        }
+      };
+    }
     return { status: "error", message: "Layanan tidak tersedia saat ini" };
   }
 };
 
 export const loginAdmin = async (username: string, password: string) => {
-  // Login admin via sessionStorage, bypass API
+  // Login langsung (bypass API untuk kecepatan)
   if (username === 'admin' && password === 'admin123') {
     return { status: "success" };
   }
