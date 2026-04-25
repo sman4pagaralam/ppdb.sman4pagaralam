@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaf
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin } from 'lucide-react';
-import { cn } from '../lib/utils'; // ← TAMBAHKAN IMPORT INI
+import { cn } from '../lib/utils'; // ← IMPORT CN
 
 // Fix for default marker icons in Leaflet with React
 delete (L.Icon.Default.prototype as any)._getIconUrl;
