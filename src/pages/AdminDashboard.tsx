@@ -1335,4 +1335,8 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
     </div>
-  )}
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
