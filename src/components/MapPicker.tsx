@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -16,6 +16,7 @@ L.Icon.Default.mergeOptions({
 interface MapPickerProps {
   onLocationSelect: (lat: number, lng: number) => void;
   initialLocation?: { lat: number; lng: number };
+  autoLocate?: boolean; // Props baru untuk auto locate
 }
 
 // Komponen untuk menangani klik di peta
@@ -38,12 +39,14 @@ function LocationMarker({ onLocationSelect, initialLocation }: { onLocationSelec
 }
 
 // Komponen tombol lokasi yang terintegrasi dengan map
-function LocationButton({ onLocationFound, isLoading, setIsLoading }: { 
+function LocationButton({ onLocationFound, isLoading, setIsLoading, autoLocate = false }: { 
   onLocationFound: (lat: number, lng: number) => void; 
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+  autoLocate?: boolean;
 }) {
   const map = useMap();
+  const [hasAutoLocated, setHasAutoLocated] = useState(false);
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -87,6 +90,18 @@ function LocationButton({ onLocationFound, isLoading, setIsLoading }: {
     );
   };
 
+  // Auto-locate saat pertama kali halaman dimuat
+  useEffect(() => {
+    if (autoLocate && !hasAutoLocated && !isLoading) {
+      setHasAutoLocated(true);
+      // Delay sebentar agar map siap
+      const timer = setTimeout(() => {
+        handleGetLocation();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoLocate, hasAutoLocated, isLoading]);
+
   return (
     <button
       onClick={handleGetLocation}
@@ -103,7 +118,7 @@ function LocationButton({ onLocationFound, isLoading, setIsLoading }: {
   );
 }
 
-export default function MapPicker({ onLocationSelect, initialLocation }: MapPickerProps) {
+export default function MapPicker({ onLocationSelect, initialLocation, autoLocate = true }: MapPickerProps) {
   const defaultCenter: [number, number] = initialLocation 
     ? [initialLocation.lat, initialLocation.lng] 
     : [-2.548926, 118.014863];
@@ -168,6 +183,7 @@ export default function MapPicker({ onLocationSelect, initialLocation }: MapPick
           onLocationFound={handleLocationFound} 
           isLoading={isLocating}
           setIsLoading={setIsLocating}
+          autoLocate={autoLocate}
         />
       </MapContainer>
       
