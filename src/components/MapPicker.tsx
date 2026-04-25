@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin } from 'lucide-react';
-import { cn } from '../lib/utils'; // ← IMPORT CN
+import { MapPin, LocateFixed, Navigation } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 // Fix for default marker icons in Leaflet with React
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -37,12 +37,71 @@ function LocationMarker({ onLocationSelect, initialLocation }: { onLocationSelec
   );
 }
 
+// Komponen untuk tombol "Gunakan Lokasi Saat Ini"
+function LocationButton({ onLocationFound, isLoading }: { onLocationFound: (lat: number, lng: number) => void; isLoading: boolean }) {
+  const map = useMap();
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Browser Anda tidak mendukung geolokasi");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        map.flyTo([latitude, longitude], 16);
+        onLocationFound(latitude, longitude);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        let errorMessage = "Tidak dapat mengambil lokasi Anda. ";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += "Izin lokasi ditolak. Silakan izinkan akses lokasi di browser Anda.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += "Informasi lokasi tidak tersedia.";
+            break;
+          case error.TIMEOUT:
+            errorMessage += "Waktu permintaan lokasi habis.";
+            break;
+          default:
+            errorMessage += "Terjadi kesalahan.";
+        }
+        alert(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
+  return (
+    <button
+      onClick={handleGetLocation}
+      disabled={isLoading}
+      className="absolute bottom-3 right-3 z-[1000] bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors disabled:opacity-50"
+      title="Gunakan lokasi saya saat ini"
+    >
+      {isLoading ? (
+        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      ) : (
+        <LocateFixed size={20} className="text-blue-600" />
+      )}
+    </button>
+  );
+}
+
 export default function MapPicker({ onLocationSelect, initialLocation }: MapPickerProps) {
   const defaultCenter: [number, number] = initialLocation 
     ? [initialLocation.lat, initialLocation.lng] 
     : [-2.548926, 118.014863]; // Default ke tengah Indonesia
 
   const [mapType, setMapType] = useState<'street' | 'satellite'>('street');
+  const [isLocating, setIsLocating] = useState(false);
 
   // URL untuk berbagai tile layer
   const tileLayers = {
@@ -53,6 +112,20 @@ export default function MapPicker({ onLocationSelect, initialLocation }: MapPick
   const attributions = {
     street: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     satellite: '&copy; <a href="https://www.esri.com">Esri</a> | Maxar, Earthstar Geographics, and the GIS User Community',
+  };
+
+  const handleLocationFound = (lat: number, lng: number) => {
+    setIsLocating(false);
+    onLocationSelect(lat, lng);
+  };
+
+  const handleGetLocationStart = () => {
+    setIsLocating(true);
+  };
+
+  // Wrapper untuk menangani loading state
+  const handleGetLocation = () => {
+    // Loading state akan diatur di komponen LocationButton
   };
 
   return (
@@ -94,10 +167,52 @@ export default function MapPicker({ onLocationSelect, initialLocation }: MapPick
           attribution={attributions[mapType]}
         />
         <LocationMarker onLocationSelect={onLocationSelect} initialLocation={initialLocation} />
+        <LocationButton onLocationFound={handleLocationFound} isLoading={isLocating} />
       </MapContainer>
+
+      {/* Fungsi untuk trigger location dari luar MapContainer */}
+      <button
+        onClick={() => {
+          setIsLocating(true);
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const { latitude, longitude } = position.coords;
+                handleLocationFound(latitude, longitude);
+                // Kita perlu akses ke map instance, tapi karena LocationButton sudah handle, kita trigger event
+                const mapElement = document.querySelector('.leaflet-container');
+                if (mapElement && (mapElement as any)._leaflet_map) {
+                  const map = (mapElement as any)._leaflet_map;
+                  map.flyTo([latitude, longitude], 16);
+                }
+                setIsLocating(false);
+              },
+              (error) => {
+                console.error(error);
+                setIsLocating(false);
+                let errorMessage = "Tidak dapat mengambil lokasi. ";
+                if (error.code === 1) errorMessage += "Izin lokasi ditolak.";
+                else errorMessage += "Silakan coba lagi.";
+                alert(errorMessage);
+              }
+            );
+          } else {
+            setIsLocating(false);
+            alert("Browser Anda tidak mendukung geolokasi");
+          }
+        }}
+        className="absolute bottom-3 right-3 z-[1000] bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors flex items-center gap-2"
+        title="Gunakan lokasi saya saat ini"
+      >
+        {isLocating ? (
+          <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <LocateFixed size={20} className="text-blue-600" />
+        )}
+      </button>
       
       <p className="text-xs text-slate-500 mt-2 text-center">
-        💡 Klik pada peta untuk menandai lokasi rumah Anda. Gunakan tombol di atas untuk beralih antara peta biasa dan satelit.
+        💡 Klik pada peta untuk menandai lokasi rumah Anda. Klik tombol <LocateFixed size={12} className="inline" /> untuk menggunakan lokasi otomatis.
       </p>
     </div>
   );
