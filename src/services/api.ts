@@ -1,7 +1,7 @@
 // Service to interact with Google Apps Script Backend
 
 // ✅ Google Apps Script URL yang SUDAH TERBUKTI BERHASIL
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJhIAA7341jWkMqgqh1EnK9rNEBqFZcAv7zQRi8xSK6QvVpH1tTouyC0Sm5GX1Z0yZDA/exec";
+const GAS_WEB_APP_URL = "/api/gas-proxy";
 
 export interface FormField {
   id: string;
