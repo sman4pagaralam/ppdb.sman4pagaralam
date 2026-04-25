@@ -1175,29 +1175,165 @@ export default function AdminDashboard() {
 )}
       </div>
 
-      {/* Detail Modal */}
-      <AnimatePresence>
-        {selectedStudent && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className={cn("w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl", isDarkMode ? "bg-slate-800 text-white" : "bg-white text-slate-900")}
-            >
-              <div className={cn("sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b", isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200")}>
-                <h2 className="text-xl font-bold">Detail Pendaftar</h2>
-                <button onClick={() => setSelectedStudent(null)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
-                  <X size={20} />
-                </button>
+      {/* Detail Modal - FULL VERSION */}
+<AnimatePresence>
+  {selectedStudent && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className={cn("w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl", isDarkMode ? "bg-slate-800 text-white" : "bg-white text-slate-900")}
+      >
+        <div className={cn("sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b", isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200")}>
+          <h2 className="text-xl font-bold">Detail Pendaftar</h2>
+          <button onClick={() => setSelectedStudent(null)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Data Section */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold border-b pb-2 mb-4 dark:border-slate-700">Data Pendaftar</h3>
+                <dl className="grid grid-cols-1 gap-y-3 text-sm">
+                  <div className="grid grid-cols-3 gap-4">
+                    <dt className="text-slate-500 dark:text-slate-400">No. Pendaftaran</dt>
+                    <dd className="col-span-2 font-medium">{selectedStudent['No Pendaftaran']}</dd>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <dt className="text-slate-500 dark:text-slate-400">Status</dt>
+                    <dd className="col-span-2">{getStatusBadge(selectedStudent.Status)}</dd>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <dt className="text-slate-500 dark:text-slate-400">Waktu Daftar</dt>
+                    <dd className="col-span-2 font-medium">{selectedStudent.Timestamp ? new Date(selectedStudent.Timestamp).toLocaleString() : '-'}</dd>
+                  </div>
+                  
+                  {/* Dynamic Fields from Settings */}
+                  {settings?.formFields?.filter(f => f.type !== 'file').map(field => {
+                    const value = getFieldValue(selectedStudent, field.id);
+                    return (
+                      <React.Fragment key={field.id}>
+                        <div className="grid grid-cols-3 gap-4">
+                          <dt className="text-slate-500 dark:text-slate-400">{field.label}</dt>
+                          <dd className="col-span-2 font-medium">
+                            {field.id === 'Tanggal Lahir' ? formatDate(value) : (value || '-')}
+                          </dd>
+                        </div>
+                        {field.id === 'Tanggal Lahir' && (
+                          <div className="grid grid-cols-3 gap-4">
+                            <dt className="text-slate-500 dark:text-slate-400">Usia</dt>
+                            <dd className="col-span-2 font-medium">{calculateAge(value)}</dd>
+                          </div>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                  
+                  {/* Additional fields */}
+                  {selectedStudent['Koordinat Lokasi'] && (
+                    <div className="grid grid-cols-3 gap-4 mt-2">
+                      <dt className="text-slate-500 dark:text-slate-400">Koordinat Lokasi</dt>
+                      <dd className="col-span-2 font-medium">
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${selectedStudent['Koordinat Lokasi']}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline flex items-center gap-1"
+                        >
+                          {selectedStudent['Koordinat Lokasi']} ↗
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  
+                  {selectedStudent['Jarak ke Sekolah (km)'] && (
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-slate-500 dark:text-slate-400">Jarak ke Sekolah</dt>
+                      <dd className="col-span-2 font-medium text-blue-700">{selectedStudent['Jarak ke Sekolah (km)']} km</dd>
+                    </div>
+                  )}
+                  
+                  {selectedStudent['Alasan Penolakan'] && (
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-slate-500 dark:text-slate-400">Alasan Penolakan</dt>
+                      <dd className="col-span-2 font-medium text-red-600">{selectedStudent['Alasan Penolakan']}</dd>
+                    </div>
+                  )}
+                </dl>
               </div>
-              <div className="p-6">
-                <p>Detail pendaftar: {safeToString(selectedStudent['No Pendaftaran'])} - {getFieldValue(selectedStudent, 'Nama Lengkap')}</p>
+              
+              <div className="pt-4 flex gap-3">
+                {safeToString(selectedStudent.Status) !== 'Lulus' && (
+                  <button 
+                    onClick={() => handleUpdateStatus(selectedStudent['No Pendaftaran'], 'Lulus')} 
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Ubah ke Lulus
+                  </button>
+                )}
+                {safeToString(selectedStudent.Status) !== 'Tidak Lulus' && (
+                  <button 
+                    onClick={() => handleUpdateStatus(selectedStudent['No Pendaftaran'], 'Tidak Lulus')} 
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Ubah ke Tidak Lulus
+                  </button>
+                )}
               </div>
-            </motion.div>
+            </div>
+
+            {/* Files Section */}
+            <div>
+              <h3 className="text-lg font-semibold border-b pb-2 mb-4 dark:border-slate-700">Berkas Upload</h3>
+              <div className="space-y-4">
+                {settings?.formFields?.filter(f => f.type === 'file').map(field => {
+                  const fileUrl = getFieldValue(selectedStudent, field.id);
+                  return (
+                    <div key={field.id} className={cn("p-4 rounded-xl border", isDarkMode ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-slate-50")}>
+                      <p className="text-sm font-medium mb-2">{field.label}</p>
+                      {fileUrl && fileUrl !== '-' ? (
+                        fileUrl.startsWith('data:image') ? (
+                          <img src={fileUrl} alt={field.label} className="w-full h-32 object-cover rounded-lg border" />
+                        ) : fileUrl.startsWith('https://drive.google.com') ? (
+                          <a 
+                            href={fileUrl} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="text-blue-500 hover:underline text-sm flex items-center gap-2"
+                          >
+                            <FileText size={16} /> Lihat {field.label} (Google Drive)
+                          </a>
+                        ) : (
+                          <a 
+                            href={fileUrl} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="text-blue-500 hover:underline text-sm flex items-center gap-2"
+                          >
+                            <FileText size={16} /> Buka {field.label}
+                          </a>
+                        )
+                      ) : (
+                        <span className="text-sm text-slate-500">Tidak ada file</span>
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {(!settings?.formFields?.filter(f => f.type === 'file') || settings?.formFields?.filter(f => f.type === 'file').length === 0) && (
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 text-center text-slate-500">
+                    Tidak ada berkas yang diupload
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      </motion.div>
     </div>
-  );
-}
+  )}
+</AnimatePresence>
