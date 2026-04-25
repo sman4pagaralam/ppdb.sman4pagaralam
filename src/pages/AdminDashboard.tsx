@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Filter, Download, Printer, CheckCircle, XCircle, Clock, FileText, Moon, Sun, Loader2, LogOut, Eye, X, Settings, LayoutDashboard, RefreshCw } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -71,6 +71,14 @@ const calculateAge = (dateString: string) => {
   return `${years} Tahun ${months} Bulan ${days} Hari`;
 };
 
+// Helper function untuk mengamankan string
+const safeToString = (value: any): string => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return value.toString();
+  return '';
+};
+
 export default function AdminDashboard() {
   const { settings, refreshSettings } = useSettings();
   const [data, setData] = useState<AdminData[]>([]);
@@ -89,17 +97,16 @@ export default function AdminDashboard() {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [localSettings, setLocalSettings] = useState(settings);
 
-  const getFieldValue = (item: any, fieldId: string) => {
-    // PENTING: Tambahkan guard clause untuk item yang null/undefined
-    if (!item) return '-';
+  const getFieldValue = useCallback((item: any, fieldId: string): string => {
+    if (!item) return '';
     
     const field = settings?.formFields?.find(f => f.id === fieldId);
     if (field && item[field.label] !== undefined && item[field.label] !== null) {
-      return item[field.label];
+      return safeToString(item[field.label]);
     }
-    // Fallback ke fieldId
-    return item[fieldId] !== undefined && item[fieldId] !== null ? item[fieldId] : '-';
-  };
+    
+    return safeToString(item[fieldId]);
+  }, [settings]);
 
   useEffect(() => {
     if (settings) {
@@ -120,12 +127,11 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const result = await getRegistrations();
-      // Pastikan result adalah array
       setData(Array.isArray(result) ? result : []);
     } catch (error) {
       console.error('Error fetching data:', error);
       Swal.fire('Error', 'Gagal mengambil data dari server', 'error');
-      setData([]); // Set ke array kosong jika error
+      setData([]);
     } finally {
       setIsLoading(false);
     }
@@ -262,7 +268,6 @@ export default function AdminDashboard() {
     
     const doc = new jsPDF();
     
-    // Header
     doc.setFillColor(37, 99, 235);
     doc.rect(0, 0, 210, 40, 'F');
     doc.setTextColor(255, 255, 255);
@@ -273,7 +278,6 @@ export default function AdminDashboard() {
     doc.setFont("helvetica", "normal");
     doc.text(settings?.namaSekolah || "Sekolah Dasar", 105, 30, { align: "center" });
 
-    // Content
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
     
@@ -283,7 +287,7 @@ export default function AdminDashboard() {
     doc.setFont("helvetica", "bold");
     doc.text("No. Pendaftaran:", 20, startY);
     doc.setFont("helvetica", "normal");
-    doc.text(student['No Pendaftaran'] || '-', 70, startY);
+    doc.text(safeToString(student['No Pendaftaran']), 70, startY);
 
     doc.setFont("helvetica", "bold");
     doc.text("Nama Lengkap:", 20, startY + lineHeight);
@@ -310,9 +314,8 @@ export default function AdminDashboard() {
     doc.setFont("helvetica", "bold");
     doc.text("Status:", 20, startY + lineHeight * 5);
     doc.setFont("helvetica", "normal");
-    doc.text(student.Status || '-', 70, startY + lineHeight * 5);
+    doc.text(safeToString(student.Status), 70, startY + lineHeight * 5);
 
-    // Footer
     doc.setDrawColor(200, 200, 200);
     doc.line(20, startY + lineHeight * 7, 190, startY + lineHeight * 7);
     doc.setFontSize(10);
@@ -320,7 +323,6 @@ export default function AdminDashboard() {
     doc.text(`Kartu ini adalah bukti sah pendaftaran PPDB ${settings?.namaSekolah || 'Sekolah'}.`, 105, startY + lineHeight * 8, { align: "center" });
     doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 105, startY + lineHeight * 8.5, { align: "center" });
 
-    // Box
     doc.setDrawColor(37, 99, 235);
     doc.setLineWidth(1);
     doc.rect(10, 10, 190, 150);
@@ -328,56 +330,48 @@ export default function AdminDashboard() {
     doc.save(`Kartu_PPDB_${student['No Pendaftaran']}.pdf`);
   };
 
-  // PERBAIKAN UTAMA: Filter data dengan guard clauses yang aman
+  // PERBAIKAN UTAMA: Filter data dengan safeToString
   const filteredData = useMemo(() => {
-    // Pastikan data adalah array
     if (!Array.isArray(data) || data.length === 0) {
       return [];
     }
     
-    // Jika searchTerm kosong dan statusFilter 'Semua', return data langsung
     if (searchTerm === '' && statusFilter === 'Semua') {
       return data;
     }
     
-    const searchLower = searchTerm.toLowerCase().trim();
+    const searchLower = safeToString(searchTerm).toLowerCase().trim();
     
     return data.filter(item => {
-      // Guard clause untuk item yang null/undefined
       if (!item) return false;
       
-      // Ambil nilai dengan aman
-      const nama = getFieldValue(item, 'Nama Lengkap') || '';
-      const nik = getFieldValue(item, 'NIK') || '';
-      const no = item['No Pendaftaran'] || '';
+      const nama = safeToString(getFieldValue(item, 'Nama Lengkap')).toLowerCase();
+      const nik = safeToString(getFieldValue(item, 'NIK'));
+      const noPendaftaran = safeToString(item['No Pendaftaran']).toLowerCase();
       
-      // Cek kecocokan search
       let matchesSearch = true;
       if (searchLower !== '') {
-        matchesSearch = nama.toLowerCase().includes(searchLower) || 
+        matchesSearch = nama.includes(searchLower) || 
                         nik.includes(searchLower) ||
-                        no.toLowerCase().includes(searchLower);
+                        noPendaftaran.includes(searchLower);
       }
       
-      // Cek kecocokan status filter
       let matchesFilter = true;
       if (statusFilter !== 'Semua') {
-        matchesFilter = item.Status === statusFilter;
+        matchesFilter = safeToString(item.Status) === statusFilter;
       }
       
       return matchesSearch && matchesFilter;
     });
-  }, [data, searchTerm, statusFilter]);
+  }, [data, searchTerm, statusFilter, getFieldValue]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getStatusBadge = (status: string) => {
-    if (!status) {
-      return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200"><Clock size={12} /> Proses</span>;
-    }
+    const safeStatus = safeToString(status);
     
-    switch (status) {
+    switch (safeStatus) {
       case 'Lulus':
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200"><CheckCircle size={12} /> Lulus</span>;
       case 'Tidak Lulus':
@@ -386,14 +380,6 @@ export default function AdminDashboard() {
         return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200"><Clock size={12} /> Proses</span>;
     }
   };
-
-  // Cek apakah ada error di getFieldValue - tambahkan console.log untuk debug
-  React.useEffect(() => {
-    if (searchTerm !== '') {
-      console.log('Searching for:', searchTerm);
-      console.log('Filtered data count:', filteredData.length);
-    }
-  }, [searchTerm, filteredData]);
 
   return (
     <div className={cn("min-h-screen transition-colors duration-300", isDarkMode ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-900")}>
@@ -454,15 +440,15 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               {[
                 { label: 'Total Pendaftar', value: Array.isArray(data) ? data.length : 0, color: 'bg-blue-500 text-white border-blue-600 shadow-md' },
-                { label: 'Lulus', value: Array.isArray(data) ? data.filter(item => item && item.Status === 'Lulus').length : 0, color: 'bg-green-500 text-white border-green-600 shadow-md' },
-                { label: 'Tidak Lulus', value: Array.isArray(data) ? data.filter(item => item && item.Status === 'Tidak Lulus').length : 0, color: 'bg-red-500 text-white border-red-600 shadow-md' },
+                { label: 'Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Lulus').length : 0, color: 'bg-green-500 text-white border-green-600 shadow-md' },
+                { label: 'Tidak Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Tidak Lulus').length : 0, color: 'bg-red-500 text-white border-red-600 shadow-md' },
                 { label: 'Laki-laki', value: Array.isArray(data) ? data.filter(item => { 
-                  const jk = item ? getFieldValue(item, 'Jenis Kelamin') : ''; 
-                  return jk && jk.toLowerCase().includes('laki'); 
+                  const jk = item ? safeToString(getFieldValue(item, 'Jenis Kelamin')).toLowerCase() : ''; 
+                  return jk.includes('laki'); 
                 }).length : 0, color: 'bg-indigo-500 text-white border-indigo-600 shadow-md' },
                 { label: 'Perempuan', value: Array.isArray(data) ? data.filter(item => { 
-                  const jk = item ? getFieldValue(item, 'Jenis Kelamin') : ''; 
-                  return jk && jk.toLowerCase().includes('perempuan'); 
+                  const jk = item ? safeToString(getFieldValue(item, 'Jenis Kelamin')).toLowerCase() : ''; 
+                  return jk.includes('perempuan'); 
                 }).length : 0, color: 'bg-pink-500 text-white border-pink-600 shadow-md' },
               ].map((stat, idx) => (
                 <div key={idx} className={cn("p-4 rounded-xl border flex flex-col items-center justify-center text-center", stat.color)}>
@@ -579,7 +565,7 @@ export default function AdminDashboard() {
                           className={cn("hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors")}
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
-                            {item?.['No Pendaftaran'] || '-'}
+                            {safeToString(item?.['No Pendaftaran'])}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium">{getFieldValue(item, 'Nama Lengkap') || '-'}</div>
@@ -608,7 +594,7 @@ export default function AdminDashboard() {
                               >
                                 <Eye size={18} />
                               </button>
-                              {item?.Status !== 'Lulus' && (
+                              {safeToString(item?.Status) !== 'Lulus' && (
                                 <button 
                                   onClick={() => handleUpdateStatus(item['No Pendaftaran'], 'Lulus')} 
                                   className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 px-2 py-1 rounded transition-colors" 
@@ -617,7 +603,7 @@ export default function AdminDashboard() {
                                   <CheckCircle size={18} />
                                 </button>
                               )}
-                              {item?.Status !== 'Tidak Lulus' && (
+                              {safeToString(item?.Status) !== 'Tidak Lulus' && (
                                 <button 
                                   onClick={() => handleUpdateStatus(item['No Pendaftaran'], 'Tidak Lulus')} 
                                   className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 px-2 py-1 rounded transition-colors" 
@@ -671,19 +657,17 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'settings' && localSettings && (
-          // ... (bagian settings tetap sama seperti kode Anda)
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <div className={cn("rounded-xl shadow-sm border p-6", isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200")}>
-              <p className="text-center text-slate-500">Pengaturan tersedia di sini</p>
+              <p className="text-center text-slate-500">Pengaturan tersedia di sini (sesuaikan dengan kebutuhan Anda)</p>
             </div>
           </motion.div>
         )}
       </div>
 
-      {/* Detail Modal - tetap sama */}
+      {/* Detail Modal - Simplified */}
       <AnimatePresence>
         {selectedStudent && (
-          // ... (modal detail tetap sama)
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -698,5 +682,12 @@ export default function AdminDashboard() {
                 </button>
               </div>
               <div className="p-6">
-                <p>Detail pendaftar akan muncul di sini</p>
-              </div
+                <p>Detail pendaftar: {safeToString(selectedStudent['No Pendaftaran'])} - {getFieldValue(selectedStudent, 'Nama Lengkap')}</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
