@@ -25,9 +25,9 @@ const printProof = (data: any, settings: any) => {
   let y = 15;
 
   // HEADER
-  doc.setFillColor(37, 99, 235);
-  doc.rect(0, 0, 210, 55, 'F');
-  doc.setTextColor(255, 255, 255);
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, 210, 200, 'F');
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
   doc.text("BUKTI PENDAFTARAN PPDB", 105, 25, { align: "center" });
