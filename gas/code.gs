@@ -28,7 +28,7 @@ const DEFAULT_FORM_FIELDS = [
 ];
 
 const DEFAULT_SETTINGS = {
-  namaSekolah: "SMAN 4 PAGAR ALAM",
+  namaSekolah: "SDN Harapan Bangsa",
   alamat: "Jl. Pendidikan No. 123, Kota Pelajar, Indonesia 12345",
   telepon: "(021) 1234-5678",
   email: "info@sdnharapanbangsa.sch.id",
@@ -36,6 +36,21 @@ const DEFAULT_SETTINGS = {
   statusPendaftaran: "Buka",
   formFields: JSON.stringify(DEFAULT_FORM_FIELDS)
 };
+
+// Helper function untuk menambahkan CORS headers
+function addCORSHeaders(response) {
+  return response
+    .setHeader('Access-Control-Allow-Origin', '*')
+    .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    .setHeader('Access-Control-Max-Age', '86400');
+}
+
+// Fungsi untuk mengirim response dengan CORS
+function sendJSONResponse(data) {
+  return addCORSHeaders(ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON));
+}
 
 function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -56,7 +71,7 @@ function setup() {
   if (!adminSheet) {
     adminSheet = ss.insertSheet(ADMIN_SHEET_NAME);
     adminSheet.appendRow(["Username", "Password"]);
-    adminSheet.appendRow(["admin", "admin123"]); // Default credentials
+    adminSheet.appendRow(["admin", "admin123"]);
     adminSheet.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#e0e0e0");
   }
 
@@ -76,41 +91,56 @@ function setup() {
   if (!folders.hasNext()) {
     DriveApp.createFolder(FOLDER_NAME);
   }
+  
+  return sendJSONResponse({ status: "success", message: "Setup completed" });
 }
 
 function doPost(e) {
   try {
+    // Handle preflight OPTIONS request
+    if (e && e.method === 'OPTIONS') {
+      return doOptions();
+    }
+    
     const data = JSON.parse(e.postData.contents);
     
-    if (data.action === "login") return handleLogin(data.username, data.password);
-    if (data.action === "checkStatus") return handleCheckStatus(data.noPendaftaran);
-    if (data.action === "updateStatus") return updateStatus(data.noPendaftaran, data.newStatus);
-    if (data.action === "updateSettings") return handleUpdateSettings(data.settings);
+    let result;
+    if (data.action === "login") result = handleLogin(data.username, data.password);
+    else if (data.action === "checkStatus") result = handleCheckStatus(data.noPendaftaran);
+    else if (data.action === "updateStatus") result = updateStatus(data.noPendaftaran, data.newStatus);
+    else if (data.action === "updateSettings") result = handleUpdateSettings(data.settings);
+    else result = handleRegistration(data);
     
-    return handleRegistration(data);
+    return sendJSONResponse(result);
     
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
+    return sendJSONResponse({
       status: "error",
       message: error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
   }
 }
 
 function doGet(e) {
   try {
-    if (e.parameter.action === "getSettings") {
-      return handleGetSettings();
+    // Handle preflight OPTIONS request
+    if (e && e.method === 'OPTIONS') {
+      return doOptions();
+    }
+    
+    if (e && e.parameter && e.parameter.action === "getSettings") {
+      const settings = handleGetSettings();
+      return sendJSONResponse(settings);
     }
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName(SHEET_NAME);
     
     if (!sheet) {
-      return ContentService.createTextOutput(JSON.stringify({
+      return sendJSONResponse({
         status: "error",
         message: "Sheet not found"
-      })).setMimeType(ContentService.MimeType.JSON);
+      });
     }
     
     const data = sheet.getDataRange().getValues();
@@ -121,27 +151,26 @@ function doGet(e) {
       let obj = {};
       headers.forEach((header, index) => {
         if (row[index] instanceof Date) {
-           obj[header] = row[index].toISOString();
+          obj[header] = row[index].toISOString();
         } else {
-           obj[header] = row[index];
+          obj[header] = row[index];
         }
       });
       return obj;
     });
     
-    // Sort by timestamp descending
     result.sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp));
     
-    return ContentService.createTextOutput(JSON.stringify({
+    return sendJSONResponse({
       status: "success",
       data: result
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
     
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
+    return sendJSONResponse({
       status: "error",
       message: error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
   }
 }
 
@@ -149,22 +178,29 @@ function handleGetSettings() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SETTINGS_SHEET_NAME);
   if (!sheet) {
-    return ContentService.createTextOutput(JSON.stringify({
+    return {
       status: "success",
       data: DEFAULT_SETTINGS
-    })).setMimeType(ContentService.MimeType.JSON);
+    };
   }
 
   const data = sheet.getDataRange().getValues();
   const settings = {};
   for (let i = 1; i < data.length; i++) {
-    settings[data[i][0]] = data[i][1];
+    let value = data[i][1];
+    // Parse JSON jika diperlukan
+    if (data[i][0] === "formFields" && typeof value === 'string') {
+      try {
+        value = JSON.parse(value);
+      } catch(e) {}
+    }
+    settings[data[i][0]] = value;
   }
 
-  return ContentService.createTextOutput(JSON.stringify({
+  return {
     status: "success",
     data: settings
-  })).setMimeType(ContentService.MimeType.JSON);
+  };
 }
 
 function handleUpdateSettings(newSettings) {
@@ -178,22 +214,28 @@ function handleUpdateSettings(newSettings) {
     let found = false;
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === key) {
-        sheet.getRange(i + 1, 2).setValue(
-          typeof newSettings[key] === 'object' ? JSON.stringify(newSettings[key]) : newSettings[key]
-        );
+        let value = newSettings[key];
+        if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
+        sheet.getRange(i + 1, 2).setValue(value);
         found = true;
         break;
       }
     }
     if (!found) {
-      sheet.appendRow([key, typeof newSettings[key] === 'object' ? JSON.stringify(newSettings[key]) : newSettings[key]]);
+      let value = newSettings[key];
+      if (typeof value === 'object') {
+        value = JSON.stringify(value);
+      }
+      sheet.appendRow([key, value]);
     }
   });
 
-  return ContentService.createTextOutput(JSON.stringify({
+  return {
     status: "success",
     message: "Pengaturan berhasil disimpan"
-  })).setMimeType(ContentService.MimeType.JSON);
+  };
 }
 
 function handleRegistration(data) {
@@ -214,10 +256,10 @@ function handleRegistration(data) {
   }
 
   if (!isOpen) {
-    return ContentService.createTextOutput(JSON.stringify({
+    return {
       status: "error",
       message: "Pendaftaran sedang ditutup."
-    })).setMimeType(ContentService.MimeType.JSON);
+    };
   }
 
   let headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -227,7 +269,6 @@ function handleRegistration(data) {
   const lastRow = sheet.getLastRow();
   let nextId = 1;
   if (lastRow > 1) {
-    // Find No Pendaftaran column index
     const noRegIdx = headers.indexOf("No Pendaftaran");
     if (noRegIdx !== -1) {
       const lastNo = sheet.getRange(lastRow, noRegIdx + 1).getValue();
@@ -242,7 +283,6 @@ function handleRegistration(data) {
   const folder = getOrCreateFolder(FOLDER_NAME);
   const rowData = new Array(headers.length).fill("");
   
-  // Fill known headers
   headers.forEach((header, index) => {
     if (header === "Timestamp") rowData[index] = new Date();
     else if (header === "No Pendaftaran") rowData[index] = noPendaftaran;
@@ -256,7 +296,6 @@ function handleRegistration(data) {
     }
   });
 
-  // Check for new fields in data that aren't in headers
   Object.keys(data).forEach(key => {
     if (key !== "action" && !headers.includes(key)) {
       headers.push(key);
@@ -272,14 +311,12 @@ function handleRegistration(data) {
   
   sheet.appendRow(rowData);
   
-  return ContentService.createTextOutput(JSON.stringify({
+  return {
     status: "success",
     message: "Pendaftaran berhasil",
     noPendaftaran: noPendaftaran
-  })).setMimeType(ContentService.MimeType.JSON);
+  };
 }
-
-// ... (keep handleLogin, handleCheckStatus, updateStatus, getOrCreateFolder, uploadFile, doOptions as they were)
 
 function handleLogin(username, password) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -288,10 +325,10 @@ function handleLogin(username, password) {
   const data = sheet.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === username && data[i][1] === password) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Login berhasil" })).setMimeType(ContentService.MimeType.JSON);
+      return { status: "success", message: "Login berhasil" };
     }
   }
-  return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Username atau password salah" })).setMimeType(ContentService.MimeType.JSON);
+  return { status: "error", message: "Username atau password salah" };
 }
 
 function handleCheckStatus(noPendaftaran) {
@@ -301,22 +338,20 @@ function handleCheckStatus(noPendaftaran) {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
   const noRegIdx = headers.indexOf("No Pendaftaran");
-  const namaIdx = headers.indexOf("Nama Lengkap");
   const statusIdx = headers.indexOf("Status");
 
   for (let i = 1; i < data.length; i++) {
     if (data[i][noRegIdx] === noPendaftaran) {
-      return ContentService.createTextOutput(JSON.stringify({
+      return {
         status: "success",
         data: {
           noPendaftaran: data[i][noRegIdx],
-          namaLengkap: namaIdx !== -1 ? data[i][namaIdx] : "Siswa",
           status: statusIdx !== -1 ? data[i][statusIdx] : "Proses"
         }
-      })).setMimeType(ContentService.MimeType.JSON);
+      };
     }
   }
-  return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Nomor pendaftaran tidak ditemukan" })).setMimeType(ContentService.MimeType.JSON);
+  return { status: "error", message: "Nomor pendaftaran tidak ditemukan" };
 }
 
 function updateStatus(noPendaftaran, newStatus) {
@@ -330,10 +365,10 @@ function updateStatus(noPendaftaran, newStatus) {
   for (let i = 1; i < data.length; i++) {
     if (data[i][noRegIdx] === noPendaftaran) {
       sheet.getRange(i + 1, statusIdx + 1).setValue(newStatus);
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Status berhasil diupdate" })).setMimeType(ContentService.MimeType.JSON);
+      return { status: "success", message: "Status berhasil diupdate" };
     }
   }
-  return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Data tidak ditemukan" })).setMimeType(ContentService.MimeType.JSON);
+  return { status: "error", message: "Data tidak ditemukan" };
 }
 
 function getOrCreateFolder(folderName) {
@@ -353,15 +388,11 @@ function uploadFile(base64Data, filename, folder) {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     return file.getUrl();
   } catch (e) {
-    return "Error uploading file";
+    return "Error uploading file: " + e.toString();
   }
 }
 
 function doOptions(e) {
-  return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.TEXT).setHeaders({
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Max-Age": "86400"
-  });
+  return addCORSHeaders(ContentService.createTextOutput(""))
+    .setMimeType(ContentService.MimeType.TEXT);
 }
