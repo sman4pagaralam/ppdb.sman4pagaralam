@@ -59,7 +59,7 @@ const printProof = (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   
   // Garis bawah - DITEMPATKAN DEKAT DENGAN TULISAN DOMISILI
-  let garisBawahY = y + 26; // Dari 28 diubah ke 26 (lebih naik)
+  let garisBawahY = y + 22; // Dari 28 diubah ke 26 (lebih naik)
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 12; // Jarak setelah garis
 
