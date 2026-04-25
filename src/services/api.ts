@@ -1,7 +1,7 @@
 // Service to interact with Google Apps Script Backend
 
 // To use the real backend, replace this URL with your deployed Google Apps Script Web App URL
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyQWHUNmH61L4ebYlICStyJEb8CapBH8akdiTQ8SlPYj1jHuYnuZTDAn2vbswB9I1lTYw/exec"; 
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyWSzoGL9LQFM4IiS0V6XEvRqNQQe1yhU00wr-_ITXhkQ-ZGSKibIouMpBT5gTZtsE0wA/exec"; 
 
 // Helper function untuk fetch dengan CORS yang benar
 const fetchWithCORS = async (url: string, options: RequestInit = {}) => {
