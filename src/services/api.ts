@@ -269,3 +269,43 @@ export const loginAdmin = async (username: string, password: string) => {
   }
   return { status: "error", message: "Username atau password salah" };
 };
+
+// ========== FUNGSI BARU: getRegistrationByNo ==========
+// Fungsi untuk mengambil data pendaftaran lengkap berdasarkan nomor pendaftaran
+export const getRegistrationByNo = async (noPendaftaran: string): Promise<AdminData | null> => {
+  try {
+    // Coba ambil dari API terlebih dahulu
+    const response = await fetch(`${GAS_WEB_APP_URL}?action=getRegistration&noPendaftaran=${encodeURIComponent(noPendaftaran)}&t=${Date.now()}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      if (result.status === "success" && result.data) {
+        return result.data;
+      }
+    }
+    
+    // Jika API gagal, cari dari fallback data
+    const localData = fallbackData.find(item => item['No Pendaftaran'] === noPendaftaran);
+    if (localData) {
+      return localData;
+    }
+    
+    // Jika tidak ditemukan di kedua sumber
+    return null;
+  } catch (error) {
+    console.warn("Error fetching registration by number:", error);
+    
+    // Coba cari dari fallback data jika ada error jaringan
+    const localData = fallbackData.find(item => item['No Pendaftaran'] === noPendaftaran);
+    if (localData) {
+      return localData;
+    }
+    
+    return null;
+  }
+};
