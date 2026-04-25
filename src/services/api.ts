@@ -3,6 +3,36 @@
 // To use the real backend, replace this URL with your deployed Google Apps Script Web App URL
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyQWHUNmH61L4ebYlICStyJEb8CapBH8akdiTQ8SlPYj1jHuYnuZTDAn2vbswB9I1lTYw/exec"; 
 
+// Helper function untuk fetch dengan CORS yang benar
+const fetchWithCORS = async (url: string, options: RequestInit = {}) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 detik timeout
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      mode: 'cors',
+      credentials: 'omit',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error('Fetch error:', error);
+    throw error;
+  }
+};
+
 export interface FormField {
   id: string;
   label: string;
@@ -78,11 +108,11 @@ const getInitialMockSettings = (): AppSettings => {
     tanggalPengumuman: "",
     logoSekolah: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2022&auto=format&fit=crop",
     tahunPendaftaran: new Date().getFullYear().toString(),
-    koordinatSekolah: "-6.200000, 106.816666", // Default to Jakarta
-    sambutanKepalaSekolah: "Selamat datang di website resmi PPDB SDN Harapan Bangsa. Kami berkomitmen untuk memberikan pelayanan pendidikan terbaik bagi putra-putri Anda. Mari bergabung bersama kami untuk mencetak generasi penerus bangsa yang cerdas, berakhlak mulia, dan berprestasi.",
+    koordinatSekolah: "-6.200000, 106.816666",
+    sambutanKepalaSekolah: "Selamat datang di website resmi PPDB SDN Harapan Bangsa. Kami berkomitmen untuk memberikan pelayanan pendidikan terbaik bagi putra-putri Anda.",
     fotoKepalaSekolah: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop",
     visiSekolah: "Menjadi sekolah dasar unggulan yang menghasilkan lulusan berakhlak mulia, cerdas, terampil, dan berwawasan lingkungan.",
-    misiSekolah: "1. Menyelenggarakan pembelajaran yang aktif, inovatif, kreatif, efektif, dan menyenangkan (PAIKEM).\n2. Menanamkan nilai-nilai agama dan budi pekerti luhur dalam kehidupan sehari-hari.\n3. Mengembangkan potensi, bakat, dan minat siswa melalui kegiatan ekstrakurikuler.\n4. Menciptakan lingkungan sekolah yang bersih, sehat, dan asri.",
+    misiSekolah: "1. Menyelenggarakan pembelajaran yang aktif, inovatif, kreatif, efektif, dan menyenangkan (PAIKEM).\n2. Menanamkan nilai-nilai agama dan budi pekerti luhur.\n3. Mengembangkan potensi, bakat, dan minat siswa melalui kegiatan ekstrakurikuler.\n4. Menciptakan lingkungan sekolah yang bersih, sehat, dan asri.",
     formFields: [
       { id: "Nama Lengkap", label: "Nama Lengkap", type: "text", required: true },
       { id: "NIK", label: "NIK", type: "text", required: true },
@@ -100,18 +130,18 @@ const getInitialMockSettings = (): AppSettings => {
     panduanDeskripsi: "Persiapkan dokumen berikut sebelum mulai mengisi formulir pendaftaran.",
     panduanPeringatan: "Pastikan semua dokumen di-scan atau difoto dengan jelas dan dapat terbaca. Format file yang disarankan adalah JPG, PNG, atau PDF dengan ukuran maksimal 2MB per file.",
     panduanDokumen: [
-      { id: "1", icon: "FileDigit", title: "Kartu Keluarga (KK)", description: "Asli atau fotokopi yang dilegalisir. Pastikan NIK dan nama calon siswa tercantum dengan benar." },
-      { id: "2", icon: "FileBadge", title: "Akta Kelahiran", description: "Dokumen asli atau fotokopi legalisir untuk verifikasi usia dan data diri calon siswa." },
-      { id: "3", icon: "FileImage", title: "Pas Foto Terbaru", description: "Pas foto berwarna ukuran 3x4 dengan latar belakang merah atau biru." },
-      { id: "4", icon: "FileText", title: "Ijazah / SKHUN (Jika Ada)", description: "Surat Keterangan Lulus atau Ijazah dari jenjang pendidikan sebelumnya (TK/PAUD)." }
+      { id: "1", icon: "FileDigit", title: "Kartu Keluarga (KK)", description: "Asli atau fotokopi yang dilegalisir." },
+      { id: "2", icon: "FileBadge", title: "Akta Kelahiran", description: "Dokumen asli atau fotokopi legalisir." },
+      { id: "3", icon: "FileImage", title: "Pas Foto Terbaru", description: "Pas foto berwarna ukuran 3x4." },
+      { id: "4", icon: "FileText", title: "Ijazah / SKHUN (Jika Ada)", description: "Surat Keterangan Lulus atau Ijazah." }
     ],
     panduanAlur: [
-      "Siapkan seluruh dokumen persyaratan dalam bentuk file digital (foto/scan).",
+      "Siapkan seluruh dokumen persyaratan dalam bentuk file digital.",
       "Klik tombol 'Mulai Pendaftaran' di bawah atau menu 'Daftar' di navigasi.",
-      "Isi seluruh kolom formulir dengan data yang valid dan sesuai dengan dokumen asli.",
-      "Tandai lokasi rumah Anda di peta yang disediakan untuk perhitungan jarak.",
+      "Isi seluruh kolom formulir dengan data yang valid.",
+      "Tandai lokasi rumah Anda di peta yang disediakan.",
       "Unggah dokumen persyaratan pada kolom yang tersedia.",
-      "Kirim formulir dan simpan Nomor Pendaftaran Anda untuk mengecek status kelulusan."
+      "Kirim formulir dan simpan Nomor Pendaftaran Anda."
     ]
   };
 
@@ -119,7 +149,7 @@ const getInitialMockSettings = (): AppSettings => {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      return { ...defaultSettings, ...parsed }; // Merge default settings with parsed local settings
+      return { ...defaultSettings, ...parsed };
     } catch (e) {
       console.error("Failed to parse mock settings from localStorage", e);
     }
@@ -147,21 +177,7 @@ const getInitialMockData = (): AdminData[] => {
       console.error("Failed to parse mock data from localStorage", e);
     }
   }
-  return [
-    {
-      Timestamp: new Date().toISOString(),
-      'No Pendaftaran': "PPDB-2024-001",
-      'Nama Lengkap': "Budi Santoso",
-      'NIK': "1234567890123456",
-      'Tempat Lahir': "Jakarta",
-      'Tanggal Lahir': "2015-05-10",
-      'Jenis Kelamin': "Laki-laki",
-      'Alamat': "Jl. Sudirman No. 1",
-      'Nama Orang Tua': "Agus Santoso",
-      'No HP': "081234567890",
-      Status: "Proses"
-    }
-  ];
+  return [];
 };
 
 let mockData: AdminData[] = getInitialMockData();
@@ -180,19 +196,28 @@ export const getSettings = async (): Promise<AppSettings> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return { ...mockSettings };
   }
+  
   try {
-    const response = await fetch(`${GAS_WEB_APP_URL}?action=getSettings&t=${Date.now()}`);
+    const response = await fetchWithCORS(`${GAS_WEB_APP_URL}?action=getSettings&t=${Date.now()}`);
     const result = await response.json();
+    
     if (result.status === "success") {
-      return {
-        ...result.data,
-        formFields: typeof result.data.formFields === 'string' ? JSON.parse(result.data.formFields) : result.data.formFields
-      };
+      let formFields = result.data.formFields;
+      if (typeof formFields === 'string') {
+        try {
+          formFields = JSON.parse(formFields);
+        } catch (e) {
+          console.error("Error parsing formFields:", e);
+          formFields = mockSettings.formFields;
+        }
+      }
+      return { ...result.data, formFields };
     }
-    throw new Error(result.message);
+    throw new Error(result.message || "Failed to fetch settings");
   } catch (error) {
     console.error("Error fetching settings:", error);
-    throw error;
+    // Fallback ke mock settings jika error
+    return { ...mockSettings };
   }
 };
 
@@ -202,14 +227,14 @@ export const updateSettings = async (settings: Partial<AppSettings>) => {
     saveMockSettings({ ...mockSettings, ...settings });
     return { status: "success" };
   }
+  
   try {
-    const response = await fetch(GAS_WEB_APP_URL, {
+    const response = await fetchWithCORS(GAS_WEB_APP_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "updateSettings",
         settings
       }),
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
     });
     return await response.json();
   } catch (error) {
@@ -234,11 +259,11 @@ export const submitRegistration = async (data: RegistrationData) => {
     saveMockData([...mockData, newEntry]);
     return { status: "success", noPendaftaran: newEntry['No Pendaftaran'] };
   }
+  
   try {
-    const response = await fetch(GAS_WEB_APP_URL, {
+    const response = await fetchWithCORS(GAS_WEB_APP_URL, {
       method: "POST",
       body: JSON.stringify(data),
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
     });
     return await response.json();
   } catch (error) {
@@ -254,15 +279,16 @@ export const getRegistrations = async (): Promise<AdminData[]> => {
   }
 
   try {
-    const response = await fetch(`${GAS_WEB_APP_URL}?t=${Date.now()}`);
+    const response = await fetchWithCORS(`${GAS_WEB_APP_URL}?t=${Date.now()}`);
     const result = await response.json();
+    
     if (result.status === "success") {
-      return result.data;
+      return result.data || [];
     }
-    throw new Error(result.message);
+    throw new Error(result.message || "Failed to fetch registrations");
   } catch (error) {
     console.error("Error fetching registrations:", error);
-    throw error;
+    return []; // Return empty array instead of throwing
   }
 };
 
@@ -283,7 +309,7 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
   }
 
   try {
-    const response = await fetch(GAS_WEB_APP_URL, {
+    const response = await fetchWithCORS(GAS_WEB_APP_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "updateStatus",
@@ -291,9 +317,6 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
         newStatus,
         alasan
       }),
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8",
-      },
     });
     return await response.json();
   } catch (error) {
@@ -322,15 +345,12 @@ export const checkStatus = async (noPendaftaran: string) => {
   }
 
   try {
-    const response = await fetch(GAS_WEB_APP_URL, {
+    const response = await fetchWithCORS(GAS_WEB_APP_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "checkStatus",
         noPendaftaran
       }),
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8",
-      },
     });
     return await response.json();
   } catch (error) {
@@ -349,16 +369,13 @@ export const loginAdmin = async (username: string, password: string) => {
   }
 
   try {
-    const response = await fetch(GAS_WEB_APP_URL, {
+    const response = await fetchWithCORS(GAS_WEB_APP_URL, {
       method: "POST",
       body: JSON.stringify({
         action: "login",
         username,
         password
       }),
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8",
-      },
     });
     return await response.json();
   } catch (error) {
