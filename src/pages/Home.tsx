@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Users, Building2, Trophy, ChevronRight, Calendar, FileText, CheckCircle, Clock } from 'lucide-react';
+import { BookOpen, Users, Building2, Trophy, ChevronRight, Calendar, FileText, CheckCircle, Clock, Upload } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 import { cn } from '../lib/utils';
 
