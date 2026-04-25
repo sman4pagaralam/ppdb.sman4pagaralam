@@ -26,41 +26,38 @@ const printProof = (data: any, settings: any) => {
 
   // HEADER
   doc.setFillColor(37, 99, 235);
-  doc.rect(0, 0, 210, 55, 'F'); // Tinggi header ditambah
+  doc.rect(0, 0, 210, 55, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text("BUKTI PENDAFTARAN PPDB", 105, 25, { align: "center" });
+  doc.text("BUKTI PENDAFTARAN PPDB", 105, 30, { align: "center" });
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 37, { align: "center" });
-  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 47, { align: "center" });
+  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 42, { align: "center" });
+  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 52, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  y = 65;
+  y = 70;
 
-  // JENIS SELEKSI - DIPERBESAR DENGAN GARIS
+  // JENIS SELEKSI - DIPERBESAR DENGAN GARIS (tanpa tumpang tindih)
   const jenisSeleksi = data['Jenis Seleksi'] || '-';
-  doc.setFillColor(240, 240, 240);
-  doc.rect(14, y - 5, 182, 12, 'F');
+  doc.setFillColor(245, 245, 245);
+  doc.rect(14, y - 5, 182, 18, 'F');
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
-  doc.rect(14, y - 5, 182, 12);
-  doc.setFontSize(14);
+  doc.rect(14, y - 5, 182, 18);
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("JENIS SELEKSI", 105, y, { align: "center" });
-  y += 8;
-  doc.setFontSize(13);
+  doc.text("JENIS SELEKSI", 105, y + 2, { align: "center" });
+  doc.setFontSize(14);
   doc.setTextColor(37, 99, 235);
-  doc.text(jenisSeleksi, 105, y, { align: "center" });
+  doc.text(jenisSeleksi, 105, y + 13, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  y += 12;
+  y += 22;
 
   // ========== TABEL DATA PRIBADI ==========
-  // Field kiri dan kanan
   const leftFields = [
     "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
-    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan",
-    "Alamat Domisili Lengkap", "Nomor WA Aktif"
+    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan"
   ];
   const rightFields = [
     "NISN", "Asal Sekolah",
@@ -84,6 +81,7 @@ const printProof = (data: any, settings: any) => {
     tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
   }
 
+  // autoTable dengan startY yang sudah disesuaikan
   autoTable(doc, {
     startY: y,
     head: [],
@@ -103,6 +101,26 @@ const printProof = (data: any, settings: any) => {
   // Dapatkan posisi Y setelah tabel
   let finalY = (doc as any).lastAutoTable.finalY + 5;
 
+  // ALAMAT dan NO WA (di luar tabel agar lebih rapi)
+  if (data['Alamat Domisili Lengkap']) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Alamat Domisili Lengkap:", 20, finalY);
+    finalY += 5;
+    doc.setFont("helvetica", "normal");
+    const alamat = String(data['Alamat Domisili Lengkap']);
+    const splitAlamat = doc.splitTextToSize(alamat, 160);
+    doc.text(splitAlamat, 22, finalY);
+    finalY += splitAlamat.length * 5 + 5;
+  }
+
+  if (data['Nomor WA Aktif']) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Nomor WA Aktif:", 20, finalY);
+    doc.setFont("helvetica", "normal");
+    doc.text(String(data['Nomor WA Aktif']), 70, finalY);
+    finalY += 10;
+  }
+
   // LOKASI DAN JARAK
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
     doc.setFillColor(200, 200, 200);
@@ -118,8 +136,10 @@ const printProof = (data: any, settings: any) => {
       doc.setFont("helvetica", "bold");
       doc.text("Koordinat Rumah:", 20, finalY);
       doc.setFont("helvetica", "normal");
-      doc.text(data['Koordinat Lokasi'], 70, finalY);
-      finalY += 6;
+      const koordinat = String(data['Koordinat Lokasi']);
+      const splitKoor = doc.splitTextToSize(koordinat, 100);
+      doc.text(splitKoor, 70, finalY);
+      finalY += Math.max(6, splitKoor.length * 5);
     }
     if (data['Jarak ke Sekolah (km)']) {
       doc.setFont("helvetica", "bold");
@@ -151,12 +171,14 @@ const printProof = (data: any, settings: any) => {
   finalY += 12;
 
   // FOOTER
-  doc.setDrawColor(200, 200, 200);
-  doc.line(20, 270, 190, 270);
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
-  doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 287, { align: "center" });
+  if (finalY < 260) {
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 270, 190, 270);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
+    doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 287, { align: "center" });
+  }
 
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
