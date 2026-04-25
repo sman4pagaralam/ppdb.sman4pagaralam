@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin, LocateFixed, Navigation } from 'lucide-react';
+import { LocateFixed } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 // Fix for default marker icons in Leaflet with React
@@ -37,8 +37,12 @@ function LocationMarker({ onLocationSelect, initialLocation }: { onLocationSelec
   );
 }
 
-// Komponen untuk tombol "Gunakan Lokasi Saat Ini"
-function LocationButton({ onLocationFound, isLoading }: { onLocationFound: (lat: number, lng: number) => void; isLoading: boolean }) {
+// Komponen tombol lokasi yang terintegrasi dengan map
+function LocationButton({ onLocationFound, isLoading, setIsLoading }: { 
+  onLocationFound: (lat: number, lng: number) => void; 
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+}) {
   const map = useMap();
 
   const handleGetLocation = () => {
@@ -47,11 +51,14 @@ function LocationButton({ onLocationFound, isLoading }: { onLocationFound: (lat:
       return;
     }
 
+    setIsLoading(true);
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         map.flyTo([latitude, longitude], 16);
         onLocationFound(latitude, longitude);
+        setIsLoading(false);
       },
       (error) => {
         console.error("Error getting location:", error);
@@ -70,6 +77,7 @@ function LocationButton({ onLocationFound, isLoading }: { onLocationFound: (lat:
             errorMessage += "Terjadi kesalahan.";
         }
         alert(errorMessage);
+        setIsLoading(false);
       },
       {
         enableHighAccuracy: true,
@@ -98,12 +106,11 @@ function LocationButton({ onLocationFound, isLoading }: { onLocationFound: (lat:
 export default function MapPicker({ onLocationSelect, initialLocation }: MapPickerProps) {
   const defaultCenter: [number, number] = initialLocation 
     ? [initialLocation.lat, initialLocation.lng] 
-    : [-2.548926, 118.014863]; // Default ke tengah Indonesia
+    : [-2.548926, 118.014863];
 
   const [mapType, setMapType] = useState<'street' | 'satellite'>('street');
   const [isLocating, setIsLocating] = useState(false);
 
-  // URL untuk berbagai tile layer
   const tileLayers = {
     street: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
     satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -115,17 +122,7 @@ export default function MapPicker({ onLocationSelect, initialLocation }: MapPick
   };
 
   const handleLocationFound = (lat: number, lng: number) => {
-    setIsLocating(false);
     onLocationSelect(lat, lng);
-  };
-
-  const handleGetLocationStart = () => {
-    setIsLocating(true);
-  };
-
-  // Wrapper untuk menangani loading state
-  const handleGetLocation = () => {
-    // Loading state akan diatur di komponen LocationButton
   };
 
   return (
@@ -167,49 +164,12 @@ export default function MapPicker({ onLocationSelect, initialLocation }: MapPick
           attribution={attributions[mapType]}
         />
         <LocationMarker onLocationSelect={onLocationSelect} initialLocation={initialLocation} />
-        <LocationButton onLocationFound={handleLocationFound} isLoading={isLocating} />
+        <LocationButton 
+          onLocationFound={handleLocationFound} 
+          isLoading={isLocating}
+          setIsLoading={setIsLocating}
+        />
       </MapContainer>
-
-      {/* Fungsi untuk trigger location dari luar MapContainer */}
-      <button
-        onClick={() => {
-          setIsLocating(true);
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                const { latitude, longitude } = position.coords;
-                handleLocationFound(latitude, longitude);
-                // Kita perlu akses ke map instance, tapi karena LocationButton sudah handle, kita trigger event
-                const mapElement = document.querySelector('.leaflet-container');
-                if (mapElement && (mapElement as any)._leaflet_map) {
-                  const map = (mapElement as any)._leaflet_map;
-                  map.flyTo([latitude, longitude], 16);
-                }
-                setIsLocating(false);
-              },
-              (error) => {
-                console.error(error);
-                setIsLocating(false);
-                let errorMessage = "Tidak dapat mengambil lokasi. ";
-                if (error.code === 1) errorMessage += "Izin lokasi ditolak.";
-                else errorMessage += "Silakan coba lagi.";
-                alert(errorMessage);
-              }
-            );
-          } else {
-            setIsLocating(false);
-            alert("Browser Anda tidak mendukung geolokasi");
-          }
-        }}
-        className="absolute bottom-3 right-3 z-[1000] bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors flex items-center gap-2"
-        title="Gunakan lokasi saya saat ini"
-      >
-        {isLocating ? (
-          <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        ) : (
-          <LocateFixed size={20} className="text-blue-600" />
-        )}
-      </button>
       
       <p className="text-xs text-slate-500 mt-2 text-center">
         💡 Klik pada peta untuk menandai lokasi rumah Anda. Klik tombol <LocateFixed size={12} className="inline" /> untuk menggunakan lokasi otomatis.
