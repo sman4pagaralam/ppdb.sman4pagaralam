@@ -31,92 +31,7 @@ function AnimatedImage({ src, alt, delay = 0 }: { src: string; alt: string; dela
 export default function Home() {
   const { settings } = useSettings();
 
-  return (
-    <div className="min-h-screen relative">
-      {/* Background Image untuk seluruh halaman */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: 'url("/images/background-lapangan.jpg")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        <div className="absolute inset-0 bg-black/60"></div>
-      </div>
-
-      {/* Konten dengan background transparan */}
-      <div className="relative z-10">
-        {/* Hero Section */}
-        <section className="py-20 lg:py-32">
-          {/* ... konten hero ... */}
-        </section>
-
-        {/* Keunggulan Section dengan background card putih transparan */}
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-white mb-4">Keunggulan Sekolah</h2>
-              <p className="text-white/80 max-w-2xl mx-auto">
-                Berbagai fasilitas dan program unggulan untuk mendukung perkembangan siswa
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Card dengan background putih transparan */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center hover:bg-white/20 transition-all border border-white/20">
-                <div className="w-16 h-16 bg-blue-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOpen size={32} className="text-white" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Kurikulum Modern</h3>
-                <p className="text-white/80">
-                  Menerapkan kurikulum merdeka belajar yang adaptif dengan perkembangan zaman.
-                </p>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center hover:bg-white/20 transition-all border border-white/20">
-                <div className="w-16 h-16 bg-green-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users size={32} className="text-white" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Guru Profesional</h3>
-                <p className="text-white/80">
-                  Tenaga pengajar tersertifikasi, berpengalaman, dan berdedikasi tinggi.
-                </p>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center hover:bg-white/20 transition-all border border-white/20">
-                <div className="w-16 h-16 bg-purple-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Building2 size={32} className="text-white" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Fasilitas Lengkap</h3>
-                <p className="text-white/80">
-                  Ruang kelas nyaman, perpustakaan digital, lab komputer, dan sarana olahraga.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Galeri Section */}
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl font-bold text-white mb-2">Galeri Sekolah</h2>
-              <p className="text-white/80">Momen kebersamaan dan prestasi SMAN 4 Pagar Alam</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* ... komponen AnimatedImage ... */}
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
-}
-
-  // Daftar foto yang akan ditampilkan (ganti dengan URL foto Anda)
+  // Daftar foto yang akan ditampilkan
   const galleryImages = [
     {
       src: '/images/image1.jpg',
@@ -142,28 +57,38 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className={cn(
-        "relative overflow-hidden py-20 lg:py-32",
-        "bg-gradient-to-br from-blue-50 via-white to-blue-50"
-      )}>
-        <div className="absolute inset-0 bg-grid-slate-100 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Hero Section dengan Background Foto Lapangan Sekolah */}
+      <section className="relative overflow-hidden py-20 lg:py-32">
+        {/* Background Image - Foto Lapangan Sekolah */}
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: 'url("/images/background-lapangan.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          {/* Overlay Gelap agar teks terbaca */}
+          <div className="absolute inset-0 bg-black/60"></div>
+        </div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium mb-4">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500 text-white text-sm font-medium mb-4">
                 <Calendar size={14} />
                 Pendaftaran PPDB 2026 Telah Dibuka
               </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 mb-6">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6">
                 Membangun Generasi
-                <span className="text-blue-600 block">Cerdas & Berkarakter</span>
+                <span className="text-blue-300 block">Cerdas & Berkarakter</span>
               </h1>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-10">
+              <p className="text-xl text-white/90 max-w-2xl mx-auto mb-10">
                 Bergabunglah bersama SMAN 4 PAGAR ALAM. Kami berkomitmen memberikan pendidikan terbaik
                 dengan fasilitas modern dan tenaga pendidik profesional.
               </p>
@@ -177,7 +102,7 @@ export default function Home() {
                 </Link>
                 <Link
                   to="/cek-kelulusan"
-                  className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-8 py-3 rounded-xl font-semibold border border-slate-200 transition-all shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-8 py-3 rounded-xl font-semibold border border-white/30 transition-all"
                 >
                   Cek Kelulusan
                 </Link>
@@ -193,8 +118,8 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-center mb-10"
             >
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Galeri Sekolah</h2>
-              <p className="text-slate-500">Momen kebersamaan dan prestasi SMAN 4 Pagar Alam</p>
+              <h2 className="text-2xl font-bold text-white mb-2">Galeri Sekolah</h2>
+              <p className="text-white/80">Momen kebersamaan dan prestasi SMAN 4 Pagar Alam</p>
             </motion.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
