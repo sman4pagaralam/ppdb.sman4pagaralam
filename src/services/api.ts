@@ -94,18 +94,13 @@ let fallbackData: AdminData[] = [];
 
 export const getSettings = async (): Promise<AppSettings> => {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
+    // Gunakan fetch biasa tanpa abort controller yang bermasalah
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getSettings&t=${Date.now()}`, {
-      signal: controller.signal,
       method: 'GET',
       headers: {
         'Accept': 'application/json',
       },
     });
-    
-    clearTimeout(timeoutId);
     
     if (response.ok) {
       const result = await response.json();
