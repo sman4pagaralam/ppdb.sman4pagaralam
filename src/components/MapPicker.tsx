@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -16,7 +16,7 @@ L.Icon.Default.mergeOptions({
 interface MapPickerProps {
   onLocationSelect: (lat: number, lng: number) => void;
   initialLocation?: { lat: number; lng: number };
-  autoLocate?: boolean; // Props baru untuk auto locate
+  autoLocate?: boolean;
 }
 
 // Komponen untuk menangani klik di peta
@@ -38,15 +38,40 @@ function LocationMarker({ onLocationSelect, initialLocation }: { onLocationSelec
   );
 }
 
-// Komponen tombol lokasi yang terintegrasi dengan map
-function LocationButton({ onLocationFound, isLoading, setIsLoading, autoLocate = false }: { 
-  onLocationFound: (lat: number, lng: number) => void; 
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
-  autoLocate?: boolean;
-}) {
+// Komponen khusus untuk auto locate
+function AutoLocate({ autoLocate, onLocationFound }: { autoLocate: boolean; onLocationFound: (lat: number, lng: number) => void }) {
   const map = useMap();
-  const [hasAutoLocated, setHasAutoLocated] = useState(false);
+  const [hasLocated, setHasLocated] = useState(false);
+
+  useEffect(() => {
+    if (autoLocate && !hasLocated && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.flyTo([latitude, longitude], 16);
+          onLocationFound(latitude, longitude);
+          setHasLocated(true);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setHasLocated(true); // Jangan coba lagi
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        }
+      );
+    }
+  }, [autoLocate, hasLocated, map, onLocationFound]);
+
+  return null;
+}
+
+// Komponen tombol lokasi manual
+function ManualLocationButton({ onLocationFound }: { onLocationFound: (lat: number, lng: number) => void }) {
+  const map = useMap();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -90,18 +115,6 @@ function LocationButton({ onLocationFound, isLoading, setIsLoading, autoLocate =
     );
   };
 
-  // Auto-locate saat pertama kali halaman dimuat
-  useEffect(() => {
-    if (autoLocate && !hasAutoLocated && !isLoading) {
-      setHasAutoLocated(true);
-      // Delay sebentar agar map siap
-      const timer = setTimeout(() => {
-        handleGetLocation();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [autoLocate, hasAutoLocated, isLoading]);
-
   return (
     <button
       onClick={handleGetLocation}
@@ -124,7 +137,6 @@ export default function MapPicker({ onLocationSelect, initialLocation, autoLocat
     : [-2.548926, 118.014863];
 
   const [mapType, setMapType] = useState<'street' | 'satellite'>('street');
-  const [isLocating, setIsLocating] = useState(false);
 
   const tileLayers = {
     street: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
@@ -179,12 +191,8 @@ export default function MapPicker({ onLocationSelect, initialLocation, autoLocat
           attribution={attributions[mapType]}
         />
         <LocationMarker onLocationSelect={onLocationSelect} initialLocation={initialLocation} />
-        <LocationButton 
-          onLocationFound={handleLocationFound} 
-          isLoading={isLocating}
-          setIsLoading={setIsLocating}
-          autoLocate={autoLocate}
-        />
+        <AutoLocate autoLocate={autoLocate} onLocationFound={handleLocationFound} />
+        <ManualLocationButton onLocationFound={handleLocationFound} />
       </MapContainer>
       
       <p className="text-xs text-slate-500 mt-2 text-center">
