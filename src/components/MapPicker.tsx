@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { MapPin } from 'lucide-react';
 
-// Fix Leaflet icon issue
+// Fix for default marker icons in Leaflet with React
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -16,66 +17,87 @@ interface MapPickerProps {
   initialLocation?: { lat: number; lng: number };
 }
 
-function LocationMarker({ onLocationSelect, initialLocation }: MapPickerProps) {
-  const [position, setPosition] = useState<L.LatLng | null>(
-    initialLocation ? new L.LatLng(initialLocation.lat, initialLocation.lng) : null
-  );
+// Komponen untuk menangani klik di peta
+function LocationMarker({ onLocationSelect, initialLocation }: { onLocationSelect: (lat: number, lng: number) => void; initialLocation?: { lat: number; lng: number } }) {
+  const [position, setPosition] = useState<{ lat: number; lng: number } | null>(initialLocation || null);
 
   useMapEvents({
     click(e) {
-      setPosition(e.latlng);
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
+      const { lat, lng } = e.latlng;
+      setPosition({ lat, lng });
+      onLocationSelect(lat, lng);
     },
   });
 
   return position === null ? null : (
-    <Marker position={position}></Marker>
+    <Marker position={[position.lat, position.lng]}>
+      <Popup>Lokasi Rumah Anda</Popup>
+    </Marker>
   );
 }
 
 export default function MapPicker({ onLocationSelect, initialLocation }: MapPickerProps) {
-  const defaultCenter = initialLocation || { lat: -6.200000, lng: 106.816666 };
-  const [center, setCenter] = useState<{lat: number, lng: number}>(defaultCenter);
-  const [mapKey, setMapKey] = useState(0); // To force re-render MapContainer when center changes drastically
+  const defaultCenter: [number, number] = initialLocation 
+    ? [initialLocation.lat, initialLocation.lng] 
+    : [-2.548926, 118.014863]; // Default ke tengah Indonesia
 
-  const handleGetLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setCenter({ lat: latitude, lng: longitude });
-          onLocationSelect(latitude, longitude);
-          setMapKey(prev => prev + 1);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          alert("Tidak dapat mengambil lokasi saat ini. Pastikan izin lokasi diberikan.");
-        }
-      );
-    } else {
-      alert("Geolocation tidak didukung oleh browser ini.");
-    }
+  const [mapType, setMapType] = useState<'street' | 'satellite'>('street');
+
+  // URL untuk berbagai tile layer
+  const tileLayers = {
+    street: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  };
+
+  const attributions = {
+    street: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    satellite: '&copy; <a href="https://www.esri.com">Esri</a> | Maxar, Earthstar Geographics, and the GIS User Community',
   };
 
   return (
-    <div className="space-y-2">
-      <button
-        type="button"
-        onClick={handleGetLocation}
-        className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-3 rounded-md transition-colors flex items-center gap-2 border border-slate-300"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
-        Gunakan Lokasi Saat Ini
-      </button>
-      <div className="h-[300px] w-full rounded-lg overflow-hidden border border-slate-300 z-0 relative">
-        <MapContainer key={mapKey} center={[center.lat, center.lng]} zoom={15} scrollWheelZoom={false} className="h-full w-full z-0">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <LocationMarker onLocationSelect={onLocationSelect} initialLocation={center} />
-        </MapContainer>
+    <div className="relative">
+      {/* Tombol Toggle Peta */}
+      <div className="absolute top-3 right-3 z-[1000] flex gap-2 bg-white rounded-lg shadow-md p-1">
+        <button
+          onClick={() => setMapType('street')}
+          className={cn(
+            "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+            mapType === 'street' 
+              ? "bg-blue-600 text-white" 
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          )}
+        >
+          Peta
+        </button>
+        <button
+          onClick={() => setMapType('satellite')}
+          className={cn(
+            "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+            mapType === 'satellite' 
+              ? "bg-blue-600 text-white" 
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          )}
+        >
+          Satelit
+        </button>
       </div>
+
+      <MapContainer
+        center={defaultCenter}
+        zoom={13}
+        style={{ height: "400px", width: "100%", borderRadius: "0.75rem", zIndex: 1 }}
+        className="border border-slate-200"
+      >
+        <TileLayer
+          url={tileLayers[mapType]}
+          attribution={attributions[mapType]}
+        />
+        <LocationMarker onLocationSelect={onLocationSelect} initialLocation={initialLocation} />
+      </MapContainer>
+      
+      <p className="text-xs text-slate-500 mt-2 text-center">
+        💡 Klik pada peta untuk menandai lokasi rumah Anda. Gunakan tombol di atas untuk beralih antara peta biasa dan satelit.
+      </p>
     </div>
   );
 }
