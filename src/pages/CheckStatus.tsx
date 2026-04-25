@@ -18,25 +18,86 @@ const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
-// ========== BUKTI PENDAFTARAN (untuk status Proses) ==========
-const printProof = (data: any, settings: any) => {
+// ========== BUKTI PENDAFTARAN (untuk status Proses) dengan FOTO ==========
+const printProof = async (data: any, settings: any) => {
   if (!data) return;
   const doc = new jsPDF();
+  
+  // Cari field foto (bisa "Foto Siswa", "File Pas Foto", atau "Pas Foto")
+  const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
+  
+  // Ambil gambar jika ada URL
+  let fotoBase64 = null;
+  if (fotoField && typeof fotoField === 'string' && (fotoField.startsWith('http') || fotoField.startsWith('data:image'))) {
+    try {
+      // Jika sudah dalam bentuk base64
+      if (fotoField.startsWith('data:image')) {
+        fotoBase64 = fotoField;
+      } else {
+        // Jika URL, fetch gambar
+        const response = await fetch(fotoField);
+        const blob = await response.blob();
+        fotoBase64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+      }
+    } catch (error) {
+      console.error('Gagal memuat foto:', error);
+    }
+  }
+  
   let y = 15;
 
-  // HEADER
+  // ========== HEADER DENGAN FOTO DI SAMPING KIRI ==========
+  // Header putih
   doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, 210, 200, 'F');
+  doc.rect(0, 0, 210, 65, 'F');
+  
+  // FOTO (di sebelah kiri) - ukuran 35x45
+  if (fotoBase64) {
+    try {
+      doc.addImage(fotoBase64, 'JPEG', 14, 8, 35, 45);
+      // Tambahkan border pada foto
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
+      doc.rect(14, 8, 35, 45);
+    } catch (e) {
+      console.error('Gagal menambahkan foto:', e);
+      // Placeholder jika gagal
+      doc.setDrawColor(200, 200, 200);
+      doc.setFillColor(240, 240, 240);
+      doc.rect(14, 8, 35, 45, 'FD');
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text("Foto", 31, 30, { align: "center" });
+      doc.text("3x4", 31, 38, { align: "center" });
+      doc.setTextColor(0, 0, 0);
+    }
+  } else {
+    // Placeholder jika tidak ada foto
+    doc.setDrawColor(200, 200, 200);
+    doc.setFillColor(240, 240, 240);
+    doc.rect(14, 8, 35, 45, 'FD');
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Foto", 31, 30, { align: "center" });
+    doc.text("3x4", 31, 38, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+  }
+  
+  // Teks header di sebelah kanan foto
   doc.setTextColor(0, 0, 0);
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text("BUKTI PENDAFTARAN PPDB", 105, 25, { align: "center" });
-  doc.setFontSize(12);
+  doc.text("BUKTI PENDAFTARAN PPDB", 115, 22, { align: "center" });
+  doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
-  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 37, { align: "center" });
-  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 47, { align: "center" });
-  doc.setTextColor(0, 0, 0);
-  y = 70;
+  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
+  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 115, 46, { align: "center" });
+  
+  y = 72;
 
   // JENIS SELEKSI
   const jenisSeleksi = data['Jenis Seleksi'] || '-';
@@ -55,13 +116,13 @@ const printProof = (data: any, settings: any) => {
   doc.setFontSize(22);
   doc.setTextColor(37, 99, 235);
   doc.setFont("helvetica", "bold");
-  doc.text(jenisSeleksi, 105, y + 18, { align: "center" });
+  doc.text(jenisSeleksi, 105, y + 22, { align: "center" });
   doc.setTextColor(0, 0, 0);
   
-  // Garis bawah - DITEMPATKAN DEKAT DENGAN TULISAN DOMISILI
-  let garisBawahY = y + 22; // Dari 28 diubah ke 26 (lebih naik)
+  // Garis bawah
+  let garisBawahY = y + 30;
   doc.line(14, garisBawahY, 196, garisBawahY);
-  y = garisBawahY + 12; // Jarak setelah garis
+  y = garisBawahY + 12;
 
   // ========== TABEL DATA PRIBADI ==========
   const leftFields = [
