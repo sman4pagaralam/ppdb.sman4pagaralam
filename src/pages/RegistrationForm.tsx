@@ -474,9 +474,7 @@ export default function RegistrationForm() {
                     <p className="text-xs text-slate-500 mb-3">
                       Klik pada peta untuk menandai lokasi rumah Anda. Jarak ke sekolah akan dihitung secara otomatis.
                     </p>
-                    <MapPicker onLocationSelect={handleLocationSelect} />
-                    autoLocate={true}
-                    />
+                    <MapPicker onLocationSelect={handleLocationSelect} autoLocate={true} />
                     
                     {distance !== null && (
                       <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
