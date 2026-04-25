@@ -31,6 +31,91 @@ function AnimatedImage({ src, alt, delay = 0 }: { src: string; alt: string; dela
 export default function Home() {
   const { settings } = useSettings();
 
+  return (
+    <div className="min-h-screen relative">
+      {/* Background Image untuk seluruh halaman */}
+      <div 
+        className="fixed inset-0 z-0"
+        style={{
+          backgroundImage: 'url("/images/background-lapangan.jpg")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <div className="absolute inset-0 bg-black/60"></div>
+      </div>
+
+      {/* Konten dengan background transparan */}
+      <div className="relative z-10">
+        {/* Hero Section */}
+        <section className="py-20 lg:py-32">
+          {/* ... konten hero ... */}
+        </section>
+
+        {/* Keunggulan Section dengan background card putih transparan */}
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-white mb-4">Keunggulan Sekolah</h2>
+              <p className="text-white/80 max-w-2xl mx-auto">
+                Berbagai fasilitas dan program unggulan untuk mendukung perkembangan siswa
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Card dengan background putih transparan */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center hover:bg-white/20 transition-all border border-white/20">
+                <div className="w-16 h-16 bg-blue-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpen size={32} className="text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Kurikulum Modern</h3>
+                <p className="text-white/80">
+                  Menerapkan kurikulum merdeka belajar yang adaptif dengan perkembangan zaman.
+                </p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center hover:bg-white/20 transition-all border border-white/20">
+                <div className="w-16 h-16 bg-green-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users size={32} className="text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Guru Profesional</h3>
+                <p className="text-white/80">
+                  Tenaga pengajar tersertifikasi, berpengalaman, dan berdedikasi tinggi.
+                </p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center hover:bg-white/20 transition-all border border-white/20">
+                <div className="w-16 h-16 bg-purple-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Building2 size={32} className="text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Fasilitas Lengkap</h3>
+                <p className="text-white/80">
+                  Ruang kelas nyaman, perpustakaan digital, lab komputer, dan sarana olahraga.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Galeri Section */}
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl font-bold text-white mb-2">Galeri Sekolah</h2>
+              <p className="text-white/80">Momen kebersamaan dan prestasi SMAN 4 Pagar Alam</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* ... komponen AnimatedImage ... */}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
   // Daftar foto yang akan ditampilkan (ganti dengan URL foto Anda)
   const galleryImages = [
     {
