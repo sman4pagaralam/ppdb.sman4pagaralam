@@ -47,12 +47,12 @@ const printProof = (data: any, settings: any) => {
   doc.line(14, y - 2, 196, y - 2);
   
   // Label JENIS SELEKSI
-  doc.setFontSize(11);
+  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.text("JENIS SELEKSI", 105, y + 6, { align: "center" });
   
   // Value Jenis Seleksi (warna biru)
-  doc.setFontSize(16);
+  doc.setFontSize(22);
   doc.setTextColor(37, 99, 235);
   doc.setFont("helvetica", "bold");
   doc.text(jenisSeleksi, 105, y + 18, { align: "center" });
