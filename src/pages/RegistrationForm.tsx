@@ -20,8 +20,43 @@ export default function RegistrationForm() {
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
 
+  // ========== FUNGSI VALIDASI NIK DAN NISN ==========
+  const validateNIK = (nik: string): boolean => {
+    // Hanya angka, panjang tepat 16 digit
+    const nikRegex = /^\d{16}$/;
+    return nikRegex.test(nik);
+  };
+
+  const validateNISN = (nisn: string): boolean => {
+    // Hanya angka, panjang tepat 10 digit
+    const nisnRegex = /^\d{10}$/;
+    return nisnRegex.test(nisn);
+  };
+  // ========== SAMPAI SINI ==========
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // ========== VALIDASI LANGSUNG SAAT MENGETIK NIK ==========
+    if (name === 'NIK') {
+      // Hanya izinkan angka
+      const angkaOnly = value.replace(/\D/g, '');
+      if (angkaOnly.length <= 16) {
+        setFormData(prev => ({ ...prev, [name]: angkaOnly }));
+      }
+      return;
+    }
+    
+    // ========== VALIDASI LANGSUNG SAAT MENGETIK NISN ==========
+    if (name === 'NISN') {
+      // Hanya izinkan angka
+      const angkaOnly = value.replace(/\D/g, '');
+      if (angkaOnly.length <= 10) {
+        setFormData(prev => ({ ...prev, [name]: angkaOnly }));
+      }
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -69,7 +104,7 @@ export default function RegistrationForm() {
     const doc = new jsPDF();
     
     // Header
-    doc.setFillColor(37, 99, 235); // blue-600
+    doc.setFillColor(37, 99, 235);
     doc.rect(0, 0, 210, 40, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
@@ -139,6 +174,43 @@ export default function RegistrationForm() {
         confirmButtonColor: '#3b82f6'
       });
       return;
+    }
+
+    // ========== VALIDASI NIK ==========
+    const nikValue = formData['NIK'] || '';
+    if (!validateNIK(nikValue)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'NIK Tidak Valid',
+        text: 'NIK harus terdiri dari 16 digit angka (0-9). Contoh: 3173010101010001',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+    
+    // ========== VALIDASI NISN (jika ada dan required) ==========
+    // Cek apakah field NISN ada di formFields
+    const nisnField = settings?.formFields?.find(f => f.id === 'NISN' || f.label === 'NISN');
+    if (nisnField && nisnField.required) {
+      const nisnValue = formData['NISN'] || '';
+      if (!nisnValue) {
+        Swal.fire({
+          icon: 'error',
+          title: 'NISN Wajib Diisi',
+          text: 'Silakan isi NISN dengan benar.',
+          confirmButtonColor: '#3b82f6'
+        });
+        return;
+      }
+      if (!validateNISN(nisnValue)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'NISN Tidak Valid',
+          text: 'NISN harus terdiri dari 10 digit angka (0-9). Contoh: 1234567890',
+          confirmButtonColor: '#3b82f6'
+        });
+        return;
+      }
     }
 
     // Basic validation for files
@@ -225,6 +297,44 @@ export default function RegistrationForm() {
   const renderField = (field: any) => {
     const commonClasses = "w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors";
     
+    // ========== TAMBAHKAN ATRIBUT PATTERN UNTUK NIK DAN NISN ==========
+    if (field.id === 'NIK') {
+      return (
+        <input
+          type="text"
+          name={field.label}
+          required={field.required}
+          value={formData[field.label] || ''}
+          onChange={handleChange}
+          className={commonClasses}
+          placeholder="16 digit angka (contoh: 3173010101010001)"
+          maxLength={16}
+          minLength={16}
+          pattern="\d{16}"
+          title="NIK harus 16 digit angka"
+        />
+      );
+    }
+    
+    if (field.id === 'NISN') {
+      return (
+        <input
+          type="text"
+          name={field.label}
+          required={field.required}
+          value={formData[field.label] || ''}
+          onChange={handleChange}
+          className={commonClasses}
+          placeholder="10 digit angka (contoh: 1234567890)"
+          maxLength={10}
+          minLength={10}
+          pattern="\d{10}"
+          title="NISN harus 10 digit angka"
+        />
+      );
+    }
+    
+    // ========== FUNGSI RENDER FIELD YANG SUDAH ADA (TIDAK BERUBAH) ==========
     switch (field.type) {
       case 'textarea':
         return (
@@ -331,6 +441,13 @@ export default function RegistrationForm() {
                         {field.label} {field.required && '*'}
                       </label>
                       {renderField(field)}
+                      {/* ========== TAMBAHKAN PESAN BANTUAN UNTUK NIK DAN NISN ========== */}
+                      {field.id === 'NIK' && (
+                        <p className="text-xs text-slate-400 mt-1">* Harus 16 digit angka</p>
+                      )}
+                      {field.id === 'NISN' && (
+                        <p className="text-xs text-slate-400 mt-1">* Harus 10 digit angka</p>
+                      )}
                     </div>
                   ))}
                   
