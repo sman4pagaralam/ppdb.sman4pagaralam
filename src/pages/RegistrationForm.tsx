@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Upload, AlertCircle, FileText, Image as ImageIcon, Loader2, MapPin } from 'lucide-react';
+import { Upload, AlertCircle, FileText, Loader2, MapPin } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { Link } from 'react-router-dom';
 import { submitRegistration, RegistrationData } from '../services/api';
@@ -44,7 +44,7 @@ export default function RegistrationForm() {
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
 
-  // Validasi NIK/NISN
+  // ========== VALIDASI ==========
   const validateNIK = (nik: string): boolean => /^\d{16}$/.test(nik);
   const validateNISN = (nisn: string): boolean => /^\d{10}$/.test(nisn);
 
@@ -93,19 +93,16 @@ export default function RegistrationForm() {
     }
   };
 
-  // ========== BUKTI PENDAFTARAN (sama seperti di CheckStatus, tapi langsung pakai formData + noPendaftaran) ==========
+  // ========== BUKTI PENDAFTARAN (sama dengan di CheckStatus) ==========
   const printProof = async (noPendaftaran: string) => {
     if (!formData) return;
-    const data = { ...formData, 'No Pendaftaran': noPendaftaran }; // gabungkan data form dengan nomor pendaftaran
+    const data = { ...formData, 'No Pendaftaran': noPendaftaran };
     const doc = new jsPDF();
-
-    // Ambil field foto (bisa dari 'Foto Siswa') – karena masih base64, jadi langsung bisa
     const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
     let fotoBase64 = null;
     if (fotoField && typeof fotoField === 'string' && isBase64Image(fotoField)) {
       fotoBase64 = fotoField;
     } else if (fotoField && typeof fotoField === 'string' && fotoField.startsWith('http')) {
-      // Jika URL (misal sudah di-upload), coba fetch via proxy (opsional, tapi di sini tidak diperlukan karena baru selesai daftar masih base64)
       const fileId = extractFileId(fotoField);
       if (fileId) {
         try {
@@ -123,19 +120,14 @@ export default function RegistrationForm() {
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, 210, 65, 'F');
 
-    // Tempat foto
     if (fotoBase64) {
       try {
         doc.addImage(fotoBase64, 'JPEG', 14, 8, 35, 45);
         doc.setDrawColor(0, 0, 0);
         doc.setLineWidth(0.5);
         doc.rect(14, 8, 35, 45);
-      } catch (e) {
-        drawPlaceholder(doc);
-      }
-    } else {
-      drawPlaceholder(doc);
-    }
+      } catch (e) { drawPlaceholder(doc); }
+    } else { drawPlaceholder(doc); }
 
     function drawPlaceholder(doc: any) {
       doc.setDrawColor(200, 200, 200);
@@ -148,7 +140,6 @@ export default function RegistrationForm() {
       doc.setTextColor(0, 0, 0);
     }
 
-    // Teks header
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
@@ -159,11 +150,8 @@ export default function RegistrationForm() {
     doc.text(`No. Pendaftaran: ${noPendaftaran}`, 115, 46, { align: "center" });
 
     y = 72;
-
-    // JENIS SELEKSI
     const jenisSeleksi = data['Jenis Seleksi'] || '-';
     doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
     doc.line(14, y - 2, 196, y - 2);
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
@@ -177,7 +165,6 @@ export default function RegistrationForm() {
     doc.line(14, garisBawahY, 196, garisBawahY);
     y = garisBawahY + 12;
 
-    // TABEL DATA PRIBADI - field disesuaikan dengan formData
     const leftFields = [
       "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
       "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "Alamat Domisili Lengkap"
@@ -223,7 +210,6 @@ export default function RegistrationForm() {
 
     let finalY = (doc as any).lastAutoTable.finalY + 5;
 
-    // LOKASI DAN JARAK
     if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
       doc.setDrawColor(200, 200, 200);
       doc.line(14, finalY, 196, finalY);
@@ -234,7 +220,6 @@ export default function RegistrationForm() {
       finalY += 10;
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-
       if (data['Koordinat Lokasi']) {
         doc.setFont("helvetica", "bold");
         doc.text("Koordinat Rumah:", 20, finalY);
@@ -253,7 +238,6 @@ export default function RegistrationForm() {
       }
     }
 
-    // STATUS PENDAFTARAN
     doc.setDrawColor(200, 200, 200);
     doc.line(14, finalY, 196, finalY);
     finalY += 8;
@@ -261,16 +245,13 @@ export default function RegistrationForm() {
     doc.setFont("helvetica", "bold");
     doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
     finalY += 10;
-    const status = 'Proses';
     doc.setFillColor(255, 193, 7);
     doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.text(status, 105, finalY + 2, { align: "center" });
+    doc.text("Proses", 105, finalY + 2, { align: "center" });
     doc.setTextColor(0, 0, 0);
     finalY += 15;
-
-    // FOOTER
     if (finalY < 260) {
       doc.setDrawColor(200, 200, 200);
       doc.line(20, 270, 190, 270);
@@ -279,7 +260,6 @@ export default function RegistrationForm() {
       doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
       doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 287, { align: "center" });
     }
-
     doc.save(`Bukti_Pendaftaran_${noPendaftaran}.pdf`);
   };
 
@@ -353,9 +333,9 @@ export default function RegistrationForm() {
     }
   };
 
-  // Render field (sama seperti kode asli, tidak perlu diubah)
+  // Render field form
   const renderField = (field: any) => {
-    const commonClasses = "w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors";
+    const commonClasses = "w-full px-3 py-2 sm:px-4 sm:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base";
     if (field.id === 'NIK') {
       return <input type="text" name={field.label} required={field.required} value={formData[field.label] || ''} onChange={handleChange} className={commonClasses} placeholder="16 digit angka (contoh: 3173010101010001)" maxLength={16} minLength={16} pattern="\d{16}" title="NIK harus 16 digit angka" />;
     }
@@ -369,15 +349,15 @@ export default function RegistrationForm() {
         return <select name={field.label} required={field.required} value={formData[field.label] || ''} onChange={handleChange} className={`${commonClasses} bg-white`}><option value="">Pilih {field.label}</option>{field.options?.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}</select>;
       case 'file':
         return (
-          <div className="relative flex-grow border-2 border-dashed border-slate-300 rounded-xl hover:border-blue-500 transition-colors bg-slate-50 group overflow-hidden h-40">
+          <div className="relative flex-grow border-2 border-dashed border-slate-300 rounded-xl hover:border-blue-500 transition-colors bg-slate-50 group overflow-hidden h-32 sm:h-40">
             <input type="file" accept="image/jpeg, image/png, application/pdf" required={field.required} onChange={(e) => handleFileChange(e, field.label)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
             {previews[field.label] ? (
               <div className="absolute inset-0">
-                {previews[field.label].startsWith('data:image') ? <img src={previews[field.label]} alt="Preview" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center justify-center h-full p-4 text-center bg-blue-50"><FileText className="w-12 h-12 text-blue-500 mb-2" /><span className="text-sm text-blue-700 font-medium">File Terpilih</span></div>}
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white text-sm font-medium">Ubah File</span></div>
+                {previews[field.label].startsWith('data:image') ? <img src={previews[field.label]} alt="Preview" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center justify-center h-full p-2 text-center bg-blue-50"><FileText className="w-8 h-8 sm:w-12 sm:h-12 text-blue-500 mb-1" /><span className="text-xs sm:text-sm text-blue-700 font-medium">File Terpilih</span></div>}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white text-xs sm:text-sm font-medium">Ubah File</span></div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full p-4 text-center"><Upload className="w-8 h-8 text-slate-400 mb-2 group-hover:text-blue-500 transition-colors" /><span className="text-sm text-slate-500 group-hover:text-blue-600">Klik atau Drag file</span></div>
+              <div className="flex flex-col items-center justify-center h-full p-2 text-center"><Upload className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400 mb-1 group-hover:text-blue-500 transition-colors" /><span className="text-xs sm:text-sm text-slate-500 group-hover:text-blue-600">Klik atau Drag file</span></div>
             )}
           </div>
         );
@@ -403,58 +383,116 @@ export default function RegistrationForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
+    <div className="min-h-screen bg-slate-50 py-6 px-3 sm:py-12 sm:px-4">
       <div className="max-w-3xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-10 text-white text-center">
-            <h2 className="text-3xl font-bold mb-2">Formulir Pendaftaran PPDB</h2>
-            <p className="text-blue-100">Lengkapi data diri calon peserta didik dengan benar dan valid.</p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100"
+        >
+          <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-4 py-6 sm:px-8 sm:py-10 text-white text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Formulir Pendaftaran PPDB</h2>
+            <p className="text-blue-100 text-sm sm:text-base">Lengkapi data diri calon peserta didik dengan benar dan valid.</p>
           </div>
-          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+
+          <form onSubmit={handleSubmit} className="p-4 sm:p-8 space-y-6 sm:space-y-8">
             {textFields.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold border-b pb-2 mb-6 flex items-center gap-2"><span className="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span> Data Pendaftar</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <h3 className="text-lg font-semibold text-slate-900 border-b pb-2 mb-4 sm:mb-6 flex items-center gap-2">
+                  <span className="bg-blue-100 text-blue-600 w-7 h-7 rounded-full flex items-center justify-center text-sm">1</span>
+                  Data Pendaftar
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   {textFields.map(field => (
                     <div key={field.id} className={field.type === 'textarea' ? 'col-span-1 md:col-span-2' : ''}>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">{field.label} {field.required && '*'}</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        {field.label} {field.required && '*'}
+                      </label>
                       {renderField(field)}
-                      {field.id === 'NIK' && <p className="text-xs text-slate-400 mt-1">* Harus 16 digit angka</p>}
-                      {field.id === 'NISN' && <p className="text-xs text-slate-400 mt-1">* Harus 10 digit angka</p>}
+                      {field.id === 'NIK' && (
+                        <p className="text-xs text-slate-400 mt-1">* Harus 16 digit angka</p>
+                      )}
+                      {field.id === 'NISN' && (
+                        <p className="text-xs text-slate-400 mt-1">* Harus 10 digit angka</p>
+                      )}
                     </div>
                   ))}
-                  <div className="col-span-2 mt-4">
-                    <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2"><MapPin size={18} className="text-blue-600" /> Tandai Lokasi Rumah di Peta</label>
-                    <p className="text-xs text-slate-500 mb-3">Klik pada peta untuk menandai lokasi rumah Anda. Jarak ke sekolah akan dihitung secara otomatis.</p>
+                  <div className="col-span-1 md:col-span-2 mt-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                      <MapPin size={18} className="text-blue-600" />
+                      Tandai Lokasi Rumah di Peta
+                    </label>
+                    <p className="text-xs text-slate-500 mb-3">
+                      Klik pada peta untuk menandai lokasi rumah Anda. Jarak ke sekolah akan dihitung secara otomatis.
+                    </p>
                     <MapPicker onLocationSelect={handleLocationSelect} autoLocate={true} />
-                    {distance !== null && <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg flex justify-between"><span className="text-sm text-slate-700">Jarak ke Sekolah:</span><span className="font-bold text-blue-700">{distance.toFixed(2)} km</span></div>}
+                    {distance !== null && (
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
+                        <span className="text-sm text-slate-700">Jarak ke Sekolah:</span>
+                        <span className="font-bold text-blue-700">{distance.toFixed(2)} km</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             )}
+
             {fileFields.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold border-b pb-2 mb-6 flex items-center gap-2"><span className="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span> Upload Berkas</h3>
-                <p className="text-sm text-slate-500 mb-6 flex items-center gap-2 bg-blue-50 p-3 rounded-lg"><AlertCircle size={16} className="text-blue-500" /> Format file: JPG/PNG/PDF. Ukuran maksimal: 2MB per file.</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <h3 className="text-lg font-semibold text-slate-900 border-b pb-2 mb-4 sm:mb-6 flex items-center gap-2">
+                  <span className="bg-blue-100 text-blue-600 w-7 h-7 rounded-full flex items-center justify-center text-sm">2</span>
+                  Upload Berkas
+                </h3>
+                <p className="text-sm text-slate-500 mb-4 sm:mb-6 flex items-center gap-2 bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100">
+                  <AlertCircle size={16} className="text-blue-500 shrink-0" />
+                  Format file: JPG/PNG/PDF. Ukuran maksimal: 2MB per file.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {fileFields.map(field => (
                     <div key={field.id} className="flex flex-col">
-                      <label className="block text-sm font-medium text-slate-700 mb-2">{field.label} {field.required && '*'}</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        {field.label} {field.required && '*'}
+                      </label>
                       {renderField(field)}
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            <div className="bg-slate-50 p-6 rounded-xl border">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" checked={isAgreed} onChange={(e) => setIsAgreed(e.target.checked)} className="mt-1 w-5 h-5 text-blue-600 rounded" />
-                <div className="text-sm text-slate-700"><span className="font-semibold block mb-1">Pernyataan Kebenaran Data</span> Saya menyatakan bahwa data yang saya isikan dalam formulir pendaftaran ini adalah benar dan dapat dipertanggungjawabkan. Apabila di kemudian hari ditemukan data yang tidak sesuai, saya bersedia menerima sanksi sesuai ketentuan yang berlaku.</div>
+
+            <div className="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200">
+              <label className="flex items-start gap-2 sm:gap-3 cursor-pointer">
+                <div className="flex-shrink-0 mt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={isAgreed}
+                    onChange={(e) => setIsAgreed(e.target.checked)}
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="text-xs sm:text-sm text-slate-700">
+                  <span className="font-semibold block mb-1">Pernyataan Kebenaran Data</span>
+                  Saya menyatakan bahwa data yang saya isikan dalam formulir pendaftaran ini adalah benar dan dapat dipertanggungjawabkan. Apabila di kemudian hari ditemukan data yang tidak sesuai, saya bersedia menerima sanksi sesuai ketentuan yang berlaku.
+                </div>
               </label>
             </div>
-            <button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-70 flex items-center justify-center">
-              {isSubmitting ? <><Loader2 className="animate-spin mr-2" size={24} /> Memproses...</> : 'Kirim Pendaftaran'}
-            </button>
+
+            <div className="pt-2 sm:pt-4 border-t border-slate-100">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 sm:px-8 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all shadow-md hover:shadow-lg disabled:opacity-70 flex items-center justify-center"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" size={20} />
+                    Memproses...
+                  </>
+                ) : (
+                  'Kirim Pendaftaran'
+                )}
+              </button>
+            </div>
           </form>
         </motion.div>
       </div>
