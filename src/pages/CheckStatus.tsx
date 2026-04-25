@@ -26,33 +26,44 @@ const printProof = (data: any, settings: any) => {
 
   // HEADER
   doc.setFillColor(37, 99, 235);
-  doc.rect(0, 0, 210, 55, 'F');
+  doc.rect(0, 0, 210, 50, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text("BUKTI PENDAFTARAN PPDB", 105, 30, { align: "center" });
+  doc.text("BUKTI PENDAFTARAN PPDB", 105, 28, { align: "center" });
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
-  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 42, { align: "center" });
-  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 52, { align: "center" });
+  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 40, { align: "center" });
+  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 105, 50, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  y = 70;
+  y = 68;
 
-  // JENIS SELEKSI - DIPERBESAR DENGAN GARIS (tanpa tumpang tindih)
+  // JENIS SELEKSI - Desain lebih rapi
   const jenisSeleksi = data['Jenis Seleksi'] || '-';
-  doc.setFillColor(245, 245, 245);
-  doc.rect(14, y - 5, 182, 18, 'F');
+  
+  // Garis atas
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
-  doc.rect(14, y - 5, 182, 18);
-  doc.setFontSize(12);
+  doc.line(14, y, 196, y);
+  y += 8;
+  
+  // Label JENIS SELEKSI
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("JENIS SELEKSI", 105, y + 2, { align: "center" });
-  doc.setFontSize(14);
+  doc.text("JENIS SELEKSI", 105, y, { align: "center" });
+  y += 8;
+  
+  // Value Jenis Seleksi (warna biru, font lebih besar)
+  doc.setFontSize(16);
   doc.setTextColor(37, 99, 235);
-  doc.text(jenisSeleksi, 105, y + 13, { align: "center" });
+  doc.setFont("helvetica", "bold");
+  doc.text(jenisSeleksi, 105, y, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  y += 22;
+  y += 12;
+  
+  // Garis bawah
+  doc.line(14, y, 196, y);
+  y += 12;
 
   // ========== TABEL DATA PRIBADI ==========
   const leftFields = [
@@ -68,6 +79,8 @@ const printProof = (data: any, settings: any) => {
   const formatValue = (field: string, val: any) => {
     if (field === "Tanggal Lahir") return formatDate(val);
     if (val === undefined || val === null || val === "") return "-";
+    // Singkat URL jika ada
+    if (typeof val === "string" && val.startsWith("http")) return "File terupload";
     return String(val);
   };
 
@@ -81,7 +94,6 @@ const printProof = (data: any, settings: any) => {
     tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
   }
 
-  // autoTable dengan startY yang sudah disesuaikan
   autoTable(doc, {
     startY: y,
     head: [],
@@ -98,36 +110,39 @@ const printProof = (data: any, settings: any) => {
     tableWidth: 'auto',
   });
 
-  // Dapatkan posisi Y setelah tabel
   let finalY = (doc as any).lastAutoTable.finalY + 5;
 
-  // ALAMAT dan NO WA (di luar tabel agar lebih rapi)
+  // ALAMAT
   if (data['Alamat Domisili Lengkap']) {
     doc.setFont("helvetica", "bold");
     doc.text("Alamat Domisili Lengkap:", 20, finalY);
-    finalY += 5;
+    finalY += 6;
     doc.setFont("helvetica", "normal");
     const alamat = String(data['Alamat Domisili Lengkap']);
     const splitAlamat = doc.splitTextToSize(alamat, 160);
     doc.text(splitAlamat, 22, finalY);
-    finalY += splitAlamat.length * 5 + 5;
+    finalY += splitAlamat.length * 5 + 8;
   }
 
+  // NOMOR WA
   if (data['Nomor WA Aktif']) {
     doc.setFont("helvetica", "bold");
     doc.text("Nomor WA Aktif:", 20, finalY);
     doc.setFont("helvetica", "normal");
     doc.text(String(data['Nomor WA Aktif']), 70, finalY);
-    finalY += 10;
+    finalY += 12;
   }
 
   // LOKASI DAN JARAK
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
-    doc.setFillColor(200, 200, 200);
-    doc.rect(14, finalY - 6, 182, 8, 'F');
+    // Garis pemisah
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, finalY, 196, finalY);
+    finalY += 8;
+    
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text("LOKASI DAN JARAK", 105, finalY - 1, { align: "center" });
+    doc.text("LOKASI DAN JARAK", 105, finalY, { align: "center" });
     finalY += 10;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
@@ -146,29 +161,32 @@ const printProof = (data: any, settings: any) => {
       doc.text("Jarak ke Sekolah:", 20, finalY);
       doc.setFont("helvetica", "normal");
       doc.text(`${data['Jarak ke Sekolah (km)']} km`, 70, finalY);
-      finalY += 6;
+      finalY += 10;
     }
-    finalY += 5;
   }
 
   // STATUS PENDAFTARAN
-  doc.setFillColor(200, 200, 200);
-  doc.rect(14, finalY - 6, 182, 8, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, finalY, 196, finalY);
+  finalY += 8;
+  
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("STATUS PENDAFTARAN", 105, finalY - 1, { align: "center" });
+  doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
   finalY += 10;
+  
   const status = data.Status || 'Proses';
   let statusColor = [255, 193, 7];
   if (status === 'Lulus') statusColor = [40, 167, 69];
   if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
+  
   doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-  doc.rect(70, finalY - 5, 70, 8, 'F');
+  doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.text(status, 105, finalY, { align: "center" });
+  doc.text(status, 105, finalY + 2, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  finalY += 12;
+  finalY += 15;
 
   // FOOTER
   if (finalY < 260) {
