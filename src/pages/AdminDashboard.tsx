@@ -510,12 +510,669 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'settings' && localSettings && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className={cn("rounded-xl shadow-sm border p-6", isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200")}>
-              <p className="text-center text-slate-500">Pengaturan aplikasi akan muncul di sini</p>
+  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+    <div className={cn("rounded-xl shadow-sm border p-6", isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200")}>
+      
+      {/* Tab Navigation Settings */}
+      <div className="flex items-center gap-4 mb-6 border-b dark:border-slate-700 pb-4 overflow-x-auto">
+        <button
+          onClick={() => setSettingsTab('school')}
+          className={cn("px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap", 
+            settingsTab === 'school' 
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" 
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700/50"
+          )}
+        >
+          Pengaturan Sekolah
+        </button>
+        <button
+          onClick={() => setSettingsTab('form')}
+          className={cn("px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap", 
+            settingsTab === 'form' 
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" 
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700/50"
+          )}
+        >
+          Pengaturan Formulir
+        </button>
+        <button
+          onClick={() => setSettingsTab('surat')}
+          className={cn("px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap", 
+            settingsTab === 'surat' 
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" 
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700/50"
+          )}
+        >
+          Pengaturan Surat
+        </button>
+        <button
+          onClick={() => setSettingsTab('daftar-ulang')}
+          className={cn("px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap", 
+            settingsTab === 'daftar-ulang' 
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" 
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700/50"
+          )}
+        >
+          Daftar Ulang
+        </button>
+        <button
+          onClick={() => setSettingsTab('kepala-sekolah')}
+          className={cn("px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap", 
+            settingsTab === 'kepala-sekolah' 
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" 
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700/50"
+          )}
+        >
+          Kepala Sekolah
+        </button>
+        <button
+          onClick={() => setSettingsTab('panduan')}
+          className={cn("px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap", 
+            settingsTab === 'panduan' 
+              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" 
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700/50"
+          )}
+        >
+          Panduan
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {/* Tab: Pengaturan Sekolah */}
+        {settingsTab === 'school' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Nama Sekolah</label>
+              <input
+                type="text"
+                value={localSettings.namaSekolah || ''}
+                onChange={e => setLocalSettings({...localSettings, namaSekolah: e.target.value})}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
             </div>
-          </motion.div>
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Status Pendaftaran</label>
+              <select
+                value={localSettings.statusPendaftaran || 'Buka'}
+                onChange={e => setLocalSettings({...localSettings, statusPendaftaran: e.target.value as any})}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              >
+                <option value="Buka">Buka</option>
+                <option value="Tutup">Tutup</option>
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Alamat</label>
+              <textarea
+                value={localSettings.alamat || ''}
+                onChange={e => setLocalSettings({...localSettings, alamat: e.target.value})}
+                rows={2}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Koordinat Sekolah</label>
+              <input
+                type="text"
+                value={localSettings.koordinatSekolah || ''}
+                onChange={e => setLocalSettings({...localSettings, koordinatSekolah: e.target.value})}
+                placeholder="Contoh: -6.200000, 106.816666"
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+              <p className="text-xs text-slate-500 mt-1">Digunakan untuk menghitung jarak rumah pendaftar ke sekolah.</p>
+            </div>
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Telepon</label>
+              <input
+                type="text"
+                value={localSettings.telepon || ''}
+                onChange={e => setLocalSettings({...localSettings, telepon: e.target.value})}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Email</label>
+              <input
+                type="email"
+                value={localSettings.email || ''}
+                onChange={e => setLocalSettings({...localSettings, email: e.target.value})}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Tahun Pendaftaran</label>
+              <input
+                type="text"
+                value={localSettings.tahunPendaftaran || ''}
+                onChange={e => setLocalSettings({...localSettings, tahunPendaftaran: e.target.value})}
+                placeholder="Contoh: 2024"
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Deskripsi Sekolah</label>
+              <textarea
+                value={localSettings.deskripsi || ''}
+                onChange={e => setLocalSettings({...localSettings, deskripsi: e.target.value})}
+                rows={3}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Logo Sekolah</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const compressed = await compressImage(file, 400);
+                    setLocalSettings({...localSettings, logoSekolah: compressed});
+                  }
+                }}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+              {localSettings.logoSekolah && (
+                <img src={localSettings.logoSekolah} alt="Logo Sekolah" className="mt-2 h-16 object-contain border rounded bg-white p-1" />
+              )}
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Gambar Header Beranda</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const compressed = await compressImage(file, 1200);
+                    setLocalSettings({...localSettings, gambarHeaderBeranda: compressed});
+                  }
+                }}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+              {localSettings.gambarHeaderBeranda && (
+                <img src={localSettings.gambarHeaderBeranda} alt="Header Beranda" className="mt-2 h-32 object-cover border rounded bg-white" />
+              )}
+            </div>
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Tanggal Pengumuman</label>
+              <input
+                type="date"
+                value={localSettings.tanggalPengumuman || ''}
+                onChange={e => setLocalSettings({...localSettings, tanggalPengumuman: e.target.value})}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+              <p className="text-xs text-slate-500 mt-1">Sebelum tanggal ini, pendaftar akan melihat status "Proses".</p>
+            </div>
+          </div>
         )}
+
+        {/* Tab: Pengaturan Formulir */}
+        {settingsTab === 'form' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Field Formulir Pendaftaran</h3>
+              <button
+                onClick={() => {
+                  const newFields = [...(localSettings.formFields || [])];
+                  newFields.push({ id: `field_${Date.now()}`, label: 'Field Baru', type: 'text', required: false });
+                  setLocalSettings({...localSettings, formFields: newFields});
+                }}
+                className="text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-400"
+              >
+                + Tambah Field
+              </button>
+            </div>
+            <div className="space-y-4">
+              {(localSettings.formFields || []).map((field, index) => (
+                <div key={index} className={cn("p-4 rounded-lg border grid grid-cols-1 md:grid-cols-12 gap-4 items-end", isDarkMode ? "border-slate-700 bg-slate-900/50" : "border-slate-200 bg-slate-50")}>
+                  <div className="md:col-span-3">
+                    <label className="block text-xs font-medium mb-1 opacity-70">ID Field</label>
+                    <input
+                      type="text"
+                      value={field.id}
+                      onChange={e => {
+                        const newFields = [...(localSettings.formFields || [])];
+                        newFields[index] = { ...newFields[index], id: e.target.value };
+                        setLocalSettings({...localSettings, formFields: newFields});
+                      }}
+                      className={cn("w-full px-3 py-2 text-sm border rounded-md", isDarkMode ? "bg-slate-800 border-slate-600" : "bg-white border-slate-300")}
+                    />
+                  </div>
+                  <div className="md:col-span-4">
+                    <label className="block text-xs font-medium mb-1 opacity-70">Label</label>
+                    <input
+                      type="text"
+                      value={field.label}
+                      onChange={e => {
+                        const newFields = [...(localSettings.formFields || [])];
+                        newFields[index] = { ...newFields[index], label: e.target.value };
+                        setLocalSettings({...localSettings, formFields: newFields});
+                      }}
+                      className={cn("w-full px-3 py-2 text-sm border rounded-md", isDarkMode ? "bg-slate-800 border-slate-600" : "bg-white border-slate-300")}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium mb-1 opacity-70">Tipe</label>
+                    <select
+                      value={field.type}
+                      onChange={e => {
+                        const newFields = [...(localSettings.formFields || [])];
+                        newFields[index] = { ...newFields[index], type: e.target.value as any };
+                        setLocalSettings({...localSettings, formFields: newFields});
+                      }}
+                      className={cn("w-full px-3 py-2 text-sm border rounded-md", isDarkMode ? "bg-slate-800 border-slate-600" : "bg-white border-slate-300")}
+                    >
+                      <option value="text">Text</option>
+                      <option value="number">Number</option>
+                      <option value="date">Date</option>
+                      <option value="select">Select</option>
+                      <option value="textarea">Textarea</option>
+                      <option value="file">File</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2 flex items-center h-[38px]">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={field.required || false}
+                        onChange={e => {
+                          const newFields = [...(localSettings.formFields || [])];
+                          newFields[index] = { ...newFields[index], required: e.target.checked };
+                          setLocalSettings({...localSettings, formFields: newFields});
+                        }}
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm">Wajib</span>
+                    </label>
+                  </div>
+                  <div className="md:col-span-1 flex justify-end">
+                    <button
+                      onClick={() => {
+                        const newFields = (localSettings.formFields || []).filter((_, i) => i !== index);
+                        setLocalSettings({...localSettings, formFields: newFields});
+                      }}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  {field.type === 'select' && (
+                    <div className="md:col-span-12 mt-2">
+                      <label className="block text-xs font-medium mb-1 opacity-70">Opsi (pisahkan dengan koma)</label>
+                      <input
+                        type="text"
+                        value={field.options?.join(', ') || ''}
+                        onChange={e => {
+                          const newFields = [...(localSettings.formFields || [])];
+                          newFields[index] = { ...newFields[index], options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) };
+                          setLocalSettings({...localSettings, formFields: newFields});
+                        }}
+                        placeholder="Contoh: Laki-laki, Perempuan"
+                        className={cn("w-full px-3 py-2 text-sm border rounded-md", isDarkMode ? "bg-slate-800 border-slate-600" : "bg-white border-slate-300")}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Pengaturan Surat */}
+        {settingsTab === 'surat' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Nomor Surat</label>
+              <input
+                type="text"
+                value={localSettings.nomorSurat || ''}
+                onChange={e => setLocalSettings({...localSettings, nomorSurat: e.target.value})}
+                placeholder="Contoh: 421.2/001/SD/2024"
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Tempat Surat</label>
+              <input
+                type="text"
+                value={localSettings.tempatSurat || ''}
+                onChange={e => setLocalSettings({...localSettings, tempatSurat: e.target.value})}
+                placeholder="Contoh: Jakarta"
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Kop Surat (Gambar)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const compressed = await compressImage(file, 1200);
+                    setLocalSettings({...localSettings, kopSurat: compressed});
+                  }
+                }}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+              {localSettings.kopSurat && <img src={localSettings.kopSurat} alt="Kop Surat" className="mt-2 h-16 object-contain border rounded bg-white" />}
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Catatan Tambahan</label>
+              <textarea
+                value={localSettings.catatanTambahan || ''}
+                onChange={e => setLocalSettings({...localSettings, catatanTambahan: e.target.value})}
+                rows={3}
+                placeholder="Contoh: Harap membawa materai 10.000 saat daftar ulang."
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Daftar Ulang */}
+        {settingsTab === 'daftar-ulang' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Tanggal Daftar Ulang</label>
+              <input
+                type="date"
+                value={localSettings.tanggalDaftarUlang || ''}
+                onChange={e => setLocalSettings({...localSettings, tanggalDaftarUlang: e.target.value})}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Persyaratan Daftar Ulang</label>
+              <textarea
+                value={localSettings.persyaratanDaftarUlang || ''}
+                onChange={e => setLocalSettings({...localSettings, persyaratanDaftarUlang: e.target.value})}
+                rows={6}
+                placeholder="1. Membawa bukti kelulusan&#10;2. Fotokopi akta kelahiran&#10;3. Pas foto 3x4"
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Kepala Sekolah */}
+        {settingsTab === 'kepala-sekolah' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Nama Kepala Sekolah</label>
+              <input
+                type="text"
+                value={localSettings.namaKepalaSekolah || ''}
+                onChange={e => setLocalSettings({...localSettings, namaKepalaSekolah: e.target.value})}
+                placeholder="Contoh: Drs. H. Ahmad, M.Pd."
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>NIP Kepala Sekolah</label>
+              <input
+                type="text"
+                value={localSettings.nipKepalaSekolah || ''}
+                onChange={e => setLocalSettings({...localSettings, nipKepalaSekolah: e.target.value})}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Foto Kepala Sekolah</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const compressed = await compressImage(file, 400);
+                    setLocalSettings({...localSettings, fotoKepalaSekolah: compressed});
+                  }
+                }}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+              {localSettings.fotoKepalaSekolah && (
+                <img src={localSettings.fotoKepalaSekolah} alt="Foto Kepala Sekolah" className="mt-2 h-32 object-cover border rounded bg-white" />
+              )}
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Tanda Tangan Kepala Sekolah</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const compressed = await compressImage(file, 400);
+                    setLocalSettings({...localSettings, tandaTanganKepalaSekolah: compressed});
+                  }
+                }}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+              {localSettings.tandaTanganKepalaSekolah && (
+                <img src={localSettings.tandaTanganKepalaSekolah} alt="Tanda Tangan" className="mt-2 h-16 object-contain border rounded bg-white" />
+              )}
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Stempel Sekolah</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const compressed = await compressImage(file, 400);
+                    setLocalSettings({...localSettings, stempelSekolah: compressed});
+                  }
+                }}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+              {localSettings.stempelSekolah && (
+                <img src={localSettings.stempelSekolah} alt="Stempel" className="mt-2 h-16 object-contain border rounded bg-white" />
+              )}
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Sambutan Kepala Sekolah</label>
+              <textarea
+                value={localSettings.sambutanKepalaSekolah || ''}
+                onChange={e => setLocalSettings({...localSettings, sambutanKepalaSekolah: e.target.value})}
+                rows={4}
+                placeholder="Sambutan kepala sekolah untuk halaman beranda..."
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Visi Sekolah</label>
+              <textarea
+                value={localSettings.visiSekolah || ''}
+                onChange={e => setLocalSettings({...localSettings, visiSekolah: e.target.value})}
+                rows={3}
+                placeholder="Visi sekolah..."
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Misi Sekolah</label>
+              <textarea
+                value={localSettings.misiSekolah || ''}
+                onChange={e => setLocalSettings({...localSettings, misiSekolah: e.target.value})}
+                rows={5}
+                placeholder="1. Misi pertama&#10;2. Misi kedua"
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Panduan */}
+        {settingsTab === 'panduan' && (
+          <div className="space-y-6">
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Judul Panduan</label>
+              <input
+                type="text"
+                value={localSettings.panduanJudul || ''}
+                onChange={e => setLocalSettings({...localSettings, panduanJudul: e.target.value})}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Deskripsi Panduan</label>
+              <textarea
+                value={localSettings.panduanDeskripsi || ''}
+                onChange={e => setLocalSettings({...localSettings, panduanDeskripsi: e.target.value})}
+                rows={2}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            <div>
+              <label className={cn("block text-sm font-medium mb-1", isDarkMode ? "text-slate-300" : "text-slate-700")}>Pesan Peringatan</label>
+              <textarea
+                value={localSettings.panduanPeringatan || ''}
+                onChange={e => setLocalSettings({...localSettings, panduanPeringatan: e.target.value})}
+                rows={3}
+                className={cn("w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500", isDarkMode ? "bg-slate-900 border-slate-700 text-white" : "bg-white border-slate-300")}
+              />
+            </div>
+            
+            <div className="border-t pt-4 dark:border-slate-700">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-md font-semibold">Dokumen yang Harus Disiapkan</h4>
+                <button
+                  onClick={() => {
+                    const newDocs = [...(localSettings.panduanDokumen || [])];
+                    newDocs.push({ id: Date.now().toString(), icon: 'FileText', title: 'Dokumen Baru', description: 'Deskripsi dokumen' });
+                    setLocalSettings({...localSettings, panduanDokumen: newDocs});
+                  }}
+                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-400"
+                >
+                  + Tambah Dokumen
+                </button>
+              </div>
+              <div className="space-y-4">
+                {(localSettings.panduanDokumen || []).map((doc, index) => (
+                  <div key={doc.id} className={cn("p-4 rounded-lg border grid grid-cols-1 md:grid-cols-12 gap-4 items-start", isDarkMode ? "border-slate-700 bg-slate-900/50" : "border-slate-200 bg-slate-50")}>
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-medium mb-1 opacity-70">Ikon</label>
+                      <select
+                        value={doc.icon}
+                        onChange={e => {
+                          const newDocs = [...(localSettings.panduanDokumen || [])];
+                          newDocs[index] = { ...newDocs[index], icon: e.target.value as any };
+                          setLocalSettings({...localSettings, panduanDokumen: newDocs});
+                        }}
+                        className={cn("w-full px-3 py-2 text-sm border rounded-md", isDarkMode ? "bg-slate-800 border-slate-600" : "bg-white border-slate-300")}
+                      >
+                        <option value="FileDigit">FileDigit (KK)</option>
+                        <option value="FileBadge">FileBadge (Akta)</option>
+                        <option value="FileImage">FileImage (Foto)</option>
+                        <option value="FileText">FileText (Ijazah)</option>
+                      </select>
+                    </div>
+                    <div className="md:col-span-3">
+                      <label className="block text-xs font-medium mb-1 opacity-70">Nama Dokumen</label>
+                      <input
+                        type="text"
+                        value={doc.title}
+                        onChange={e => {
+                          const newDocs = [...(localSettings.panduanDokumen || [])];
+                          newDocs[index] = { ...newDocs[index], title: e.target.value };
+                          setLocalSettings({...localSettings, panduanDokumen: newDocs});
+                        }}
+                        className={cn("w-full px-3 py-2 text-sm border rounded-md", isDarkMode ? "bg-slate-800 border-slate-600" : "bg-white border-slate-300")}
+                      />
+                    </div>
+                    <div className="md:col-span-6">
+                      <label className="block text-xs font-medium mb-1 opacity-70">Deskripsi</label>
+                      <textarea
+                        value={doc.description}
+                        onChange={e => {
+                          const newDocs = [...(localSettings.panduanDokumen || [])];
+                          newDocs[index] = { ...newDocs[index], description: e.target.value };
+                          setLocalSettings({...localSettings, panduanDokumen: newDocs});
+                        }}
+                        rows={2}
+                        className={cn("w-full px-3 py-2 text-sm border rounded-md", isDarkMode ? "bg-slate-800 border-slate-600" : "bg-white border-slate-300")}
+                      />
+                    </div>
+                    <div className="md:col-span-1 flex justify-end">
+                      <button
+                        onClick={() => {
+                          const newDocs = (localSettings.panduanDokumen || []).filter((_, i) => i !== index);
+                          setLocalSettings({...localSettings, panduanDokumen: newDocs});
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-md"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t pt-4 dark:border-slate-700">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-md font-semibold">Alur Pendaftaran</h4>
+                <button
+                  onClick={() => {
+                    const newAlur = [...(localSettings.panduanAlur || [])];
+                    newAlur.push('Langkah baru');
+                    setLocalSettings({...localSettings, panduanAlur: newAlur});
+                  }}
+                  className="text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-400"
+                >
+                  + Tambah Langkah
+                </button>
+              </div>
+              <div className="space-y-3">
+                {(localSettings.panduanAlur || []).map((step, index) => (
+                  <div key={index} className="flex gap-3 items-start">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center shrink-0 mt-1 dark:bg-slate-700 dark:text-slate-300">
+                      {index + 1}
+                    </div>
+                    <textarea
+                      value={step}
+                      onChange={e => {
+                        const newAlur = [...(localSettings.panduanAlur || [])];
+                        newAlur[index] = e.target.value;
+                        setLocalSettings({...localSettings, panduanAlur: newAlur});
+                      }}
+                      rows={2}
+                      className={cn("flex-grow px-3 py-2 text-sm border rounded-md", isDarkMode ? "bg-slate-800 border-slate-600" : "bg-white border-slate-300")}
+                    />
+                    <button
+                      onClick={() => {
+                        const newAlur = (localSettings.panduanAlur || []).filter((_, i) => i !== index);
+                        setLocalSettings({...localSettings, panduanAlur: newAlur});
+                      }}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-md"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tombol Simpan */}
+        <div className="pt-6 flex justify-end border-t dark:border-slate-700">
+          <button
+            onClick={handleSaveSettings}
+            disabled={isSavingSettings}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-70"
+          >
+            {isSavingSettings && <Loader2 size={18} className="animate-spin" />}
+            Simpan Pengaturan
+          </button>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+)}
       </div>
 
       {/* Detail Modal */}
