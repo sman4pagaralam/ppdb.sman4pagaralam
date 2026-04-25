@@ -66,12 +66,12 @@ const printProof = (data: any, settings: any) => {
   // ========== TABEL DATA PRIBADI ==========
   const leftFields = [
     "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
-    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif"
+    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "Alamat Domisili Lengkap"
   ];
   const rightFields = [
     "NISN", "Asal Sekolah",
     "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-    "Prestasi Akademik", "Prestasi Non Akademik", "Alamat Domisili Lengkap"
+    "Prestasi Akademik", "Prestasi Non Akademik", "No WA Aktif Orang Tua"
   ];
 
   const formatValue = (field: string, val: any) => {
