@@ -164,135 +164,150 @@ export default function RegistrationForm() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!isAgreed) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Pernyataan Belum Disetujui',
-        text: 'Anda harus menyetujui pernyataan kebenaran data sebelum mengirim formulir.',
-        confirmButtonColor: '#3b82f6'
-      });
-      return;
-    }
+  e.preventDefault();
+  
+  if (!isAgreed) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Pernyataan Belum Disetujui',
+      text: 'Anda harus menyetujui pernyataan kebenaran data sebelum mengirim formulir.',
+      confirmButtonColor: '#3b82f6'
+    });
+    return;
+  }
 
-    // ========== VALIDASI NIK ==========
-    const nikValue = formData['NIK'] || '';
-    if (!validateNIK(nikValue)) {
+  // ========== VALIDASI NIK ==========
+  const nikValue = formData['NIK'] || '';
+  if (!validateNIK(nikValue)) {
+    Swal.fire({
+      icon: 'error',
+      title: 'NIK Tidak Valid',
+      text: 'NIK harus terdiri dari 16 digit angka (0-9). Contoh: 3173010101010001',
+      confirmButtonColor: '#3b82f6'
+    });
+    return;
+  }
+  
+  // ========== VALIDASI NISN (jika ada dan required) ==========
+  // Cek apakah field NISN ada di formFields
+  const nisnField = settings?.formFields?.find(f => f.id === 'NISN' || f.label === 'NISN');
+  if (nisnField && nisnField.required) {
+    const nisnValue = formData['NISN'] || '';
+    if (!nisnValue) {
       Swal.fire({
         icon: 'error',
-        title: 'NIK Tidak Valid',
-        text: 'NIK harus terdiri dari 16 digit angka (0-9). Contoh: 3173010101010001',
+        title: 'NISN Wajib Diisi',
+        text: 'Silakan isi NISN dengan benar.',
         confirmButtonColor: '#3b82f6'
       });
       return;
     }
+    if (!validateNISN(nisnValue)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'NISN Tidak Valid',
+        text: 'NISN harus terdiri dari 10 digit angka (0-9). Contoh: 1234567890',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+  }
+
+  // Basic validation for files
+  const missingFiles = settings?.formFields?.filter(f => f.type === 'file' && f.required && !formData[f.label]);
+  if (missingFiles && missingFiles.length > 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Berkas Belum Lengkap',
+      text: `Mohon unggah dokumen: ${missingFiles.map(f => f.label).join(', ')}`,
+      confirmButtonColor: '#3b82f6'
+    });
+    return;
+  }
+
+  if (!mapLocation) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Lokasi Belum Ditandai',
+      text: 'Mohon tandai lokasi rumah Anda di peta.',
+      confirmButtonColor: '#3b82f6'
+    });
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    const response = await submitRegistration(formData);
     
-    // ========== VALIDASI NISN (jika ada dan required) ==========
-    // Cek apakah field NISN ada di formFields
-    const nisnField = settings?.formFields?.find(f => f.id === 'NISN' || f.label === 'NISN');
-    if (nisnField && nisnField.required) {
-      const nisnValue = formData['NISN'] || '';
-      if (!nisnValue) {
-        Swal.fire({
-          icon: 'error',
-          title: 'NISN Wajib Diisi',
-          text: 'Silakan isi NISN dengan benar.',
-          confirmButtonColor: '#3b82f6'
-        });
-        return;
-      }
-      if (!validateNISN(nisnValue)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'NISN Tidak Valid',
-          text: 'NISN harus terdiri dari 10 digit angka (0-9). Contoh: 1234567890',
-          confirmButtonColor: '#3b82f6'
-        });
-        return;
-      }
-    }
-
-    // Basic validation for files
-    const missingFiles = settings?.formFields?.filter(f => f.type === 'file' && f.required && !formData[f.label]);
-    if (missingFiles && missingFiles.length > 0) {
+    if (response.status === 'success') {
       Swal.fire({
-        icon: 'warning',
-        title: 'Berkas Belum Lengkap',
-        text: `Mohon unggah dokumen: ${missingFiles.map(f => f.label).join(', ')}`,
-        confirmButtonColor: '#3b82f6'
+        icon: 'success',
+        title: 'Pendaftaran Berhasil!',
+        html: `Nomor Pendaftaran Anda:<br><b style="font-size: 1.5rem; color: #2563eb;">${response.noPendaftaran}</b><br><br>Simpan nomor ini untuk mengecek status kelulusan.`,
+        confirmButtonColor: '#3b82f6',
+        confirmButtonText: 'Unduh Bukti Pendaftaran',
+        showCancelButton: true,
+        cancelButtonText: 'Tutup',
+        allowOutsideClick: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          printProof(response.noPendaftaran);
+        }
+        // Reset form
+        window.location.href = '/';
       });
-      return;
-    }
-
-    if (!mapLocation) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Lokasi Belum Ditandai',
-        text: 'Mohon tandai lokasi rumah Anda di peta.',
-        confirmButtonColor: '#3b82f6'
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await submitRegistration(formData);
+    } else {
+      // ========== TAMPILKAN PESAN ERROR DARI SERVER ==========
+      let errorMessage = response.message || 'Terjadi kesalahan. Silakan coba lagi.';
       
-      if (response.status === 'success') {
+      // Periksa apakah error terkait duplikat NIK/NISN
+      if (errorMessage.includes('NIK') && errorMessage.includes('sudah terdaftar')) {
         Swal.fire({
-          icon: 'success',
-          title: 'Pendaftaran Berhasil!',
-          html: `Nomor Pendaftaran Anda:<br><b style="font-size: 1.5rem; color: #2563eb;">${response.noPendaftaran}</b><br><br>Simpan nomor ini untuk mengecek status kelulusan.`,
-          confirmButtonColor: '#3b82f6',
-          confirmButtonText: 'Unduh Bukti Pendaftaran',
-          showCancelButton: true,
-          cancelButtonText: 'Tutup',
-          allowOutsideClick: false
-        }).then((result) => {
-          if (result.isConfirmed) {
-            printProof(response.noPendaftaran);
-          }
-          // Reset form
-          window.location.href = '/';
+          icon: 'error',
+          title: 'NIK Sudah Terdaftar!',
+          html: `${errorMessage}<br><br>Jika Anda sudah mendaftar sebelumnya, silakan cek status pendaftaran Anda.`,
+          confirmButtonColor: '#3b82f6'
+        });
+      } else if (errorMessage.includes('NISN') && errorMessage.includes('sudah terdaftar')) {
+        Swal.fire({
+          icon: 'error',
+          title: 'NISN Sudah Terdaftar!',
+          html: `${errorMessage}<br><br>Jika Anda sudah mendaftar sebelumnya, silakan cek status pendaftaran Anda.`,
+          confirmButtonColor: '#3b82f6'
         });
       } else {
-        throw new Error(response.message || 'Terjadi kesalahan');
+        Swal.fire({
+          icon: 'error',
+          title: 'Pendaftaran Gagal',
+          text: errorMessage,
+          confirmButtonColor: '#3b82f6'
+        });
       }
-    } catch (error) {
+    }
+  } catch (error: any) {
+    console.error('Registration error:', error);
+    
+    // Cek apakah error dari response API
+    if (error?.message) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Pendaftaran Gagal',
+        text: error.message,
+        confirmButtonColor: '#3b82f6'
+      });
+    } else {
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
         text: 'Terjadi kesalahan saat mengirim data. Silakan coba lagi.',
         confirmButtonColor: '#3b82f6'
       });
-    } finally {
-      setIsSubmitting(false);
     }
-  };
-
-  if (isClosed) {
-    return (
-      <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 text-center p-8">
-          <div className="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertCircle size={40} />
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Pendaftaran Ditutup</h2>
-          <p className="text-slate-600 mb-8">
-            Mohon maaf, pendaftaran peserta didik baru saat ini sedang ditutup. Silakan kembali lagi nanti atau hubungi pihak sekolah untuk informasi lebih lanjut.
-          </p>
-          <Link
-            to="/"
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-          >
-            Kembali ke Beranda
-          </Link>
-        </div>
-      </div>
-    );
+  } finally {
+    setIsSubmitting(false);
   }
+};
 
   const renderField = (field: any) => {
     const commonClasses = "w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors";
