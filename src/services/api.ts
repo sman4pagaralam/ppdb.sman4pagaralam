@@ -94,7 +94,6 @@ let fallbackData: AdminData[] = [];
 
 export const getSettings = async (): Promise<AppSettings> => {
   try {
-    // Gunakan fetch biasa tanpa abort controller yang bermasalah
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getSettings&t=${Date.now()}`, {
       method: 'GET',
       headers: {
@@ -178,7 +177,6 @@ export const getRegistrations = async (): Promise<AdminData[]> => {
     if (response.ok) {
       const result = await response.json();
       if (result.status === "success" && Array.isArray(result.data)) {
-        // Simpan ke fallback untuk digunakan nanti jika offline
         fallbackData = result.data;
         return result.data;
       }
@@ -205,7 +203,6 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
     
     if (response.ok) {
       const result = await response.json();
-      // Update fallback data juga
       fallbackData = fallbackData.map(item => 
         item['No Pendaftaran'] === noPendaftaran 
           ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
@@ -216,7 +213,6 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
     throw new Error("Failed to update");
   } catch (error) {
     console.warn("Status updated locally only:", error);
-    // Update local fallback
     fallbackData = fallbackData.map(item => 
       item['No Pendaftaran'] === noPendaftaran 
         ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
@@ -257,19 +253,35 @@ export const checkStatus = async (noPendaftaran: string) => {
   }
 };
 
+// ========== LOGIN ADMIN - TELAH DIPERBAIKI ==========
+// Sekarang benar-benar memanggil Google Apps Script untuk verifikasi
 export const loginAdmin = async (username: string, password: string) => {
-  // Login langsung (bypass API untuk kecepatan)
-  if (username === 'admin' && password === 'admin123') {
-    return { status: "success" };
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "login",
+        username,
+        password
+      }),
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      return result;
+    }
+    
+    return { status: "error", message: "Login gagal, coba lagi" };
+  } catch (error) {
+    console.error("Error logging in:", error);
+    return { status: "error", message: "Terjadi kesalahan koneksi" };
   }
-  return { status: "error", message: "Username atau password salah" };
 };
 
 // ========== FUNGSI BARU: getRegistrationByNo ==========
-// Fungsi untuk mengambil data pendaftaran lengkap berdasarkan nomor pendaftaran
 export const getRegistrationByNo = async (noPendaftaran: string): Promise<AdminData | null> => {
   try {
-    // Coba ambil dari API terlebih dahulu
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getRegistration&noPendaftaran=${encodeURIComponent(noPendaftaran)}&t=${Date.now()}`, {
       method: 'GET',
       headers: {
@@ -284,23 +296,18 @@ export const getRegistrationByNo = async (noPendaftaran: string): Promise<AdminD
       }
     }
     
-    // Jika API gagal, cari dari fallback data
     const localData = fallbackData.find(item => item['No Pendaftaran'] === noPendaftaran);
     if (localData) {
       return localData;
     }
     
-    // Jika tidak ditemukan di kedua sumber
     return null;
   } catch (error) {
     console.warn("Error fetching registration by number:", error);
-    
-    // Coba cari dari fallback data jika ada error jaringan
     const localData = fallbackData.find(item => item['No Pendaftaran'] === noPendaftaran);
     if (localData) {
       return localData;
     }
-    
     return null;
   }
 };
