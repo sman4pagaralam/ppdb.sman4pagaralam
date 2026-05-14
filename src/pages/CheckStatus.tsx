@@ -94,40 +94,38 @@ const printProof = async (data: any, settings: any) => {
   doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
   doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 115, 46, { align: "center" });
 
-         y = 72;
+         y = 62;  // setelah header, naikkan 10 mm
     const jalur1 = data['Jalur 1'] || '-';
     const jalur2 = data['Jalur 2'] || '-';
     
-    // Garis atas
+    // Garis atas (tetap di y)
     doc.setDrawColor(0, 0, 0);
     doc.line(14, y - 2, 196, y - 2);
     
-    // Dua kolom: kiri (JALUR 1) dan kanan (JALUR 2)
-    // Kolom kiri
-    doc.setFontSize(12);
+    // === Dua kolom, lebih rapat ===
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
-    doc.text("JALUR 1", 55, y + 8, { align: "center" });
-    doc.setFontSize(16);
+    doc.text("JALUR 1", 55, y + 6, { align: "center" });
+    doc.setFontSize(14);
     doc.setTextColor(37, 99, 235);
     doc.setFont("helvetica", "bold");
-    doc.text(jalur1, 55, y + 22, { align: "center" });
+    doc.text(jalur1, 55, y + 18, { align: "center" });
     
-    // Kolom kanan
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
-    doc.text("JALUR 2", 155, y + 8, { align: "center" });
-    doc.setFontSize(16);
+    doc.text("JALUR 2", 155, y + 6, { align: "center" });
+    doc.setFontSize(14);
     doc.setTextColor(37, 99, 235);
     doc.setFont("helvetica", "bold");
-    doc.text(jalur2, 155, y + 22, { align: "center" });
+    doc.text(jalur2, 155, y + 18, { align: "center" });
     
     doc.setTextColor(0, 0, 0);
-    // Garis bawah
-    let garisBawahY = y + 32;
+    // Garis bawah lebih dekat (tinggi total blok ~24 mm)
+    let garisBawahY = y + 28;
     doc.line(14, garisBawahY, 196, garisBawahY);
-    y = garisBawahY + 12;
+    y = garisBawahY + 8;  // spasi ke tabel lebih kecil
 
   // TABEL DATA PRIBADI
   const leftFields = [
