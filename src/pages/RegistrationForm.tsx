@@ -149,8 +149,7 @@ export default function RegistrationForm() {
     doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
     doc.text(`No. Pendaftaran: ${noPendaftaran}`, 115, 46, { align: "center" });
 
-     y = 72;
-    // Ambil nilai Jalur 1 dan Jalur 2
+         y = 72;
     const jalur1 = data['Jalur 1'] || '-';
     const jalur2 = data['Jalur 2'] || '-';
     
@@ -158,28 +157,30 @@ export default function RegistrationForm() {
     doc.setDrawColor(0, 0, 0);
     doc.line(14, y - 2, 196, y - 2);
     
-    // Judul "JALUR 1"
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("JALUR 1", 105, y + 6, { align: "center" });
-    doc.setFontSize(18);
-    doc.setTextColor(37, 99, 235);
-    doc.setFont("helvetica", "bold");
-    doc.text(jalur1, 105, y + 20, { align: "center" });
-    
-    // Judul "JALUR 2"
-    doc.setFontSize(14);
+    // Dua kolom: kiri (JALUR 1) dan kanan (JALUR 2)
+    // Kolom kiri
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(0, 0, 0);
-    doc.text("JALUR 2", 105, y + 34, { align: "center" });
-    doc.setFontSize(18);
+    doc.text("JALUR 1", 55, y + 8, { align: "center" });
+    doc.setFontSize(16);
     doc.setTextColor(37, 99, 235);
     doc.setFont("helvetica", "bold");
-    doc.text(jalur2, 105, y + 48, { align: "center" });
+    doc.text(jalur1, 55, y + 22, { align: "center" });
+    
+    // Kolom kanan
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text("JALUR 2", 155, y + 8, { align: "center" });
+    doc.setFontSize(16);
+    doc.setTextColor(37, 99, 235);
+    doc.setFont("helvetica", "bold");
+    doc.text(jalur2, 155, y + 22, { align: "center" });
     
     doc.setTextColor(0, 0, 0);
     // Garis bawah
-    let garisBawahY = y + 58;
+    let garisBawahY = y + 32;
     doc.line(14, garisBawahY, 196, garisBawahY);
     y = garisBawahY + 12;
 
