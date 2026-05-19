@@ -30,7 +30,7 @@ export default function Guide() {
 
   const judul = settings?.panduanJudul || "Panduan Pendaftaran PPDB";
   const deskripsi = settings?.panduanDeskripsi || "Persiapkan dokumen berikut sebelum mulai mengisi formulir pendaftaran.";
-  const peringatan = settings?.panduanPeringatan || "Pastikan semua dokumen jelas dan dapat terbaca. Yang di Upload Hanya Foto Saja JPG, JPEG, dengan ukuran maksimal 2MB per file.";
+  const peringatan = settings?.panduanPeringatan || "Pastikan semua dokumen jelas dan dapat terbaca. Yang di Upload Hanya Foto Saja dengan format JPG, JPEG, dengan ukuran maksimal 2MB per file.";
   const dokumen = settings?.panduanDokumen || [
     { id: "1", icon: "FileDigit", title: "Kartu Keluarga (KK)", description: "Asli atau fotokopi yang dilegalisir. Pastikan NIK dan nama calon siswa tercantum dengan benar." },
     { id: "2", icon: "FileBadge", title: "Akta Kelahiran", description: "Dokumen asli atau fotokopi legalisir untuk verifikasi usia dan data diri calon siswa." },
@@ -38,7 +38,7 @@ export default function Guide() {
     { id: "4", icon: "FileText", title: "Surat Keterangan Lulus", description: "Surat Keterangan Lulus atau Surat Keterangan Kelas IX SMP Asal." }
   ];
   const alur = settings?.panduanAlur || [
-    "Siapkan Siap Kan File Pas Foto.",
+    "Siapkan File Pas Foto.",
     "Klik tombol 'Mulai Pendaftaran' di bawah atau menu 'Daftar' di navigasi.",
     "Isi seluruh kolom formulir dengan data yang valid dan sesuai dengan dokumen asli.",
     "Tandai lokasi rumah Anda di peta yang disediakan untuk perhitungan jarak.",
