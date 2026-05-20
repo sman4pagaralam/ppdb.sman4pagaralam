@@ -211,7 +211,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
               { icon: FileText, title: "Isi Formulir", desc: "Lengkapi data diri calon siswa dan orang tua secara online.", step: "01" },
-              { icon: Upload, title: "Upload Berkas", desc: "Unggah dokumen persyaratan (Foto, KK, Akta Kelahiran).", step: "02" },
+              { icon: Upload, title: "Upload Berkas", desc: "Unggah dokumen persyaratan (File Pas Foto).", step: "02" },
               { icon: CheckCircle, title: "Verifikasi", desc: "Panitia akan memverifikasi data dan dokumen yang diunggah.", step: "03" },
               { icon: Clock, title: "Pengumuman", desc: "Cek status kelulusan dan cetak bukti pendaftaran.", step: "04" },
             ].map((step, idx) => (
