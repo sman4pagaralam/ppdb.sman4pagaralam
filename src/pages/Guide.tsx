@@ -35,7 +35,7 @@ export default function Guide() {
     { id: "1", icon: "FileDigit", title: "Kartu Keluarga (KK)", description: "Asli atau fotokopi yang dilegalisir. Pastikan NIK dan nama calon siswa tercantum dengan benar." },
     { id: "2", icon: "FileBadge", title: "Akta Kelahiran", description: "Dokumen asli atau fotokopi legalisir untuk verifikasi usia dan data diri calon siswa." },
     { id: "3", icon: "FileImage", title: "Pas Foto Terbaru", description: "File pas foto berwarna dengan latar belakang merah atau biru." },
-    { id: "4", icon: "FileText", title: "Surat Keterangan Lulus", description: "Surat Keterangan Lulus atau Surat Keterangan Kelas IX SMP Asal." }
+    { id: "4", icon: "FileText", title: "Surat Keterangan Lulus", description: "Ijazah/Surat Keterangan Lulus atau Surat Keterangan Kelas IX SMP Asal." }
   ];
   const alur = settings?.panduanAlur || [
     "Siapkan File Pas Foto.",
