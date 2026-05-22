@@ -189,7 +189,7 @@ export default function RegistrationForm() {
     const rightFields = [
       "NISN", "Asal Sekolah",
       "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-      "Prestasi Akademik", "Prestasi Non Akademik", "No WA Aktif Orang Tua", "Rata-Rata Nilai Akhir"
+      "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "No WA Aktif Orang Tua", "Rata-Rata Nilai Akhir"
     ];
 
     const formatValue = (field: string, val: any) => {
