@@ -172,7 +172,7 @@ const printProof = async (data: any, settings: any) => {
       3: { cellWidth: 76 },
     },
     margin: { left: 10, right: 10 },
-    tableWidth: 208,  // total lebar tabel
+    tableWidth: 180,  // total lebar tabel
   });
 
   let finalY = (doc as any).lastAutoTable.finalY + 5;
