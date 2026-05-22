@@ -263,30 +263,36 @@ export default function RegistrationForm() {
       }
     }
 
-    doc.setDrawColor(200, 200, 200);
-    doc.line(14, finalY, 196, finalY);
-    finalY += 8;
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
-    finalY += 10;
-    doc.setFillColor(255, 193, 7);
-    doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.text("Proses", 105, finalY + 2, { align: "center" });
-    doc.setTextColor(0, 0, 0);
-    finalY += 15;
-    if (finalY < 260) {
-      doc.setDrawColor(200, 200, 200);
-      doc.line(20, 270, 190, 270);
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
-      doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 287, { align: "center" });
-    }
-    doc.save(`Bukti_Pendaftaran_${noPendaftaran}.pdf`);
-  };
+    // STATUS PENDAFTARAN
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, finalY, 196, finalY);
+  finalY += 8;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
+  finalY += 10;
+  const status = data.Status || 'Proses';
+  let statusColor = [255, 193, 7];
+  if (status === 'Lulus') statusColor = [40, 167, 69];
+  if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
+  doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.text(status, 105, finalY + 2, { align: "center" });
+  doc.setTextColor(0, 0, 0);
+  finalY += 20;  // ← TAMBAHKAN JARAK (dari 15 ke 20)
+
+  // FOOTER
+  doc.setDrawColor(200, 200, 200);
+  doc.line(20, finalY, 190, finalY);
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, finalY + 10, { align: "center" });
+  doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, finalY + 17, { align: "center" });
+
+  doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
+};  // ← PENUTUP FUNGSI printProof (SATU KURUNG)
 
   // ========== SUBMIT ==========
   const handleSubmit = async (e: React.FormEvent) => {
