@@ -167,12 +167,12 @@ const printProof = async (data: any, settings: any) => {
     styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
     columnStyles: {
       0: { cellWidth: 28, fontStyle: 'bold' },
-      1: { cellWidth: 76 },
+      1: { cellWidth: 65 },
       2: { cellWidth: 28, fontStyle: 'bold' },
-      3: { cellWidth: 76 },
+      3: { cellWidth: 65 },
     },
     margin: { left: 10, right: 10 },
-    tableWidth: 100,  // total lebar tabel
+    tableWidth: auto,  // total lebar tabel
   });
 
   let finalY = (doc as any).lastAutoTable.finalY + 5;
