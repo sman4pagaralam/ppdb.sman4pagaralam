@@ -228,7 +228,7 @@ const printProof = async (data: any, settings: any) => {
   // FOOTER untuk F4 (kertas lebih panjang)
   if (finalY < 310) {
     doc.setDrawColor(200, 200, 200);
-    doc.line(20, 320, 190, 320);
+    doc.line(20, 300, 190, 300);
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
     doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 330, { align: "center" });
