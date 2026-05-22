@@ -355,7 +355,7 @@ export default function CheckStatus() {
           </div>
           <div className="p-8">
             <form onSubmit={handleSearch} className="mb-8">
-              <input type="text" required value={noPendaftaran} onChange={(e) => setNoPendaftaran(e.target.value)} className="w-full px-4 py-3 border rounded-xl" placeholder="PPDB-2024-001" />
+              <input type="text" required value={noPendaftaran} onChange={(e) => setNoPendaftaran(e.target.value)} className="w-full px-4 py-3 border rounded-xl" placeholder="PPDB-2026-001" />
               <button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white py-3 rounded-xl mt-4">
                 {isLoading ? <Loader2 className="animate-spin mx-auto" /> : <Search className="mx-auto" />}
               </button>
