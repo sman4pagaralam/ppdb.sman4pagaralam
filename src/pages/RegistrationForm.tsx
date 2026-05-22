@@ -93,11 +93,18 @@ export default function RegistrationForm() {
     }
   };
 
-  // ========== BUKTI PENDAFTARAN (sama dengan di CheckStatus) ==========
+  // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
   const printProof = async (noPendaftaran: string) => {
     if (!formData) return;
     const data = { ...formData, 'No Pendaftaran': noPendaftaran };
-    const doc = new jsPDF();
+    
+    // F4: lebar 210mm, tinggi 330mm
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [210, 330]
+    });
+    
     const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
     let fotoBase64 = null;
     if (fotoField && typeof fotoField === 'string' && isBase64Image(fotoField)) {
