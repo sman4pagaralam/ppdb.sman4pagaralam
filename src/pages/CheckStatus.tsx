@@ -137,7 +137,7 @@ const printProof = async (data: any, settings: any) => {
   const rightFields = [
     "NISN", "Asal Sekolah",
     "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "No WA Aktif Orang Tua"
+    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "No WA Aktif Orang Tua", "Rata-Rata Nilai Akhir"
   ];
 
   const formatValue = (field: string, val: any) => {
