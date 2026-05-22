@@ -467,25 +467,26 @@ export default function RegistrationForm() {
       );
     }
     
-    // ========== JALUR 2 (opsi dinamis, menghilangkan pilihan yang sudah dipilih di Jalur 1) ==========
-    if (field.id === 'Jalur 2' || field.label === 'Jalur 2') {
-      const optionsToShow = jalur2Options.length > 0 ? jalur2Options : allJalurOptions;
-      return (
-        <select
-          name={field.label}
-          required={field.required}
-          value={formData[field.label] || ''}
-          onChange={handleChange}
-          className={`${commonClasses} bg-white`}
-        >
-          <option value="">Pilih {field.label}</option>
-          {optionsToShow.map((opt: string) => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
-      );
-    }
-    // ========== SAMPAI SINI ==========
+    // ========== JALUR 2 (opsi dinamis + tambahan "Hanya memilih 1 Jalur") ==========
+if (field.id === 'Jalur 2' || field.label === 'Jalur 2') {
+  const optionsToShow = jalur2Options.length > 0 ? jalur2Options : allJalurOptions;
+  return (
+    <select
+      name={field.label}
+      required={field.required}
+      value={formData[field.label] || ''}
+      onChange={handleChange}
+      className={`${commonClasses} bg-white`}
+    >
+      <option value="">Pilih {field.label}</option>
+      <option value="Hanya memilih 1 Jalur">Hanya memilih 1 Jalur</option>
+      {optionsToShow.map((opt: string) => (
+        <option key={opt} value={opt}>{opt}</option>
+      ))}
+    </select>
+  );
+}
+// ========== SAMPAI SINI ==========
     
     switch (field.type) {
       case 'textarea':
