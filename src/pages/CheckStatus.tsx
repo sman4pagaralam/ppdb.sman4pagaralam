@@ -159,20 +159,20 @@ const printProof = async (data: any, settings: any) => {
     tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
   }
 
-   autoTable(doc, {
+ autoTable(doc, {
     startY: y,
     head: [],
     body: tableBody,
     theme: 'plain',
-    styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak', cellWidth: 'wrap' },
+    styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
     columnStyles: {
-      0: { fontStyle: 'bold', cellWidth: 'auto' },  // auto = otomatis sesuai teks terpanjang
-      1: { cellWidth: 'auto' },
-      2: { fontStyle: 'bold', cellWidth: 'auto' },
-      3: { cellWidth: 'auto' },
+      0: { cellWidth: 28, fontStyle: 'bold' },
+      1: { cellWidth: 76 },
+      2: { cellWidth: 28, fontStyle: 'bold' },
+      3: { cellWidth: 76 },
     },
-    margin: { left: 14, right: 14 },
-    tableWidth: 'wrap',  // ← kunci: tabel akan menyesuaikan lebar
+    margin: { left: 10, right: 10 },
+    tableWidth: 208,  // total lebar tabel
   });
 
   let finalY = (doc as any).lastAutoTable.finalY + 5;
