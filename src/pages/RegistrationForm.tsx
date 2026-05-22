@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Upload, AlertCircle, FileText, Loader2, MapPin } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -33,6 +33,16 @@ const extractFileId = (url: string) => {
   return match ? match[1] : null;
 };
 
+// ========== FUNGSI TITLE CASE ==========
+const toTitleCase = (str: string) => {
+  if (!str) return '';
+  return str.toLowerCase().split(' ').map(word => {
+    if (word.length === 0) return word;
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).join(' ');
+};
+// ========== SAMPAI SINI ==========
+
 export default function RegistrationForm() {
   const { settings } = useSettings();
   const isClosed = settings?.statusPendaftaran === 'Tutup';
@@ -44,12 +54,40 @@ export default function RegistrationForm() {
   const [mapLocation, setMapLocation] = useState<{lat: number, lng: number} | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
 
+  // ========== STATE UNTUK OPSI JALUR 2 (REAL-TIME) ==========
+  const [jalur2Options, setJalur2Options] = useState<string[]>([]);
+  
+  // Ambil opsi Jalur dari settings
+  const jalur1Field = settings?.formFields?.find(f => f.id === 'Jalur 1' || f.label === 'Jalur 1');
+  const allJalurOptions = jalur1Field?.options || ['Domisili', 'Afirmasi', 'Mutasi', 'Prestasi Akademik', 'Prestasi Non Akademi', 'Prestasi Nilai TKA'];
+  
+  // Update opsi Jalur 2 berdasarkan pilihan Jalur 1
+  const updateJalur2Options = (selectedJalur1: string) => {
+    if (selectedJalur1) {
+      const filtered = allJalurOptions.filter(opt => opt !== selectedJalur1);
+      setJalur2Options(filtered);
+    } else {
+      setJalur2Options(allJalurOptions);
+    }
+  };
+  
+  // Inisialisasi opsi Jalur 2 saat pertama kali load
+  useEffect(() => {
+    if (allJalurOptions.length > 0) {
+      setJalur2Options(allJalurOptions);
+    }
+  }, [settings]);
+  // ========== SAMPAI SINI ==========
+
   // ========== VALIDASI ==========
   const validateNIK = (nik: string): boolean => /^\d{16}$/.test(nik);
   const validateNISN = (nisn: string): boolean => /^\d{10}$/.test(nisn);
 
+  // ========== HANDLE CHANGE DENGAN TITLE CASE DAN JALUR ==========
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Khusus untuk NIK dan NISN (validasi angka)
     if (name === 'NIK') {
       const angkaOnly = value.replace(/\D/g, '');
       if (angkaOnly.length <= 16) setFormData(prev => ({ ...prev, [name]: angkaOnly }));
@@ -60,8 +98,29 @@ export default function RegistrationForm() {
       if (angkaOnly.length <= 10) setFormData(prev => ({ ...prev, [name]: angkaOnly }));
       return;
     }
+    
+    // ========== UNTUK JALUR 1 (update opsi Jalur 2) ==========
+    if (name === 'Jalur 1') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      // Reset Jalur 2
+      setFormData(prev => ({ ...prev, 'Jalur 2': '' }));
+      updateJalur2Options(value);
+      return;
+    }
+    // ========== SAMPAI SINI ==========
+    
+    // ========== TITLE CASE UNTUK FIELD TERTENTU ==========
+    const titleCaseFields = ['Nama Lengkap', 'Nama Ayah', 'Nama Ibu', 'Tempat Lahir'];
+    if (titleCaseFields.includes(name)) {
+      const formattedValue = toTitleCase(value);
+      setFormData(prev => ({ ...prev, [name]: formattedValue }));
+      return;
+    }
+    // ========== SAMPAI SINI ==========
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+  // ========== SAMPAI SINI ==========
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, fieldId: string) => {
     const file = e.target.files?.[0];
@@ -301,6 +360,22 @@ export default function RegistrationForm() {
       Swal.fire({ icon: 'warning', title: 'Pernyataan Belum Disetujui', text: 'Anda harus menyetujui pernyataan kebenaran data sebelum mengirim formulir.', confirmButtonColor: '#3b82f6' });
       return;
     }
+    
+    // ========== VALIDASI JALUR 1 DAN JALUR 2 TIDAK BOLEH SAMA ==========
+    const jalur1 = formData['Jalur 1'];
+    const jalur2 = formData['Jalur 2'];
+    
+    if (jalur1 && jalur2 && jalur1 === jalur2) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Jalur Tidak Valid',
+        text: 'Jalur 1 dan Jalur 2 tidak boleh sama. Silakan pilih jalur yang berbeda.',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+    // ========== SAMPAI SINI ==========
+    
     const nikValue = formData['NIK'] || '';
     if (!validateNIK(nikValue)) {
       Swal.fire({ icon: 'error', title: 'NIK Tidak Valid', text: 'NIK harus terdiri dari 16 digit angka (0-9). Contoh: 3173010101010001', confirmButtonColor: '#3b82f6' });
@@ -364,7 +439,7 @@ export default function RegistrationForm() {
     }
   };
 
-  // Render field form
+  // ========== RENDER FIELD JALUR 2 DENGAN OPSI DINAMIS ==========
   const renderField = (field: any) => {
     const commonClasses = "w-full px-3 py-2 sm:px-4 sm:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base";
     if (field.id === 'NIK') {
@@ -373,6 +448,45 @@ export default function RegistrationForm() {
     if (field.id === 'NISN') {
       return <input type="text" name={field.label} required={field.required} value={formData[field.label] || ''} onChange={handleChange} className={commonClasses} placeholder="10 digit angka (contoh: 1234567890)" maxLength={10} minLength={10} pattern="\d{10}" title="NISN harus 10 digit angka" />;
     }
+    
+    // ========== JALUR 1 (opsi tetap) ==========
+    if (field.id === 'Jalur 1' || field.label === 'Jalur 1') {
+      return (
+        <select
+          name={field.label}
+          required={field.required}
+          value={formData[field.label] || ''}
+          onChange={handleChange}
+          className={`${commonClasses} bg-white`}
+        >
+          <option value="">Pilih {field.label}</option>
+          {allJalurOptions.map((opt: string) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      );
+    }
+    
+    // ========== JALUR 2 (opsi dinamis, menghilangkan pilihan yang sudah dipilih di Jalur 1) ==========
+    if (field.id === 'Jalur 2' || field.label === 'Jalur 2') {
+      const optionsToShow = jalur2Options.length > 0 ? jalur2Options : allJalurOptions;
+      return (
+        <select
+          name={field.label}
+          required={field.required}
+          value={formData[field.label] || ''}
+          onChange={handleChange}
+          className={`${commonClasses} bg-white`}
+        >
+          <option value="">Pilih {field.label}</option>
+          {optionsToShow.map((opt: string) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      );
+    }
+    // ========== SAMPAI SINI ==========
+    
     switch (field.type) {
       case 'textarea':
         return <textarea name={field.label} required={field.required} rows={3} value={formData[field.label] || ''} onChange={handleChange} className={`${commonClasses} resize-none`} placeholder={field.label} />;
@@ -396,6 +510,7 @@ export default function RegistrationForm() {
         return <input type={field.type} name={field.label} required={field.required} value={formData[field.label] || ''} onChange={handleChange} className={commonClasses} placeholder={field.label} />;
     }
   };
+  // ========== SAMPAI SINI ==========
 
   const textFields = settings?.formFields?.filter(f => f.type !== 'file') || [];
   const fileFields = settings?.formFields?.filter(f => f.type === 'file') || [];
