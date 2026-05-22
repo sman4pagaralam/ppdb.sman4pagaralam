@@ -159,71 +159,72 @@ export default function RegistrationForm() {
     
     // === Dua kolom, lebih rapat ===
     doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
-    doc.text("JALUR 1", 55, y + 6, { align: "center" });
-    doc.setFontSize(14);
-    doc.setTextColor(37, 99, 235);
-    doc.setFont("helvetica", "bold");
-    doc.text(jalur1, 55, y + 18, { align: "center" });
-    
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
-    doc.text("JALUR 2", 155, y + 6, { align: "center" });
-    doc.setFontSize(14);
-    doc.setTextColor(37, 99, 235);
-    doc.setFont("helvetica", "bold");
-    doc.text(jalur2, 155, y + 18, { align: "center" });
-    
-    doc.setTextColor(0, 0, 0);
-    // Garis bawah lebih dekat (tinggi total blok ~24 mm)
-    let garisBawahY = y + 28;
-    doc.line(14, garisBawahY, 196, garisBawahY);
-    y = garisBawahY + 8;  // spasi ke tabel lebih kecil
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text("JALUR 1", 55, y + 6, { align: "center" });
+  doc.setFontSize(14);
+  doc.setTextColor(37, 99, 235);
+  doc.setFont("helvetica", "bold");
+  doc.text(jalur1, 55, y + 18, { align: "center" });
+  
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text("JALUR 2", 155, y + 6, { align: "center" });
+  doc.setFontSize(14);
+  doc.setTextColor(37, 99, 235);
+  doc.setFont("helvetica", "bold");
+  doc.text(jalur2, 155, y + 18, { align: "center" });
+  
+  doc.setTextColor(0, 0, 0);
+  let garisBawahY = y + 28;
+  doc.line(14, garisBawahY, 196, garisBawahY);
+  y = garisBawahY + 8;
 
-    const leftFields = [
-      "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
-      "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "Alamat Domisili Lengkap"
-    ];
-    const rightFields = [
-      "NISN", "Asal Sekolah",
-      "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-      "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "No WA Aktif Orang Tua", "Rata-Rata Nilai Akhir"
-    ];
+  // TABEL DATA PRIBADI
+  const leftFields = [
+    "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
+    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
+  ];
+  const rightFields = [
+    "NISN", "Asal Sekolah",
+    "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
+    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
+  ];
 
-    const formatValue = (field: string, val: any) => {
-      if (field === "Tanggal Lahir") return formatDate(val);
-      if (val === undefined || val === null || val === "") return "-";
-      if (typeof val === "string" && val.startsWith("http")) return "File terupload";
-      return String(val);
-    };
+  const formatValue = (field: string, val: any) => {
+    if (field === "Tanggal Lahir") return formatDate(val);
+    if (val === undefined || val === null || val === "") return "-";
+    if (typeof val === "string" && val.startsWith("http")) return "File terupload";
+    // Tampilkan lengkap, biar autoTable yang bungkus
+    return String(val);
+  };
 
-    const tableBody = [];
-    const maxRows = Math.max(leftFields.length, rightFields.length);
-    for (let i = 0; i < maxRows; i++) {
-      const leftLabel = leftFields[i] || "";
-      const leftValue = leftLabel ? formatValue(leftLabel, data[leftLabel]) : "";
-      const rightLabel = rightFields[i] || "";
-      const rightValue = rightLabel ? formatValue(rightLabel, data[rightLabel]) : "";
-      tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
-    }
+  const tableBody = [];
+  const maxRows = Math.max(leftFields.length, rightFields.length);
+  for (let i = 0; i < maxRows; i++) {
+    const leftLabel = leftFields[i] || "";
+    const leftValue = leftLabel ? formatValue(leftLabel, data[leftLabel]) : "";
+    const rightLabel = rightFields[i] || "";
+    const rightValue = rightLabel ? formatValue(rightLabel, data[rightLabel]) : "";
+    tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
+  }
 
-    autoTable(doc, {
-      startY: y,
-      head: [],
-      body: tableBody,
-      theme: 'plain',
-      styles: { fontSize: 10, cellPadding: 3, overflow: 'linebreak', cellWidth: 'wrap' },
-      columnStyles: {
-        0: { cellWidth: 35, fontStyle: 'bold' },
-        1: { cellWidth: 70 },
-        2: { cellWidth: 35, fontStyle: 'bold' },
-        3: { cellWidth: 70 },
-      },
-      margin: { left: 14, right: 14 },
-      tableWidth: 'auto',
-    });
+ autoTable(doc, {
+  startY: y,
+  head: [],
+  body: tableBody,
+  theme: 'plain',
+  styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
+  columnStyles: {
+    0: { cellWidth: 25, fontStyle: 'bold' },  // label kiri (diperkecil)
+    1: { cellWidth: 70 },                  // nilai kiri (auto)
+    2: { cellWidth: 25, fontStyle: 'bold' },  // label kanan (diperkecil)
+    3: { cellWidth: 'auto' },                  // nilai kanan (auto)
+  },
+  margin: { left: 12, right: 12 },
+  tableWidth: 'auto',
+});
 
     let finalY = (doc as any).lastAutoTable.finalY + 5;
 
