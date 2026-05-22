@@ -25,7 +25,7 @@ const extractFileId = (url: string) => {
   return match ? match[1] : null;
 };
 
-// ========== BUKTI PENDAFTARAN (dengan foto asli) ==========
+// ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
 const printProof = async (data: any, settings: any) => {
   if (!data) return;
   
@@ -36,22 +36,7 @@ const printProof = async (data: any, settings: any) => {
     format: [210, 330]
   });
   
-  // ... sisa kode tetap sama ...
-  
-  // FOOTER untuk F4 (tinggi 330mm)
-  if (finalY < 310) {
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 320, 190, 320);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 330, { align: "center" });
-    doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 337, { align: "center" });
-  }
-  
-  doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
-};
-
-  // Ambil URL foto (sesuaikan dengan field foto Anda)
+  // Ambil URL foto
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
   let fotoBase64 = null;
 
@@ -59,13 +44,11 @@ const printProof = async (data: any, settings: any) => {
     const fileId = extractFileId(fotoField);
     if (fileId) {
       try {
-        const proxyUrl = '/api/gas-proxy'; // endpoint proxy Vercel
+        const proxyUrl = '/api/gas-proxy';
         const response = await fetch(`${proxyUrl}?action=getImage&fileId=${fileId}&t=${Date.now()}`);
         const result = await response.json();
         if (result.status === 'success' && result.data) {
           fotoBase64 = `data:${result.mimeType};base64,${result.data}`;
-        } else {
-          console.warn('Gagal mengambil gambar:', result.message);
         }
       } catch (error) {
         console.error('Error fetching image:', error);
@@ -87,7 +70,6 @@ const printProof = async (data: any, settings: any) => {
       doc.setLineWidth(0.5);
       doc.rect(14, 8, 35, 45);
     } catch (e) {
-      // fallback placeholder
       drawPlaceholder(doc);
     }
   } else {
@@ -115,38 +97,37 @@ const printProof = async (data: any, settings: any) => {
   doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
   doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 115, 46, { align: "center" });
 
-         y = 62;  // setelah header, naikkan 10 mm
-    const jalur1 = data['Jalur 1'] || '-';
-    const jalur2 = data['Jalur 2'] || '-';
-    
-    // Garis atas (tetap di y)
-    doc.setDrawColor(0, 0, 0);
-    doc.line(14, y - 2, 196, y - 2);
-    
-    // === Dua kolom, lebih rapat ===
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
-    doc.text("JALUR 1", 55, y + 6, { align: "center" });
-    doc.setFontSize(14);
-    doc.setTextColor(37, 99, 235);
-    doc.setFont("helvetica", "bold");
-    doc.text(jalur1, 55, y + 18, { align: "center" });
-    
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
-    doc.text("JALUR 2", 155, y + 6, { align: "center" });
-    doc.setFontSize(14);
-    doc.setTextColor(37, 99, 235);
-    doc.setFont("helvetica", "bold");
-    doc.text(jalur2, 155, y + 18, { align: "center" });
-    
-    doc.setTextColor(0, 0, 0);
-    // Garis bawah lebih dekat (tinggi total blok ~24 mm)
-    let garisBawahY = y + 28;
-    doc.line(14, garisBawahY, 196, garisBawahY);
-    y = garisBawahY + 8;  // spasi ke tabel lebih kecil
+  y = 62;
+  const jalur1 = data['Jalur 1'] || '-';
+  const jalur2 = data['Jalur 2'] || '-';
+  
+  // Garis atas
+  doc.setDrawColor(0, 0, 0);
+  doc.line(14, y - 2, 196, y - 2);
+  
+  // Dua kolom Jalur
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text("JALUR 1", 55, y + 6, { align: "center" });
+  doc.setFontSize(14);
+  doc.setTextColor(37, 99, 235);
+  doc.setFont("helvetica", "bold");
+  doc.text(jalur1, 55, y + 18, { align: "center" });
+  
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text("JALUR 2", 155, y + 6, { align: "center" });
+  doc.setFontSize(14);
+  doc.setTextColor(37, 99, 235);
+  doc.setFont("helvetica", "bold");
+  doc.text(jalur2, 155, y + 18, { align: "center" });
+  
+  doc.setTextColor(0, 0, 0);
+  let garisBawahY = y + 28;
+  doc.line(14, garisBawahY, 196, garisBawahY);
+  y = garisBawahY + 8;
 
   // TABEL DATA PRIBADI
   const leftFields = [
@@ -156,7 +137,7 @@ const printProof = async (data: any, settings: any) => {
   const rightFields = [
     "NISN", "Asal Sekolah",
     "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "No WA Aktif Orang Tua", "Rata-Rata Nilai Akhir"
+    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "No WA Aktif Orang Tua"
   ];
 
   const formatValue = (field: string, val: any) => {
@@ -244,20 +225,20 @@ const printProof = async (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   finalY += 15;
 
-  // FOOTER
-  if (finalY < 260) {
+  // FOOTER untuk F4 (kertas lebih panjang)
+  if (finalY < 310) {
     doc.setDrawColor(200, 200, 200);
-    doc.line(20, 270, 190, 270);
+    doc.line(20, 320, 190, 320);
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
-    doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
-    doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 287, { align: "center" });
+    doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 330, { align: "center" });
+    doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 337, { align: "center" });
   }
 
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
 
-// ========== BUKTI KELULUSAN (tidak berubah) ==========
+// ========== BUKTI KELULUSAN ==========
 const printBuktiLulus = (data: any, settings: any) => {
   if (!data) return;
   const doc = new jsPDF();
