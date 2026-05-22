@@ -75,6 +75,7 @@ const getDefaultSettings = (): AppSettings => ({
   formFields: [
     { id: "Nama Lengkap", label: "Nama Lengkap", type: "text", required: true },
     { id: "NIK", label: "NIK", type: "text", required: true },
+    { id: "NISN", label: "NISN", type: "text", required: false },
     { id: "Tempat Lahir", label: "Tempat Lahir", type: "text", required: true },
     { id: "Tanggal Lahir", label: "Tanggal Lahir", type: "date", required: true },
     { id: "Jenis Kelamin", label: "Jenis Kelamin", type: "select", options: ["Laki-laki", "Perempuan"], required: true },
@@ -222,14 +223,25 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
   }
 };
 
-export const checkStatus = async (noPendaftaran: string) => {
+// ========== FUNGSI CHECK STATUS YANG SUDAH DIUPDATE ==========
+// Memerlukan No Pendaftaran DAN NISN untuk validasi
+export const checkStatus = async (noPendaftaran: string, nisn: string) => {
+  // Validasi kedua parameter harus diisi
+  if (!noPendaftaran || !nisn) {
+    return { 
+      status: "error", 
+      message: "No Pendaftaran dan NISN harus diisi" 
+    };
+  }
+
   try {
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "checkStatus",
-        noPendaftaran
+        noPendaftaran: noPendaftaran,
+        nisn: nisn
       }),
     });
     
@@ -239,12 +251,18 @@ export const checkStatus = async (noPendaftaran: string) => {
     throw new Error("Failed to check");
   } catch (error) {
     console.warn("Cannot check status:", error);
-    const localStudent = fallbackData.find(d => d['No Pendaftaran'] === noPendaftaran);
+    // Cek di fallback data dengan kedua kriteria
+    const localStudent = fallbackData.find(d => 
+      d['No Pendaftaran'] === noPendaftaran && 
+      String(d['NISN']) === String(nisn)
+    );
     if (localStudent) {
       return { 
         status: "success", 
         data: {
           noPendaftaran: localStudent['No Pendaftaran'],
+          nisn: localStudent['NISN'],
+          namaLengkap: localStudent['Nama Lengkap'] || "Siswa",
           status: localStudent.Status
         }
       };
@@ -279,7 +297,7 @@ export const loginAdmin = async (username: string, password: string) => {
   }
 };
 
-// ========== FUNGSI BARU: getRegistrationByNo ==========
+// ========== FUNGSI getRegistrationByNo ==========
 export const getRegistrationByNo = async (noPendaftaran: string): Promise<AdminData | null> => {
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getRegistration&noPendaftaran=${encodeURIComponent(noPendaftaran)}&t=${Date.now()}`, {
@@ -305,6 +323,39 @@ export const getRegistrationByNo = async (noPendaftaran: string): Promise<AdminD
   } catch (error) {
     console.warn("Error fetching registration by number:", error);
     const localData = fallbackData.find(item => item['No Pendaftaran'] === noPendaftaran);
+    if (localData) {
+      return localData;
+    }
+    return null;
+  }
+};
+
+// ========== FUNGSI BARU: getRegistrationByNisn ==========
+export const getRegistrationByNisn = async (nisn: string): Promise<AdminData | null> => {
+  try {
+    const response = await fetch(`${GAS_WEB_APP_URL}?action=getByNisn&nisn=${encodeURIComponent(nisn)}&t=${Date.now()}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      if (result.status === "success" && result.data) {
+        return result.data;
+      }
+    }
+    
+    const localData = fallbackData.find(item => String(item['NISN']) === String(nisn));
+    if (localData) {
+      return localData;
+    }
+    
+    return null;
+  } catch (error) {
+    console.warn("Error fetching registration by NISN:", error);
+    const localData = fallbackData.find(item => String(item['NISN']) === String(nisn));
     if (localData) {
       return localData;
     }
