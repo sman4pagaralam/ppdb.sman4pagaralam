@@ -28,11 +28,28 @@ const extractFileId = (url: string) => {
 // ========== BUKTI PENDAFTARAN (dengan foto asli) ==========
 const printProof = async (data: any, settings: any) => {
   if (!data) return;
+  
+  // F4: lebar 210mm, tinggi 330mm
   const doc = new jsPDF({
-  orientation: 'portrait',
-  unit: 'mm',
-  format: 'f4' // F4 = 210 x 330 mm
-});
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [210, 330]
+  });
+  
+  // ... sisa kode tetap sama ...
+  
+  // FOOTER untuk F4 (tinggi 330mm)
+  if (finalY < 310) {
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 320, 190, 320);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 330, { align: "center" });
+    doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 337, { align: "center" });
+  }
+  
+  doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
+};
 
   // Ambil URL foto (sesuaikan dengan field foto Anda)
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
