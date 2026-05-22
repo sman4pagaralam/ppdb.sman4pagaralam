@@ -28,7 +28,11 @@ const extractFileId = (url: string) => {
 // ========== BUKTI PENDAFTARAN (dengan foto asli) ==========
 const printProof = async (data: any, settings: any) => {
   if (!data) return;
-  const doc = new jsPDF();
+  const doc = new jsPDF({
+  orientation: 'portrait',
+  unit: 'mm',
+  format: 'f4' // F4 = 210 x 330 mm
+});
 
   // Ambil URL foto (sesuaikan dengan field foto Anda)
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
