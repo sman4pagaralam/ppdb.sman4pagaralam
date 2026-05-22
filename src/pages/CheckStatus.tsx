@@ -166,7 +166,7 @@ const printProof = async (data: any, settings: any) => {
   styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
   columnStyles: {
     0: { cellWidth: 25, fontStyle: 'bold' },  // label kiri (diperkecil)
-    1: { cellWidth: 'auto' },                  // nilai kiri (auto)
+    1: { cellWidth: 70 },                  // nilai kiri (auto)
     2: { cellWidth: 25, fontStyle: 'bold' },  // label kanan (diperkecil)
     3: { cellWidth: 'auto' },                  // nilai kanan (auto)
   },
