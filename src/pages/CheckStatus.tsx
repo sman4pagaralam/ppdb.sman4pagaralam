@@ -137,20 +137,16 @@ const printProof = async (data: any, settings: any) => {
   const rightFields = [
     "NISN", "Asal Sekolah",
     "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "No WA Aktif Orang Tua"
+    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", 
+    "No WA Aktif Orang Tua", "Rata-Rata Nilai Akhir"
   ];
 
   const formatValue = (field: string, val: any) => {
     if (field === "Tanggal Lahir") return formatDate(val);
     if (val === undefined || val === null || val === "") return "-";
     if (typeof val === "string" && val.startsWith("http")) return "File terupload";
-    
-    // Persingkat teks panjang agar tidak keluar kertas
-    let text = String(val);
-    if (text.length > 40) {
-      text = text.substring(0, 37) + "...";
-    }
-    return text;
+    // Tampilkan lengkap, biar autoTable yang bungkus
+    return String(val);
   };
 
   const tableBody = [];
