@@ -225,14 +225,14 @@ const printProof = async (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   finalY += 15;
 
-  // FOOTER untuk F4 (kertas lebih panjang)
+  // FOOTER
   if (finalY < 310) {
     doc.setDrawColor(200, 200, 200);
     doc.line(20, 300, 190, 300);
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
-    doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 330, { align: "center" });
-    doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 337, { align: "center" });
+    doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 310, { align: "center" });
+    doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 317, { align: "center" });
   }
 
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
