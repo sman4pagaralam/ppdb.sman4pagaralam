@@ -226,13 +226,16 @@ const printProof = async (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   finalY += 20;  // ← TAMBAHKAN JARAK (dari 15 ke 20)
 
-  // FOOTER (selalu tampil, posisi tetap)
+  // FOOTER
   doc.setDrawColor(200, 200, 200);
-  doc.line(20, finalY, 190, finalY);  // garis mengikuti posisi finalY
+  doc.line(20, finalY, 190, finalY);
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
   doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, finalY + 10, { align: "center" });
   doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, finalY + 17, { align: "center" });
+
+  doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
+};  // ← PENUTUP FUNGSI printProof (SATU KURUNG)
 
 // ========== BUKTI KELULUSAN ==========
 const printBuktiLulus = (data: any, settings: any) => {
