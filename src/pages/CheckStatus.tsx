@@ -137,14 +137,20 @@ const printProof = async (data: any, settings: any) => {
   const rightFields = [
     "NISN", "Asal Sekolah",
     "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "No WA Aktif Orang Tua", "Rata-Rata Nilai Akhir"
+    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "No WA Aktif Orang Tua"
   ];
 
   const formatValue = (field: string, val: any) => {
     if (field === "Tanggal Lahir") return formatDate(val);
     if (val === undefined || val === null || val === "") return "-";
     if (typeof val === "string" && val.startsWith("http")) return "File terupload";
-    return String(val);
+    
+    // Persingkat teks panjang agar tidak keluar kertas
+    let text = String(val);
+    if (text.length > 40) {
+      text = text.substring(0, 37) + "...";
+    }
+    return text;
   };
 
   const tableBody = [];
@@ -162,12 +168,12 @@ const printProof = async (data: any, settings: any) => {
     head: [],
     body: tableBody,
     theme: 'plain',
-    styles: { fontSize: 10, cellPadding: 3, overflow: 'linebreak', cellWidth: 'wrap' },
+    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
     columnStyles: {
-      0: { cellWidth: 35, fontStyle: 'bold' },
-      1: { cellWidth: 70 },
-      2: { cellWidth: 35, fontStyle: 'bold' },
-      3: { cellWidth: 70 },
+      0: { cellWidth: 30, fontStyle: 'bold' },
+      1: { cellWidth: 75 },
+      2: { cellWidth: 30, fontStyle: 'bold' },
+      3: { cellWidth: 75 },
     },
     margin: { left: 14, right: 14 },
     tableWidth: 'auto',
@@ -225,13 +231,13 @@ const printProof = async (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   finalY += 15;
 
- // FOOTER (selalu tampil, posisi tetap)
+  // FOOTER (selalu tampil, posisi tetap)
   doc.setDrawColor(200, 200, 200);
-  doc.line(20, 270, 190, 270);
+  doc.line(20, 260, 190, 260);
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 320, { align: "center" });
-  doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 325, { align: "center" });
+  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 270, { align: "center" });
+  doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 277, { align: "center" });
 
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
