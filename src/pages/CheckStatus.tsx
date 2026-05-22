@@ -160,20 +160,20 @@ const printProof = async (data: any, settings: any) => {
   }
 
  autoTable(doc, {
-    startY: y,
-    head: [],
-    body: tableBody,
-    theme: 'plain',
-    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
-    columnStyles: {
-      0: { cellWidth: 28, fontStyle: 'bold' },
-      1: { cellWidth: 65 },
-      2: { cellWidth: 28, fontStyle: 'bold' },
-      3: { cellWidth: 65 },
-    },
-    margin: { left: 10, right: 10 },
-    tableWidth: auto,  // total lebar tabel
-  });
+  startY: y,
+  head: [],
+  body: tableBody,
+  theme: 'plain',
+  styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
+  columnStyles: {
+    0: { cellWidth: 25, fontStyle: 'bold' },  // label kiri (diperkecil)
+    1: { cellWidth: 'auto' },                  // nilai kiri (auto)
+    2: { cellWidth: 25, fontStyle: 'bold' },  // label kanan (diperkecil)
+    3: { cellWidth: 'auto' },                  // nilai kanan (auto)
+  },
+  margin: { left: 12, right: 12 },
+  tableWidth: 'auto',
+});
 
   let finalY = (doc as any).lastAutoTable.finalY + 5;
 
