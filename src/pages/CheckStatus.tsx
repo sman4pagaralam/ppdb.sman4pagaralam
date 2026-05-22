@@ -230,8 +230,8 @@ const printProof = async (data: any, settings: any) => {
   doc.line(20, 270, 190, 270);
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 280, { align: "center" });
-  doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 287, { align: "center" });
+  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, 290, { align: "center" });
+  doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, 292, { align: "center" });
 
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
