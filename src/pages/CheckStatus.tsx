@@ -409,6 +409,17 @@ export default function CheckStatus() {
           </div>
           
           <div className="p-8">
+
+            {/* ========== TARUH KODE INI DI SINI ========== */}
+            {settings?.tanggalPengumuman && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg text-center">
+                <p className="text-sm text-blue-700">
+                  📢 Pengumuman kelulusan: <strong>{settings.tanggalPengumuman}</strong>
+                </p>
+              </div>
+            )}
+            {/* ========== SAMPAI SINI ========== */}
+            
             <form onSubmit={handleSearch} className="mb-8 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
