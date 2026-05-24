@@ -334,7 +334,7 @@ const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   doc.text(splitKeterangan, marginLeft, y);
   y += splitKeterangan.length * 5 + 12;
   
-  // ==================== TEKS LULUS ====================
+  // ==================== TEKS LULUS (TANPA GARIS BAWAH) ====================
   const lulusX = pageWidth / 2;
   const lulusY = y;
   
@@ -343,9 +343,7 @@ const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   doc.text("LULUS", lulusX, lulusY, { align: "center" });
   
-  const textWidth = doc.getTextWidth("LULUS");
-  doc.setLineWidth(0.5);
-  doc.line(lulusX - (textWidth / 2), lulusY + 1, lulusX + (textWidth / 2), lulusY + 1);
+  // GARIS BAWAH TELAH DIHAPUS
   
   y += 22;
   
