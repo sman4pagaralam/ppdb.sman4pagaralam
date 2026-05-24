@@ -35,9 +35,52 @@ const formatTanggalPengumuman = (date: any): string => {
   return String(date);
 };
 
+// Helper: cek apakah sudah melewati tanggal pengumuman
+const isAfterPengumuman = (settings: any): boolean => {
+  const tanggalPengumuman = settings?.tanggalPengumuman;
+  if (!tanggalPengumuman) return true;
+  
+  let dateStr = '';
+  if (typeof tanggalPengumuman === 'string') {
+    dateStr = tanggalPengumuman;
+  } else if (tanggalPengumuman instanceof Date) {
+    const d = tanggalPengumuman;
+    dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+  } else {
+    dateStr = String(tanggalPengumuman);
+  }
+  
+  const parts = dateStr.split('/');
+  if (parts.length !== 3) return true;
+  
+  const announceDate = new Date(parts[2], parts[1] - 1, parts[0]);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  announceDate.setHours(0, 0, 0, 0);
+  
+  return today >= announceDate;
+};
+
+// Helper: dapatkan status yang benar berdasarkan tanggal pengumuman
+const getDisplayStatus = (originalStatus: string, settings: any): string => {
+  if (originalStatus !== 'Lulus' && originalStatus !== 'Tidak Lulus') {
+    return originalStatus;
+  }
+  
+  if (!isAfterPengumuman(settings)) {
+    return 'Proses';
+  }
+  
+  return originalStatus;
+};
+
 // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
 const printProof = async (data: any, settings: any) => {
   if (!data) return;
+  
+  // ========== CEK TANGGAL PENGUMUMAN UNTUK STATUS ==========
+  const originalStatus = data.Status || 'Proses';
+  const displayStatus = getDisplayStatus(originalStatus, settings);
   
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -206,6 +249,7 @@ const printProof = async (data: any, settings: any) => {
     }
   }
 
+  // ========== STATUS PENDAFTARAN (menggunakan displayStatus) ==========
   doc.setDrawColor(200, 200, 200);
   doc.line(14, finalY, 196, finalY);
   finalY += 8;
@@ -213,15 +257,16 @@ const printProof = async (data: any, settings: any) => {
   doc.setFont("helvetica", "bold");
   doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
   finalY += 10;
-  const status = data.Status || 'Proses';
-  let statusColor = [255, 193, 7];
-  if (status === 'Lulus') statusColor = [40, 167, 69];
-  if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
+  
+  let statusColor = [255, 193, 7]; // kuning untuk Proses
+  if (displayStatus === 'Lulus') statusColor = [40, 167, 69]; // hijau
+  if (displayStatus === 'Tidak Lulus') statusColor = [220, 53, 69]; // merah
+  
   doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.text(status, 105, finalY + 2, { align: "center" });
+  doc.text(displayStatus, 105, finalY + 2, { align: "center" });
   doc.setTextColor(0, 0, 0);
   finalY += 20;
 
@@ -345,9 +390,12 @@ export default function CheckStatus() {
           setRegistrationData(fullData);
         }
         
+        // Tentukan status yang ditampilkan berdasarkan tanggal pengumuman
+        const displayStatus = getDisplayStatus(response.data.status, settings);
+        
         setResult({
           ...response.data,
-          // Tambahkan data dari fullData ke result
+          status: displayStatus, // Override status dengan yang sudah dicek tanggalnya
           asalSekolah: fullData?.['Asal Sekolah'] || '-',
         });
       } else {
