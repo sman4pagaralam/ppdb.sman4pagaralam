@@ -275,17 +275,17 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
   doc.setFontSize(11);
   doc.setFont("times", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text(namaSiswa, 55, 95); // <-- Sesuaikan X dan Y
+  doc.text(namaSiswa, 55, 92); // <-- Sesuaikan X dan Y
   
   // NISN (Times New Roman Bold)
   doc.setFontSize(11);
   doc.setFont("times", "bold");
-  doc.text(nisn, 55, 105); // <-- Sesuaikan X dan Y
+  doc.text(nisn, 55, 97); // <-- Sesuaikan X dan Y
   
   // Asal Sekolah (Times New Roman Bold)
   doc.setFontSize(11);
   doc.setFont("times", "bold");
-  doc.text(asalSekolah, 55, 115); // <-- Sesuaikan X dan Y
+  doc.text(asalSekolah, 55, 105); // <-- Sesuaikan X dan Y
   
   // ==================== FOOTER ====================
   doc.setFontSize(7);
