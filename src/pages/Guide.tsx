@@ -32,8 +32,8 @@ export default function Guide() {
   const deskripsi = settings?.panduanDeskripsi || "Persiapkan dokumen berikut sebelum mulai mengisi formulir pendaftaran.";
   const peringatan = settings?.panduanPeringatan || "Pastikan semua dokumen jelas dan dapat terbaca. Yang di Upload Hanya Foto Saja dengan format JPG, JPEG, dengan ukuran maksimal 2MB per file.";
   const dokumen = settings?.panduanDokumen || [
-    { id: "1", icon: "FileDigit", title: "Kartu Keluarga (KK)", description: "Asli atau fotokopi yang dilegalisir. Pastikan NIK dan nama calon siswa tercantum dengan benar." },
-    { id: "2", icon: "FileBadge", title: "Akta Kelahiran", description: "Dokumen asli atau fotokopi legalisir untuk verifikasi usia dan data diri calon siswa." },
+    { id: "1", icon: "FileDigit", title: "Kartu Keluarga (KK)", description: "Asli atau fotokopi yang dilegalisir. Pastikan NIK dan nama calon MURID tercantum dengan benar." },
+    { id: "2", icon: "FileBadge", title: "Akta Kelahiran", description: "Dokumen asli atau fotokopi legalisir untuk verifikasi usia dan data diri calon MURID." },
     { id: "3", icon: "FileImage", title: "Pas Foto Terbaru", description: "File pas foto berwarna dengan latar belakang merah atau biru." },
     { id: "4", icon: "FileText", title: "Ijazah/Surat Keterangan Lulus", description: "Ijazah/Surat Keterangan Lulus atau Surat Keterangan Kelas IX SMP Asal." }
   ];
