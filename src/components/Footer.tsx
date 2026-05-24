@@ -31,7 +31,7 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-4">Tautan Cepat</h3>
             <ul className="space-y-2 text-sm">
               <li><Link to="/" className="hover:text-blue-400 transition-colors">Beranda</Link></li>
-              <li><Link to="/daftar" className="hover:text-blue-400 transition-colors">Pendaftaran PPDB</Link></li>
+              <li><Link to="/daftar" className="hover:text-blue-400 transition-colors">Pendaftaran SPMB</Link></li>
               <li><Link to="/admin" className="hover:text-blue-400 transition-colors">Login Admin</Link></li>
             </ul>
           </div>
@@ -57,7 +57,7 @@ export default function Footer() {
         
         <div className="mt-12 pt-8 border-t border-slate-800 text-center text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center">
           <p>&copy; {new Date().getFullYear()} {settings?.namaSekolah || 'SDN Harapan Bangsa'}. Hak Cipta Dilindungi.</p>
-          <p className="mt-2 md:mt-0">Sistem PPDB Online Terintegrasi</p>
+          <p className="mt-2 md:mt-0">Sistem SPMB Online Terintegrasi</p>
         </div>
       </div>
     </footer>
