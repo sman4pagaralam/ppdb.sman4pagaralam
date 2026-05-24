@@ -269,23 +269,29 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
   const namaSiswa = fullData?.['Nama Lengkap'] || data.namaLengkap || '-';
   const nisn = fullData?.['NISN'] || data.nisn || '-';
   const asalSekolah = fullData?.['Asal Sekolah'] || '-';
+  const noPendaftaran = data.noPendaftaran || '-';
   
   // ==================== SESUAIKAN KOORDINAT ====================
-  // Nama Siswa (Times New Roman Bold)
+  // No Pendaftaran (baris pertama)
   doc.setFontSize(11);
   doc.setFont("times", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text(namaSiswa, 55, 92); // <-- Sesuaikan X dan Y
+  doc.text(noPendaftaran, 55, 85); // <-- Sesuaikan X dan Y
   
-  // NISN (Times New Roman Bold)
+  // Nama Siswa (baris kedua)
   doc.setFontSize(11);
   doc.setFont("times", "bold");
-  doc.text(nisn, 55, 97); // <-- Sesuaikan X dan Y
+  doc.text(namaSiswa, 55, 95); // <-- Sesuaikan X dan Y
   
-  // Asal Sekolah (Times New Roman Bold)
+  // NISN (baris ketiga)
   doc.setFontSize(11);
   doc.setFont("times", "bold");
-  doc.text(asalSekolah, 55, 105); // <-- Sesuaikan X dan Y
+  doc.text(nisn, 55, 105); // <-- Sesuaikan X dan Y
+  
+  // Asal Sekolah (baris keempat)
+  doc.setFontSize(11);
+  doc.setFont("times", "bold");
+  doc.text(asalSekolah, 55, 115); // <-- Sesuaikan X dan Y
   
   // ==================== FOOTER ====================
   doc.setFontSize(7);
