@@ -57,7 +57,7 @@ export default function AdminLogin() {
               <Lock className="text-blue-400" size={32} />
             </div>
             <h2 className="text-2xl font-bold mb-2">Login Admin</h2>
-            <p className="text-slate-300 text-sm">Masuk untuk mengelola data pendaftaran PPDB.</p>
+            <p className="text-slate-300 text-sm">Masuk untuk mengelola data pendaftaran SPMB.</p>
           </div>
 
           <form onSubmit={handleLogin} className="p-8 space-y-6">
