@@ -278,12 +278,12 @@ const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   doc.text("SURAT KETERANGAN", pageWidth / 2, y, { align: "center" });
   y += 12;
   
-  // ==================== NOMOR SURAT ====================
+  // ==================== NOMOR SURAT (DI-CENTER & DINAIKKAN) ====================
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
   const tahun = new Date().getFullYear();
-  doc.text(`Nomor : 420/2784/SMAN.4PGA/06/${tahun}`, marginLeft, y);
+  doc.text(`Nomor : 420/2784/SMAN.4PGA/06/${tahun}`, pageWidth / 2, y - 5, { align: "center" }); // ← center & naik 5mm
   y += 15;
   
   // ==================== PEMBUKA ====================
