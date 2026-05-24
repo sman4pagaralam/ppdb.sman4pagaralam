@@ -236,7 +236,7 @@ const printProof = async (data: any, settings: any) => {
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
 
-// ========== BUKTI KELULUSAN (DESAIN SESUAI SURAT SEKOLAH) ==========
+// ========== BUKTI KELULUSAN (DESAIN RAPI SESUAI SURAT SEKOLAH) ==========
 const printBuktiLulus = (data: any, settings: any) => {
   if (!data) return;
   
@@ -249,15 +249,15 @@ const printBuktiLulus = (data: any, settings: any) => {
   const pageWidth = 210;
   const marginLeft = 20;
   const marginRight = 20;
-  let y = 30;
+  let y = 25;
 
   // ==================== KOP SURAT ====================
   // Nama Sekolah
-  doc.setFontSize(16);
+  doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
   doc.text("SMA NEGERI 4 PAGAR ALAM", pageWidth / 2, y, { align: "center" });
-  y += 8;
+  y += 6;
   
   // Alamat Sekolah
   doc.setFontSize(9);
@@ -268,12 +268,12 @@ const printBuktiLulus = (data: any, settings: any) => {
   doc.text("Email: sman4@pagaralam.sch.id | Telp: (0730) 12345", pageWidth / 2, y, { align: "center" });
   y += 8;
   
-  // Garis bawah kop
+  // Garis bawah kop (double line)
   doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(1);
+  doc.setLineWidth(0.8);
   doc.line(marginLeft, y, pageWidth - marginRight, y);
   doc.setLineWidth(0.3);
-  doc.line(marginLeft, y + 1, pageWidth - marginRight, y + 1);
+  doc.line(marginLeft, y + 1.5, pageWidth - marginRight, y + 1.5);
   
   y += 15;
   
@@ -285,71 +285,86 @@ const printBuktiLulus = (data: any, settings: any) => {
   y += 12;
   
   // ==================== NOMOR SURAT ====================
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   const tahun = new Date().getFullYear();
   doc.text(`Nomor : 420/2784/SMAN.4PGA/06/${tahun}`, marginLeft, y);
   y += 15;
   
   // ==================== PEMBUKA ====================
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   const pembuka = "Yang bertanda tangan dibawah ini kepala SMA Negeri 4 Pagar Alam, Menerangkan bahwa;";
   const splitPembuka = doc.splitTextToSize(pembuka, pageWidth - marginLeft - marginRight);
   doc.text(splitPembuka, marginLeft, y);
-  y += splitPembuka.length * 6 + 10;
+  y += splitPembuka.length * 5 + 8;
   
-  // ==================== DATA SISWA ====================
+  // ==================== DATA SISWA (TABEL SEDERHANA) ====================
   const namaSiswa = data.namaLengkap || '-';
   const nisn = data.nisn || '-';
   const asalSekolah = data['Asal Sekolah'] || '-';
   
-  doc.setFont("helvetica", "normal");
-  doc.text(`Nama`, marginLeft, y);
-  doc.text(`: ${namaSiswa}`, marginLeft + 35, y);
-  y += 8;
+  // Baris 1: Nama
+  doc.text("Nama", marginLeft, y);
+  doc.text(":", marginLeft + 25, y);
+  doc.text(namaSiswa, marginLeft + 30, y);
+  y += 7;
   
-  doc.text(`NISN`, marginLeft, y);
-  doc.text(`: ${nisn}`, marginLeft + 35, y);
-  y += 8;
+  // Baris 2: NISN
+  doc.text("NISN", marginLeft, y);
+  doc.text(":", marginLeft + 25, y);
+  doc.text(nisn, marginLeft + 30, y);
+  y += 7;
   
-  doc.text(`Asal Sekolah`, marginLeft, y);
-  doc.text(`: ${asalSekolah}`, marginLeft + 35, y);
+  // Baris 3: Asal Sekolah
+  doc.text("Asal Sekolah", marginLeft, y);
+  doc.text(":", marginLeft + 25, y);
+  doc.text(asalSekolah, marginLeft + 30, y);
   y += 15;
   
   // ==================== KETERANGAN KELULUSAN ====================
   const keterangan = `Berdasarkan Hasil Keputusan Rapat Kepala Sekolah dan Seluruh Dewan Guru dan Tenaga Administrasi, tentang penetapan kelulusan Sistem Penerimaan Murid Baru (SPMB) Jalur Tes Kompetensi Akademik (TKA) Tanggal 04 Juni ${tahun}, maka Peserta tersebut dinyatakan :`;
   const splitKeterangan = doc.splitTextToSize(keterangan, pageWidth - marginLeft - marginRight);
   doc.text(splitKeterangan, marginLeft, y);
-  y += splitKeterangan.length * 6 + 15;
+  y += splitKeterangan.length * 5 + 12;
   
   // ==================== TEKS LULUS (BESAR) ====================
-  doc.setFontSize(24);
+  doc.setFontSize(28);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 100, 0);
   doc.text("LULUS", pageWidth / 2, y, { align: "center" });
   y += 20;
   
-  // ==================== TANDA TANGAN ====================
-  doc.setFontSize(11);
+  // ==================== TANDA TANGAN (FORMAT RAPI) ====================
+  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
   
-  // Tanda Tangan Kepala Sekolah (kiri)
-  doc.text("Kepala Sekolah", marginLeft + 30, y);
-  y += 5;
-  doc.text("H. NAHARUDIN, S.Pd, M.Pd", marginLeft + 30, y);
-  y += 5;
-  doc.text("NIP. 196803221991031004", marginLeft + 30, y);
+  // Kiri - Kepala Sekolah
+  const leftX = marginLeft + 15;
+  const rightX = pageWidth - marginRight - 55;
   
-  // Tanda Tangan Ketua Pelaksana (kanan)
-  doc.text("Ketua Pelaksana SPMB", pageWidth - marginRight - 50, y - 10);
-  doc.text("HANDRI, S.Pd", pageWidth - marginRight - 50, y - 5);
-  doc.text("NIP. 196907052007011078", pageWidth - marginRight - 50, y);
+  doc.text("Kepala Sekolah", leftX, y);
+  y += 5;
+  doc.text("H. NAHARUDIN, S.Pd, M.Pd", leftX, y);
+  y += 5;
+  doc.text("NIP. 196803221991031004", leftX, y);
   
-  // Garis tanda tangan
+  // Garis tanda tangan kiri
   doc.setLineWidth(0.3);
-  doc.line(marginLeft + 20, y - 12, marginLeft + 80, y - 12);
-  doc.line(pageWidth - marginRight - 80, y - 12, pageWidth - marginRight - 20, y - 12);
+  doc.line(leftX - 5, y - 10, leftX + 55, y - 10);
+  
+  // Reset y untuk kanan
+  y -= 10;
+  
+  // Kanan - Ketua Pelaksana
+  doc.text("Ketua Pelaksana SPMB", rightX, y);
+  y += 5;
+  doc.text("HANDRI, S.Pd", rightX, y);
+  y += 5;
+  doc.text("NIP. 196907052007011078", rightX, y);
+  
+  // Garis tanda tangan kanan
+  doc.line(rightX - 5, y - 10, rightX + 55, y - 10);
   
   y += 20;
   
@@ -365,24 +380,28 @@ const printBuktiLulus = (data: any, settings: any) => {
   doc.text("Note:", marginLeft, y);
   y += 6;
   
+  doc.setFont("helvetica", "bold");
+  doc.text("Syarat Daftar Ulang", marginLeft, y);
+  y += 6;
+  
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   
   const syarat = [
-    "Syarat Daftar Ulang",
     "1. Membawa print out surat keterangan yang menyatakan lulus.",
     "2. Membawa bukti verifikasi berkas",
     "3. Mengisi surat pernyataan di atas materai (blanko disiapkan sekolah)",
     "4. Memakai seragam SMP rapi",
     "5. Hadir bersama Orang Tua/Wali",
-    "6. Batas akhir daftar ulang Tanggal 12 Juni 2025, Pukul 15.00 WIB. Jika tidak melakukan daftar ulang",
-    "   sesuai batas waktu yang ditentukan, maka dinyatakan mengundurkan diri."
+    "6. Batas akhir daftar ulang Tanggal 12 Juni 2025, Pukul 15.00 WIB.",
+    "   Jika tidak melakukan daftar ulang sesuai batas waktu yang ditentukan,",
+    "   maka dinyatakan mengundurkan diri."
   ];
   
   for (const line of syarat) {
-    const splitLine = doc.splitTextToSize(line, pageWidth - marginLeft - marginRight - 5);
+    const splitLine = doc.splitTextToSize(line, pageWidth - marginLeft - marginRight - 10);
     doc.text(splitLine, marginLeft + 3, y);
-    y += splitLine.length * 5;
+    y += splitLine.length * 4.5;
   }
   
   // ==================== FOOTER ====================
@@ -394,8 +413,8 @@ const printBuktiLulus = (data: any, settings: any) => {
   
   doc.setFontSize(7);
   doc.setTextColor(150, 150, 150);
-  doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, pageWidth / 2, y, { align: "center" });
-  doc.text("Dokumen ini adalah bukti resmi kelulusan", pageWidth / 2, y + 4, { align: "center" });
+  const dateStr = new Date().toLocaleString('id-ID');
+  doc.text(`Dicetak pada: ${dateStr}`, pageWidth / 2, y, { align: "center" });
   
   // Simpan PDF
   doc.save(`Surat_Keterangan_Lulus_${data.noPendaftaran}.pdf`);
