@@ -28,7 +28,7 @@ const colorMap = {
 export default function Guide() {
   const { settings } = useSettings();
 
-  const judul = settings?.panduanJudul || "Panduan Pendaftaran PPDB";
+  const judul = settings?.panduanJudul || "Panduan Pendaftaran SPMB";
   const deskripsi = settings?.panduanDeskripsi || "Persiapkan dokumen berikut sebelum mulai mengisi formulir pendaftaran.";
   const peringatan = settings?.panduanPeringatan || "Pastikan semua dokumen jelas dan dapat terbaca. Yang di Upload Hanya Foto Saja dengan format JPG, JPEG, dengan ukuran maksimal 2MB per file.";
   const dokumen = settings?.panduanDokumen || [
