@@ -303,24 +303,25 @@ const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   doc.text(splitPembuka, marginLeft, y);
   y += splitPembuka.length * 5 + 8;
   
-  // ==================== DATA SISWA ====================
-  // Ambil data dari fullData (lebih lengkap) atau dari data
+  // ==================== DATA SISWA (SEMUA BOLD) ====================
   const namaSiswa = fullData?.['Nama Lengkap'] || data.namaLengkap || '-';
   const nisn = fullData?.['NISN'] || data.nisn || '-';
   const asalSekolah = fullData?.['Asal Sekolah'] || '-';
-  
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-  
+
   doc.text("Nama", marginLeft, y);
   doc.text(":", marginLeft + 25, y);
   doc.text(namaSiswa, marginLeft + 30, y);
   y += 7;
-  
+
   doc.text("NISN", marginLeft, y);
   doc.text(":", marginLeft + 25, y);
   doc.text(nisn, marginLeft + 30, y);
   y += 7;
-  
+
   doc.text("Asal Sekolah", marginLeft, y);
   doc.text(":", marginLeft + 25, y);
   doc.text(asalSekolah, marginLeft + 30, y);
