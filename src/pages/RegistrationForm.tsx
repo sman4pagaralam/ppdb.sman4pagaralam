@@ -209,7 +209,7 @@ export default function RegistrationForm() {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text("BUKTI PENDAFTARAN PPDB", 115, 22, { align: "center" });
+    doc.text("BUKTI PENDAFTARAN SPMB", 115, 22, { align: "center" });
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
@@ -538,7 +538,7 @@ if (field.id === 'Jalur 2' || field.label === 'Jalur 2') {
           className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100"
         >
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-4 py-6 sm:px-8 sm:py-10 text-white text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Formulir Pendaftaran PPDB</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">Formulir Pendaftaran SPMB</h2>
             <p className="text-blue-100 text-sm sm:text-base">Lengkapi data diri calon peserta didik dengan benar dan valid.</p>
           </div>
 
