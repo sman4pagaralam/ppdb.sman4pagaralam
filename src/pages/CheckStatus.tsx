@@ -382,6 +382,7 @@ export default function CheckStatus() {
     
     try {
       const response = await checkStatus(noPendaftaran, nisn);
+      console.log("Response dari API:", response);
       
       if (response.status === 'success') {
         // Ambil data lengkap dari sheet untuk semua status
