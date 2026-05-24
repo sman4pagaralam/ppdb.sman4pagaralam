@@ -142,7 +142,7 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-900 mb-4">Keunggulan Sekolah</h2>
             <p className="text-slate-500 max-w-2xl mx-auto">
-              Berbagai fasilitas dan program unggulan untuk mendukung perkembangan MURID
+              Berbagai fasilitas dan program unggulan untuk mendukung perkembangan Murid
             </p>
           </div>
 
@@ -210,7 +210,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { icon: FileText, title: "Isi Formulir", desc: "Lengkapi data diri calon MURID dan orang tua secara online.", step: "01" },
+              { icon: FileText, title: "Isi Formulir", desc: "Lengkapi data diri calon Murid dan orang tua secara online.", step: "01" },
               { icon: Upload, title: "Upload Berkas", desc: "Unggah dokumen persyaratan (File Pas Foto).", step: "02" },
               { icon: CheckCircle, title: "Verifikasi", desc: "Panitia akan memverifikasi data dan dokumen yang diunggah.", step: "03" },
               { icon: Clock, title: "Pengumuman", desc: "Cek status kelulusan dan cetak bukti pendaftaran.", step: "04" },
