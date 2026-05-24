@@ -139,7 +139,7 @@ const printProof = async (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text("BUKTI PENDAFTARAN PPDB", 115, 22, { align: "center" });
+  doc.text("BUKTI PENDAFTARAN SPMB", 115, 22, { align: "center" });
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
@@ -492,7 +492,7 @@ export default function CheckStatus() {
                   required
                   value={noPendaftaran}
                   onChange={(e) => setNoPendaftaran(e.target.value.toUpperCase())}
-                  placeholder="Contoh: PPDB-2026-001"
+                  placeholder="Contoh: SPMB-2026-001"
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 />
               </div>
@@ -566,7 +566,7 @@ export default function CheckStatus() {
         
         <div className="mt-6 text-center text-xs text-slate-400">
           <p>Pastikan data yang dimasukkan sesuai dengan bukti pendaftaran</p>
-          <p className="mt-1">Jika mengalami kendala, hubungi panitia PPDB</p>
+          <p className="mt-1">Jika mengalami kendala, hubungi panitia SPMB</p>
         </div>
       </div>
     </div>
