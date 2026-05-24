@@ -260,6 +260,7 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
   } else {
     // Fallback: jika gambar tidak ada, tampilkan pesan
     doc.setFontSize(16);
+    doc.setFont("times", "bold");
     doc.text("Gambar template tidak ditemukan", 105, 50, { align: "center" });
   }
   
@@ -269,27 +270,26 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
   const nisn = fullData?.['NISN'] || data.nisn || '-';
   const asalSekolah = fullData?.['Asal Sekolah'] || '-';
   
-  // ==================== SESUAIKAN KOORDINAT INI DENGAN TEMPLATE ANDA ====================
-  // Tips: Cetak template dulu, ukur posisi dengan penggaris (dalam mm)
-  
-  // Nama Siswa
+  // ==================== SESUAIKAN KOORDINAT ====================
+  // Nama Siswa (Times New Roman Bold)
   doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("times", "bold");
   doc.setTextColor(0, 0, 0);
   doc.text(namaSiswa, 55, 95); // <-- Sesuaikan X dan Y
   
-  // NISN
+  // NISN (Times New Roman Bold)
   doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("times", "bold");
   doc.text(nisn, 55, 105); // <-- Sesuaikan X dan Y
   
-  // Asal Sekolah
+  // Asal Sekolah (Times New Roman Bold)
   doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
+  doc.setFont("times", "bold");
   doc.text(asalSekolah, 55, 115); // <-- Sesuaikan X dan Y
   
   // ==================== FOOTER ====================
   doc.setFontSize(7);
+  doc.setFont("times", "normal");
   doc.setTextColor(150, 150, 150);
   doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, 285, { align: "center" });
   
