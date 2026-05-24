@@ -82,7 +82,7 @@ export default function Home() {
             >
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500 text-white text-sm font-medium mb-4">
                 <Calendar size={14} />
-                Pendaftaran PPDB 2026 Telah Dibuka
+                Pendaftaran SPMB 2026 Telah Dibuka
               </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6">
                 Membangun Generasi
@@ -202,7 +202,7 @@ export default function Home() {
       <section className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Alur Pendaftaran PPDB</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Alur Pendaftaran SPMB</h2>
             <p className="text-slate-500 max-w-2xl mx-auto">
               Ikuti langkah-langkah mudah berikut untuk mendaftarkan putra/putri Anda
             </p>
