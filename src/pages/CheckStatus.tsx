@@ -249,23 +249,33 @@ const printBuktiLulus = (data: any, settings: any) => {
   const pageWidth = 210;
   const marginLeft = 20;
   const marginRight = 20;
-  let y = 25;
+  let y = 20;
 
   // ==================== KOP SURAT ====================
-  // Nama Sekolah
-  doc.setFontSize(14);
+  // Baris 1: PEMERINTAH PROVINSI SUMATERA SELATAN (BESAR & BOLD)
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text("SMA NEGERI 4 PAGAR ALAM", pageWidth / 2, y, { align: "center" });
-  y += 6;
+  doc.text("PEMERINTAH PROVINSI SUMATERA SELATAN", pageWidth / 2, y, { align: "center" });
+  y += 7;
   
-  // Alamat Sekolah
-  doc.setFontSize(9);
+  // Baris 2: SMA NEGERI 4 PAGAR ALAM (LEBIH BESAR & BOLD)
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text("SMA NEGERI 4 PAGAR ALAM", pageWidth / 2, y, { align: "center" });
+  y += 8;
+  
+  // Baris 3: Alamat lengkap (normal)
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(80, 80, 80);
-  doc.text("Jl. Lintas Sumatera, Pagar Alam, Sumatera Selatan", pageWidth / 2, y, { align: "center" });
-  y += 5;
-  doc.text("Email: sman4@pagaralam.sch.id | Telp: (0730) 12345", pageWidth / 2, y, { align: "center" });
+  doc.text("Alamat : Jln. Letkol A.Rozak No. 89 Kel. Ulu Rurah Kec. Pagaralam Selatan", pageWidth / 2, y, { align: "center" });
+  y += 4.5;
+  doc.text("Provinsi Sumatera Selatan", pageWidth / 2, y, { align: "center" });
+  y += 4.5;
+  
+  // Baris 4: Kontak (Whatsapp, Email, Web)
+  doc.text("Whatsapp : 0857-8807-7437 | Mail : smanegeri4pga@gmail.com | Web : https://www.sman4pagaralam.sch.id", pageWidth / 2, y, { align: "center" });
   y += 8;
   
   // Garis bawah kop (double line)
@@ -332,7 +342,7 @@ const printBuktiLulus = (data: any, settings: any) => {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 100, 0);
   doc.text("LULUS", pageWidth / 2, y, { align: "center" });
-  y += 20;
+  y += 22;
   
   // ==================== TANDA TANGAN (FORMAT RAPI) ====================
   doc.setFontSize(10);
@@ -366,7 +376,7 @@ const printBuktiLulus = (data: any, settings: any) => {
   // Garis tanda tangan kanan
   doc.line(rightX - 5, y - 10, rightX + 55, y - 10);
   
-  y += 20;
+  y += 22;
   
   // ==================== NOTE / SYARAT DAFTAR ULANG ====================
   // Garis pemisah
