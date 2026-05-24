@@ -271,11 +271,20 @@ const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   
   y += 15;
   
-  // ==================== JUDUL SURAT ====================
-  doc.setFontSize(18);
+  // ==================== JUDUL SURAT (DIPERKECIL + UNDERLINE) ====================
+  const judulX = pageWidth / 2;
+  const judulY = y;
+  
+  doc.setFontSize(16);  // ← dari 18 jadi 16
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text("SURAT KETERANGAN", pageWidth / 2, y, { align: "center" });
+  doc.text("SURAT KETERANGAN", judulX, judulY, { align: "center" });
+  
+  // Garis bawah untuk SURAT KETERANGAN
+  const judulWidth = doc.getTextWidth("SURAT KETERANGAN");
+  doc.setLineWidth(0.5);
+  doc.line(judulX - (judulWidth / 2), judulY + 1.5, judulX + (judulWidth / 2), judulY + 1.5);
+  
   y += 12;
   
   // ==================== NOMOR SURAT (DI-CENTER & DINAIKKAN) ====================
