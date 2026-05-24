@@ -269,9 +269,7 @@ const printBuktiLulus = (data: any, settings: any) => {
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(80, 80, 80);
-  doc.text("Alamat : Jln. Letkol A.Rozak No. 89 Kel. Ulu Rurah Kec. Pagaralam Selatan", pageWidth / 2, y, { align: "center" });
-  y += 4.5;
-  doc.text("Provinsi Sumatera Selatan", pageWidth / 2, y, { align: "center" });
+  doc.text("Alamat : Jln. Letkol A.Rozak No. 89 Kel. Ulu Rurah Kec. Pagaralam Selatan Provinsi Sumatera Selatan", pageWidth / 2, y, { align: "center" });
   y += 4.5;
   
   // Baris 4: Kontak (Whatsapp, Email, Web)
