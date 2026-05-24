@@ -225,7 +225,7 @@ const printProof = async (data: any, settings: any) => {
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
 
-// ========== BUKTI KELULUSAN (DESAIN RAPI SESUAI SURAT SEKOLAH) ==========
+// ========== BUKTI KELULUSAN (FINAL - SESUAI PERMINTAAN) ==========
 const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   if (!data) return;
   
@@ -271,37 +271,36 @@ const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   
   y += 15;
   
-  // ==================== JUDUL SURAT (DIPERKECIL + UNDERLINE) ====================
+  // ==================== JUDUL SURAT ====================
   const judulX = pageWidth / 2;
   const judulY = y;
   
-  doc.setFontSize(16);  // ← dari 18 jadi 16
+  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
   doc.text("SURAT KETERANGAN", judulX, judulY, { align: "center" });
   
-  // Garis bawah untuk SURAT KETERANGAN
   const judulWidth = doc.getTextWidth("SURAT KETERANGAN");
   doc.setLineWidth(0.5);
   doc.line(judulX - (judulWidth / 2), judulY + 1.5, judulX + (judulWidth / 2), judulY + 1.5);
   
   y += 12;
   
-  // ==================== NOMOR SURAT (DI-CENTER & DINAIKKAN) ====================
+  // ==================== NOMOR SURAT ====================
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
   const tahun = new Date().getFullYear();
-  doc.text(`Nomor : 420/2784/SMAN.4PGA/06/${tahun}`, pageWidth / 2, y - 5, { align: "center" }); // ← center & naik 5mm
+  doc.text(`Nomor : 420/2784/SMAN.4PGA/06/${tahun}`, pageWidth / 2, y - 5, { align: "center" });
   y += 15;
   
   // ==================== PEMBUKA ====================
   doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
   const pembuka = "Yang bertanda tangan dibawah ini kepala SMA Negeri 4 Pagar Alam, Menerangkan bahwa;";
-  const splitPembuka = doc.splitTextToSize(pembuka, pageWidth - marginLeft - marginRight);
-  doc.text(splitPembuka, marginLeft, y);
-  y += splitPembuka.length * 5 + 8;
+  doc.text(pembuka, marginLeft, y);
+  y += 8;
   
   // ==================== DATA SISWA (SEMUA BOLD) ====================
   const namaSiswa = fullData?.['Nama Lengkap'] || data.namaLengkap || '-';
@@ -328,6 +327,7 @@ const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   y += 15;
   
   // ==================== KETERANGAN KELULUSAN ====================
+  doc.setFont("helvetica", "normal");
   const keterangan = `Berdasarkan Hasil Keputusan Rapat Kepala Sekolah dan Seluruh Dewan Guru dan Tenaga Administrasi, tentang penetapan kelulusan Sistem Penerimaan Murid Baru (SPMB) Jalur Tes Kompetensi Akademik (TKA) Tanggal 04 Juni ${tahun}, maka Peserta tersebut dinyatakan :`;
   const splitKeterangan = doc.splitTextToSize(keterangan, pageWidth - marginLeft - marginRight);
   doc.setTextColor(0, 0, 0);
@@ -335,10 +335,18 @@ const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   y += splitKeterangan.length * 5 + 12;
   
   // ==================== TEKS LULUS ====================
+  const lulusX = pageWidth / 2;
+  const lulusY = y;
+  
   doc.setFontSize(28);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text("LULUS", pageWidth / 2, y, { align: "center" });
+  doc.text("LULUS", lulusX, lulusY, { align: "center" });
+  
+  const textWidth = doc.getTextWidth("LULUS");
+  doc.setLineWidth(0.5);
+  doc.line(lulusX - (textWidth / 2), lulusY + 1, lulusX + (textWidth / 2), lulusY + 1);
+  
   y += 22;
   
   // ==================== TANDA TANGAN ====================
