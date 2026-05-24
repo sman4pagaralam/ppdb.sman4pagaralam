@@ -25,6 +25,16 @@ const extractFileId = (url: string) => {
   return match ? match[1] : null;
 };
 
+// Helper: format tanggal pengumuman dengan aman
+const formatTanggalPengumuman = (date: any): string => {
+  if (!date) return '';
+  if (typeof date === 'string') return date;
+  if (date instanceof Date) {
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+  }
+  return String(date);
+};
+
 // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
 const printProof = async (data: any, settings: any) => {
   if (!data) return;
@@ -276,22 +286,22 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
   doc.setFontSize(11);
   doc.setFont("times", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text(noPendaftaran, 70, 87); // <-- Sesuaikan X dan Y
+  doc.text(noPendaftaran, 70, 87);
   
   // Nama Siswa (baris kedua)
   doc.setFontSize(11);
   doc.setFont("times", "bold");
-  doc.text(namaSiswa, 70, 94); // <-- Sesuaikan X dan Y
+  doc.text(namaSiswa, 70, 94);
   
   // NISN (baris ketiga)
   doc.setFontSize(11);
   doc.setFont("times", "bold");
-  doc.text(nisn, 70, 100.3); // <-- Sesuaikan X dan Y
+  doc.text(nisn, 70, 100.3);
   
   // Asal Sekolah (baris keempat)
   doc.setFontSize(11);
   doc.setFont("times", "bold");
-  doc.text(asalSekolah, 70, 107.2); // <-- Sesuaikan X dan Y
+  doc.text(asalSekolah, 70, 107.2);
   
   // ==================== FOOTER ====================
   doc.setFontSize(7);
@@ -395,6 +405,9 @@ export default function CheckStatus() {
     );
   };
 
+  // Format tanggal pengumuman dengan aman
+  const tanggalPengumuman = formatTanggalPengumuman(settings?.tanggalPengumuman);
+
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4">
       <div className="max-w-md mx-auto">
@@ -410,11 +423,11 @@ export default function CheckStatus() {
           
           <div className="p-8">
 
-            {/* ========== TARUH KODE INI DI SINI ========== */}
-            {settings?.tanggalPengumuman && (
+            {/* ========== TAMPILAN TANGGAL PENGUMUMAN ========== */}
+            {tanggalPengumuman && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg text-center">
                 <p className="text-sm text-blue-700">
-                  📢 Pengumuman kelulusan: <strong>{settings.tanggalPengumuman}</strong>
+                  📢 Pengumuman kelulusan: <strong>{tanggalPengumuman}</strong>
                 </p>
               </div>
             )}
