@@ -258,7 +258,7 @@ export default function AdminDashboard() {
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Data Pendaftar");
-    XLSX.writeFile(wb, `Data_PPDB_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, `Data_SPMB_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   const printCard = (student: AdminData) => {
@@ -271,7 +271,7 @@ export default function AdminDashboard() {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("KARTU PENDAFTARAN PPDB", 105, 20, { align: "center" });
+    doc.text("KARTU PENDAFTARAN SPMB", 105, 20, { align: "center" });
     doc.setFontSize(14);
     doc.setFont("helvetica", "normal");
     doc.text(settings?.namaSekolah || "Sekolah Dasar", 105, 30, { align: "center" });
@@ -318,14 +318,14 @@ export default function AdminDashboard() {
     doc.line(20, startY + lineHeight * 7, 190, startY + lineHeight * 7);
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    doc.text(`Kartu ini adalah bukti sah pendaftaran PPDB ${settings?.namaSekolah || 'Sekolah'}.`, 105, startY + lineHeight * 8, { align: "center" });
+    doc.text(`Kartu ini adalah bukti sah pendaftaran SPMB ${settings?.namaSekolah || 'Sekolah'}.`, 105, startY + lineHeight * 8, { align: "center" });
     doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 105, startY + lineHeight * 8.5, { align: "center" });
 
     doc.setDrawColor(37, 99, 235);
     doc.setLineWidth(1);
     doc.rect(10, 10, 190, 150);
 
-    doc.save(`Kartu_PPDB_${student['No Pendaftaran']}.pdf`);
+    doc.save(`Kartu_SPMB_${student['No Pendaftaran']}.pdf`);
   };
 
   const filteredData = useMemo(() => {
@@ -385,7 +385,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard Admin</h1>
-            <p className={cn("mt-1", isDarkMode ? "text-slate-400" : "text-slate-500")}>Kelola data pendaftaran PPDB {settings?.namaSekolah || 'Sekolah'}</p>
+            <p className={cn("mt-1", isDarkMode ? "text-slate-400" : "text-slate-500")}>Kelola data pendaftaran SPMB {settings?.namaSekolah || 'Sekolah'}</p>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => setIsDarkMode(!isDarkMode)} className={cn("p-2 rounded-full transition-colors", isDarkMode ? "bg-slate-800 text-yellow-400 hover:bg-slate-700" : "bg-white text-slate-600 hover:bg-slate-100 shadow-sm border border-slate-200")}>
