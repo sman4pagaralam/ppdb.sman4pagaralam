@@ -236,44 +236,225 @@ const printProof = async (data: any, settings: any) => {
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
 
-// ========== BUKTI KELULUSAN ==========
+// ========== BUKTI KELULUSAN (HARDCODE - DESAIN SURAT RESMI) ==========
 const printBuktiLulus = (data: any, settings: any) => {
   if (!data) return;
-  const doc = new jsPDF();
-  let y = 20;
+  
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  const pageWidth = 210;
+  const marginLeft = 20;
+  const marginRight = 20;
+  let y = 25;
 
-  doc.setFillColor(37, 99, 235);
-  doc.rect(0, 0, 210, 40, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
+  // ==================== KOP SURAT ====================
+  // Garis tepi atas
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.line(marginLeft, y - 5, pageWidth - marginRight, y - 5);
+  
+  // Nama Sekolah (HARDCODE - GANTI DENGAN SEKOLAH ANDA)
+  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("BUKTI KELULUSAN PPDB", 105, 20, { align: "center" });
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
-  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 105, 30, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  y = 55;
-
-  doc.setFontSize(11);
-  doc.text(`No. Pendaftaran: ${data.noPendaftaran || '-'}`, 20, y);
+  doc.text("SMAN 4 PAGAR ALAM", pageWidth / 2, y, { align: "center" });
+  
+  // Alamat Sekolah (HARDCODE - GANTI DENGAN ALAMAT SEKOLAH ANDA)
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(80, 80, 80);
+  doc.text("Jl. Pendidikan No. 123, Kota Pagar Alam, Sumatera Selatan 31511", pageWidth / 2, y + 5, { align: "center" });
+  
+  // Telepon/Email (HARDCODE - GANTI DENGAN KONTAK SEKOLAH ANDA)
+  doc.text("Telp: (0730) 12345 | Email: sman4@pagaralam.sch.id", pageWidth / 2, y + 10, { align: "center" });
+  
+  // Garis bawah kop
+  doc.setLineWidth(1);
+  doc.line(marginLeft, y + 15, pageWidth - marginRight, y + 15);
+  doc.setLineWidth(0.3);
+  doc.line(marginLeft, y + 16, pageWidth - marginRight, y + 16);
+  
+  y += 30;
+  
+  // ==================== NOMOR SURAT ====================
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Nomor : 421.3/${data.noPendaftaran}/PPDB/${new Date().getFullYear()}`, marginLeft, y);
   y += 8;
-  doc.text(`NISN: ${data.nisn || '-'}`, 20, y);
+  
+  // Lampiran dan Perihal
+  doc.text(`Lampiran : 1 (satu) berkas`, marginLeft, y);
   y += 8;
-  doc.text(`Nama Lengkap: ${data.namaLengkap || '-'}`, 20, y);
-  y += 8;
-  doc.text(`Status: LULUS`, 20, y);
+  doc.text(`Perihal : Bukti Kelulusan PPDB`, marginLeft, y);
   y += 15;
-  doc.text("Persyaratan Daftar Ulang:", 20, y);
-  y += 6;
-  const reqText = settings?.persyaratanDaftarUlang || '1. Bukti Kelulusan ini (dicetak)\n2. Fotokopi Akta Kelahiran\n3. Fotokopi Kartu Keluarga\n4. Pas Foto 3x4\n5. Melakukan pembayaran administrasi awal';
-  const splitReq = doc.splitTextToSize(reqText, 170);
-  doc.text(splitReq, 25, y);
-  y += splitReq.length * 6 + 15;
+  
+  // Tempat dan Tanggal
   const today = new Date();
-  const dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
-  doc.text(`Dicetak pada: ${dateStr}`, 20, y + 20);
-  doc.text("Kepala Sekolah", 140, y);
-  doc.text(settings?.namaKepalaSekolah || 'Kepala Sekolah', 140, y + 40);
+  const tanggal = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+  doc.text(`Pagar Alam, ${tanggal}`, pageWidth - marginRight, y - 12, { align: "right" });
+  
+  // ==================== ISI SURAT ====================
+  y += 10;
+  
+  // Salam pembuka
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text("Kepada Yth.", marginLeft, y);
+  y += 7;
+  doc.text(`Calon Peserta Didik Baru`, marginLeft, y);
+  y += 7;
+  doc.text(`di -`, marginLeft, y);
+  y += 7;
+  doc.text(`Pagar Alam`, marginLeft, y);
+  y += 15;
+  
+  doc.text("Dengan hormat,", marginLeft, y);
+  y += 10;
+  
+  // Paragraf 1
+  const namaSiswa = data.namaLengkap || '-';
+  const noPendaftaran = data.noPendaftaran || '-';
+  const nisn = data.nisn || '-';
+  
+  const paragraf1 = `Berdasarkan hasil seleksi Penerimaan Peserta Didik Baru (PPDB) Tahun ${new Date().getFullYear()} SMAN 4 PAGAR ALAM, dengan ini menyatakan bahwa:`;
+  const splitPar1 = doc.splitTextToSize(paragraf1, pageWidth - marginLeft - marginRight);
+  doc.text(splitPar1, marginLeft, y);
+  y += splitPar1.length * 6 + 8;
+  
+  // Kotak informasi siswa
+  doc.setFillColor(245, 247, 250);
+  doc.roundedRect(marginLeft, y - 3, pageWidth - marginLeft - marginRight, 35, 3, 3, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.roundedRect(marginLeft, y - 3, pageWidth - marginLeft - marginRight, 35, 3, 3, 'D');
+  
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("Nama Lengkap", marginLeft + 5, y + 5);
+  doc.setFont("helvetica", "normal");
+  doc.text(`: ${namaSiswa}`, marginLeft + 45, y + 5);
+  
+  doc.setFont("helvetica", "bold");
+  doc.text("No. Pendaftaran", marginLeft + 5, y + 13);
+  doc.setFont("helvetica", "normal");
+  doc.text(`: ${noPendaftaran}`, marginLeft + 45, y + 13);
+  
+  doc.setFont("helvetica", "bold");
+  doc.text("NISN", marginLeft + 5, y + 21);
+  doc.setFont("helvetica", "normal");
+  doc.text(`: ${nisn}`, marginLeft + 45, y + 21);
+  
+  doc.setFont("helvetica", "bold");
+  doc.text("Status", marginLeft + 5, y + 29);
+  doc.setFont("helvetica", "normal");
+  doc.text(`: LULUS`, marginLeft + 45, y + 29);
+  
+  y += 38;
+  
+  // Paragraf 2
+  const paragraf2 = `Dinyatakan LULUS dan berhak mengikuti kegiatan Daftar Ulang sebagai peserta didik baru SMAN 4 PAGAR ALAM Tahun Ajaran ${new Date().getFullYear()}/${new Date().getFullYear() + 1}.`;
+  const splitPar2 = doc.splitTextToSize(paragraf2, pageWidth - marginLeft - marginRight);
+  doc.text(splitPar2, marginLeft, y);
+  y += splitPar2.length * 6 + 12;
+  
+  // Persyaratan Daftar Ulang
+  doc.setFont("helvetica", "bold");
+  doc.text("Persyaratan Daftar Ulang:", marginLeft, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  
+  const persyaratan = 
+    "1. Bukti Kelulusan ini (dicetak dan ditandatangani)\n" +
+    "2. Fotokopi Akta Kelahiran (2 lembar)\n" +
+    "3. Fotokopi Kartu Keluarga (2 lembar)\n" +
+    "4. Pas foto 3x4 (4 lembar, background merah)\n" +
+    "5. Fotokopi Ijazah/SKL (2 lembar)\n" +
+    "6. Fotokopi Piagam Penghargaan (jika ada)\n" +
+    "7. Membawa orang tua/wali saat daftar ulang\n" +
+    "8. Melakukan pembayaran administrasi awal sebesar Rp 500.000";
+  
+  const splitReq = doc.splitTextToSize(persyaratan, pageWidth - marginLeft - marginRight - 5);
+  doc.text(splitReq, marginLeft + 5, y);
+  y += splitReq.length * 5 + 15;
+  
+  // Jadwal Daftar Ulang
+  doc.setFont("helvetica", "bold");
+  doc.text("Jadwal Daftar Ulang:", marginLeft, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.text("Tanggal: 10 - 15 Juli 2025", marginLeft + 5, y);
+  y += 5;
+  doc.text("Pukul: 08.00 - 15.00 WIB", marginLeft + 5, y);
+  y += 5;
+  doc.text("Tempat: Ruang Tata Usaha SMAN 4 Pagar Alam", marginLeft + 5, y);
+  y += 15;
+  
+  // Catatan Penting
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 0, 0);
+  doc.text("Catatan Penting:", marginLeft, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
+  const catatan = 
+    "✓ Apabila tidak melakukan daftar ulang pada jadwal yang ditentukan, maka dinyatakan mengundurkan diri\n" +
+    "✓ Berkas yang tidak lengkap akan memperlambat proses daftar ulang\n" +
+    "✓ Harap membawa dokumen ASLI untuk diperlihatkan";
+  const splitCatatan = doc.splitTextToSize(catatan, pageWidth - marginLeft - marginRight);
+  doc.text(splitCatatan, marginLeft + 5, y);
+  y += splitCatatan.length * 5 + 20;
+  
+  // Penutup
+  const penutup = `Demikian surat keterangan kelulusan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.`;
+  const splitPenutup = doc.splitTextToSize(penutup, pageWidth - marginLeft - marginRight);
+  doc.text(splitPenutup, marginLeft, y);
+  y += splitPenutup.length * 6 + 20;
+  
+  // ==================== TANDA TANGAN ====================
+  const tandaTanganY = y;
+  
+  doc.text("Hormat Kami,", pageWidth - marginRight - 40, tandaTanganY);
+  
+  // Kepala Sekolah (HARDCODE - GANTI DENGAN NAMA KEPSEK ANDA)
+  doc.setFont("helvetica", "bold");
+  doc.text("Drs. H. AHMAD RIFAI, M.Pd", pageWidth - marginRight - 40, tandaTanganY + 20);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text("NIP. 19751225 200312 1 001", pageWidth - marginRight - 40, tandaTanganY + 25);
+  
+  // Garis tanda tangan
+  doc.setLineWidth(0.5);
+  doc.line(pageWidth - marginRight - 70, tandaTanganY + 18, pageWidth - marginRight - 10, tandaTanganY + 18);
+  
+  // ==================== TEMBAHAN ====================
+  y = tandaTanganY + 45;
+  
+  // Tembusan
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text("Tembusan:", marginLeft, y);
+  y += 4;
+  doc.text("1. Arsip Sekolah", marginLeft + 5, y);
+  y += 4;
+  doc.text("2. Yang Bersangkutan", marginLeft + 5, y);
+  y += 4;
+  doc.text("3. Dinas Pendidikan Kota Pagar Alam", marginLeft + 5, y);
+  y += 10;
+  
+  // Footer
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.2);
+  doc.line(marginLeft, y, pageWidth - marginRight, y);
+  y += 5;
+  doc.setFontSize(7);
+  doc.setTextColor(150, 150, 150);
+  doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, pageWidth / 2, y, { align: "center" });
+  doc.text("Dokumen ini adalah bukti resmi kelulusan dan tidak dapat diganti jika hilang", pageWidth / 2, y + 4, { align: "center" });
+  
+  // Simpan PDF
   doc.save(`Bukti_Kelulusan_${data.noPendaftaran}.pdf`);
 };
 
