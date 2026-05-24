@@ -225,8 +225,8 @@ const printProof = async (data: any, settings: any) => {
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
 };
 
-// ========== BUKTI KELULUSAN (FINAL - SESUAI PERMINTAAN) ==========
-const printBuktiLulus = (data: any, fullData: any, settings: any) => {
+// ========== BUKTI KELULUSAN (TEMPLATE GAMBAR + OVERLAY TEKS) ==========
+const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
   if (!data) return;
   
   const doc = new jsPDF({
@@ -235,197 +235,65 @@ const printBuktiLulus = (data: any, fullData: any, settings: any) => {
     format: 'a4'
   });
   
-  const pageWidth = 210;
-  const marginLeft = 20;
-  const marginRight = 20;
-  let y = 20;
-
-  // ==================== KOP SURAT ====================
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text("PEMERINTAH PROVINSI SUMATERA SELATAN", pageWidth / 2, y, { align: "center" });
-  y += 7;
+  // ==================== LOAD TEMPLATE GAMBAR ====================
+  const loadImageToBase64 = async (path: string): Promise<string | null> => {
+    try {
+      const response = await fetch(path);
+      const blob = await response.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error(`Error loading image ${path}:`, error);
+      return null;
+    }
+  };
   
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text("SMA NEGERI 4 PAGAR ALAM", pageWidth / 2, y, { align: "center" });
-  y += 8;
+  // Load template surat (background)
+  const templateImg = await loadImageToBase64('/images/template_surat_lulus.jpg');
   
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(0, 0, 0);
-  doc.text("Alamat : Jln. Letkol A.Rozak No. 89 Kel. Ulu Rurah Kec. Pagaralam Selatan Provinsi Sumatera Selatan", pageWidth / 2, y, { align: "center" });
-  y += 4.5;
+  if (templateImg) {
+    // Tempel gambar template sebagai background (full A4)
+    doc.addImage(templateImg, 'JPEG', 0, 0, 210, 297);
+  } else {
+    // Fallback: jika gambar tidak ada, tampilkan pesan
+    doc.setFontSize(16);
+    doc.text("Gambar template tidak ditemukan", 105, 50, { align: "center" });
+  }
   
-  doc.setTextColor(0, 0, 0);
-  doc.text("Whatsapp : 0857-8807-7437 | Mail : smanegeri4pga@gmail.com | Web : https://www.sman4pagaralam.sch.id", pageWidth / 2, y, { align: "center" });
-  y += 8;
-  
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.8);
-  doc.line(marginLeft, y, pageWidth - marginRight, y);
-  doc.setLineWidth(0.3);
-  doc.line(marginLeft, y + 1.5, pageWidth - marginRight, y + 1.5);
-  
-  y += 15;
-  
-  // ==================== JUDUL SURAT ====================
-  const judulX = pageWidth / 2;
-  const judulY = y;
-  
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text("SURAT KETERANGAN", judulX, judulY, { align: "center" });
-  
-  const judulWidth = doc.getTextWidth("SURAT KETERANGAN");
-  doc.setLineWidth(0.5);
-  doc.line(judulX - (judulWidth / 2), judulY + 1.5, judulX + (judulWidth / 2), judulY + 1.5);
-  
-  y += 12;
-  
-  // ==================== NOMOR SURAT ====================
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(0, 0, 0);
-  const tahun = new Date().getFullYear();
-  doc.text(`Nomor : 420/2784/SMAN.4PGA/06/${tahun}`, pageWidth / 2, y - 5, { align: "center" });
-  y += 15;
-  
-  // ==================== PEMBUKA ====================
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(0, 0, 0);
-  const pembuka = "Yang bertanda tangan dibawah ini kepala SMA Negeri 4 Pagar Alam, Menerangkan bahwa;";
-  doc.text(pembuka, marginLeft, y);
-  y += 8;
-  
-  // ==================== DATA SISWA (SEMUA BOLD) ====================
+  // ==================== OVERLAY TEKS DATA SISWA ====================
+  // Ambil data dari API
   const namaSiswa = fullData?.['Nama Lengkap'] || data.namaLengkap || '-';
   const nisn = fullData?.['NISN'] || data.nisn || '-';
   const asalSekolah = fullData?.['Asal Sekolah'] || '-';
-
-  doc.setFontSize(10);
+  
+  // ==================== SESUAIKAN KOORDINAT INI DENGAN TEMPLATE ANDA ====================
+  // Tips: Cetak template dulu, ukur posisi dengan penggaris (dalam mm)
+  
+  // Nama Siswa
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-
-  doc.text("Nama", marginLeft, y);
-  doc.text(":", marginLeft + 25, y);
-  doc.text(namaSiswa, marginLeft + 30, y);
-  y += 7;
-
-  doc.text("NISN", marginLeft, y);
-  doc.text(":", marginLeft + 25, y);
-  doc.text(nisn, marginLeft + 30, y);
-  y += 7;
-
-  doc.text("Asal Sekolah", marginLeft, y);
-  doc.text(":", marginLeft + 25, y);
-  doc.text(asalSekolah, marginLeft + 30, y);
-  y += 15;
+  doc.text(namaSiswa, 55, 95); // <-- Sesuaikan X dan Y
   
-  // ==================== KETERANGAN KELULUSAN ====================
-  doc.setFont("helvetica", "normal");
-  const keterangan = `Berdasarkan Hasil Keputusan Rapat Kepala Sekolah dan Seluruh Dewan Guru dan Tenaga Administrasi, tentang penetapan kelulusan Sistem Penerimaan Murid Baru (SPMB) Jalur Tes Kompetensi Akademik (TKA) Tanggal 04 Juni ${tahun}, maka Peserta tersebut dinyatakan :`;
-  const splitKeterangan = doc.splitTextToSize(keterangan, pageWidth - marginLeft - marginRight);
-  doc.setTextColor(0, 0, 0);
-  doc.text(splitKeterangan, marginLeft, y);
-  y += splitKeterangan.length * 5 + 12;
-  
-  // ==================== TEKS LULUS (TANPA GARIS BAWAH) ====================
-  const lulusX = pageWidth / 2;
-  const lulusY = y;
-  
-  doc.setFontSize(28);
+  // NISN
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text("LULUS", lulusX, lulusY, { align: "center" });
+  doc.text(nisn, 55, 105); // <-- Sesuaikan X dan Y
   
-  // GARIS BAWAH TELAH DIHAPUS
-  
-  y += 22;
-  
-  // ==================== TANDA TANGAN ====================
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(0, 0, 0);
-  
-  const leftX = marginLeft + 15;
-  const rightX = pageWidth - marginRight - 55;
-  
-  doc.text("Kepala Sekolah", leftX, y);
-  y += 5;
-  doc.text("H. NAHARUDIN, S.Pd, M.Pd", leftX, y);
-  y += 5;
-  doc.text("NIP. 196803221991031004", leftX, y);
-  
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.3);
-  doc.line(leftX - 5, y - 10, leftX + 55, y - 10);
-  
-  y -= 10;
-  
-  doc.text("Ketua Pelaksana SPMB", rightX, y);
-  y += 5;
-  doc.text("HANDRI, S.Pd", rightX, y);
-  y += 5;
-  doc.text("NIP. 196907052007011078", rightX, y);
-  
-  doc.line(rightX - 5, y - 10, rightX + 55, y - 10);
-  
-  y += 22;
-  
-  // ==================== SYARAT DAFTAR ULANG ====================
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.5);
-  doc.line(marginLeft, y, pageWidth - marginRight, y);
-  y += 8;
-  
-  doc.setFontSize(10);
+  // Asal Sekolah
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text("Note:", marginLeft, y);
-  y += 6;
-  
-  doc.setFont("helvetica", "bold");
-  doc.text("Syarat Daftar Ulang", marginLeft, y);
-  y += 6;
-  
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(0, 0, 0);
-  
-  const syarat = [
-    "1. Membawa print out surat keterangan yang menyatakan lulus.",
-    "2. Membawa bukti verifikasi berkas",
-    "3. Mengisi surat pernyataan di atas materai (blanko disiapkan sekolah)",
-    "4. Memakai seragam SMP rapi",
-    "5. Hadir bersama Orang Tua/Wali",
-    "6. Batas akhir daftar ulang Tanggal 12 Juni 2025, Pukul 15.00 WIB.",
-    "   Jika tidak melakukan daftar ulang sesuai batas waktu yang ditentukan,",
-    "   maka dinyatakan mengundurkan diri."
-  ];
-  
-  for (const line of syarat) {
-    const splitLine = doc.splitTextToSize(line, pageWidth - marginLeft - marginRight - 10);
-    doc.text(splitLine, marginLeft + 3, y);
-    y += splitLine.length * 4.5;
-  }
+  doc.text(asalSekolah, 55, 115); // <-- Sesuaikan X dan Y
   
   // ==================== FOOTER ====================
-  y += 10;
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.2);
-  doc.line(marginLeft, y, pageWidth - marginRight, y);
-  y += 5;
-  
   doc.setFontSize(7);
-  doc.setTextColor(0, 0, 0);
-  const dateStr = new Date().toLocaleString('id-ID');
-  doc.text(`Dicetak pada: ${dateStr}`, pageWidth / 2, y, { align: "center" });
+  doc.setTextColor(150, 150, 150);
+  doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, 285, { align: "center" });
   
+  // Simpan PDF
   doc.save(`Surat_Keterangan_Lulus_${data.noPendaftaran}.pdf`);
 };
 
