@@ -29,14 +29,12 @@ const extractFileId = (url: string) => {
 const printProof = async (data: any, settings: any) => {
   if (!data) return;
   
-  // F4: lebar 210mm, tinggi 330mm
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: [210, 330]
   });
   
-  // Ambil URL foto
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
   let fotoBase64 = null;
 
@@ -58,11 +56,9 @@ const printProof = async (data: any, settings: any) => {
 
   let y = 15;
 
-  // HEADER
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 210, 65, 'F');
 
-  // Tempat foto (kiri)
   if (fotoBase64) {
     try {
       doc.addImage(fotoBase64, 'JPEG', 14, 8, 35, 45);
@@ -87,7 +83,6 @@ const printProof = async (data: any, settings: any) => {
     doc.setTextColor(0, 0, 0);
   }
 
-  // Teks judul di sebelah kanan foto
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
@@ -101,11 +96,9 @@ const printProof = async (data: any, settings: any) => {
   const jalur1 = data['Jalur 1'] || '-';
   const jalur2 = data['Jalur 2'] || '-';
   
-  // Garis atas
   doc.setDrawColor(0, 0, 0);
   doc.line(14, y - 2, 196, y - 2);
   
-  // Dua kolom Jalur
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
@@ -129,7 +122,6 @@ const printProof = async (data: any, settings: any) => {
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 8;
 
-  // TABEL DATA PRIBADI
   const leftFields = [
     "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
     "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
@@ -175,7 +167,6 @@ const printProof = async (data: any, settings: any) => {
 
   let finalY = (doc as any).lastAutoTable.finalY + 5;
 
-  // LOKASI DAN JARAK
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
     doc.setDrawColor(200, 200, 200);
     doc.line(14, finalY, 196, finalY);
@@ -205,7 +196,6 @@ const printProof = async (data: any, settings: any) => {
     }
   }
 
-  // STATUS PENDAFTARAN
   doc.setDrawColor(200, 200, 200);
   doc.line(14, finalY, 196, finalY);
   finalY += 8;
@@ -225,7 +215,6 @@ const printProof = async (data: any, settings: any) => {
   doc.setTextColor(0, 0, 0);
   finalY += 20;
 
-  // FOOTER
   doc.setDrawColor(200, 200, 200);
   doc.line(20, finalY, 190, finalY);
   doc.setFontSize(8);
@@ -237,7 +226,7 @@ const printProof = async (data: any, settings: any) => {
 };
 
 // ========== BUKTI KELULUSAN (DESAIN RAPI SESUAI SURAT SEKOLAH) ==========
-const printBuktiLulus = (data: any, settings: any) => {
+const printBuktiLulus = (data: any, fullData: any, settings: any) => {
   if (!data) return;
   
   const doc = new jsPDF({
@@ -252,31 +241,28 @@ const printBuktiLulus = (data: any, settings: any) => {
   let y = 20;
 
   // ==================== KOP SURAT ====================
-  // Baris 1: PEMERINTAH PROVINSI SUMATERA SELATAN (BESAR & BOLD)
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
   doc.text("PEMERINTAH PROVINSI SUMATERA SELATAN", pageWidth / 2, y, { align: "center" });
   y += 7;
   
-  // Baris 2: SMA NEGERI 4 PAGAR ALAM (LEBIH BESAR & BOLD)
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
   doc.text("SMA NEGERI 4 PAGAR ALAM", pageWidth / 2, y, { align: "center" });
   y += 8;
   
-  // Baris 3: Alamat lengkap (normal)
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(80, 80, 80);
+  doc.setTextColor(0, 0, 0);
   doc.text("Alamat : Jln. Letkol A.Rozak No. 89 Kel. Ulu Rurah Kec. Pagaralam Selatan Provinsi Sumatera Selatan", pageWidth / 2, y, { align: "center" });
   y += 4.5;
   
-  // Baris 4: Kontak (Whatsapp, Email, Web)
+  doc.setTextColor(0, 0, 0);
   doc.text("Whatsapp : 0857-8807-7437 | Mail : smanegeri4pga@gmail.com | Web : https://www.sman4pagaralam.sch.id", pageWidth / 2, y, { align: "center" });
   y += 8;
   
-  // Garis bawah kop (double line)
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.8);
   doc.line(marginLeft, y, pageWidth - marginRight, y);
@@ -295,35 +281,37 @@ const printBuktiLulus = (data: any, settings: any) => {
   // ==================== NOMOR SURAT ====================
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
+  doc.setTextColor(0, 0, 0);
   const tahun = new Date().getFullYear();
   doc.text(`Nomor : 420/2784/SMAN.4PGA/06/${tahun}`, marginLeft, y);
   y += 15;
   
   // ==================== PEMBUKA ====================
   doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
   const pembuka = "Yang bertanda tangan dibawah ini kepala SMA Negeri 4 Pagar Alam, Menerangkan bahwa;";
   const splitPembuka = doc.splitTextToSize(pembuka, pageWidth - marginLeft - marginRight);
   doc.text(splitPembuka, marginLeft, y);
   y += splitPembuka.length * 5 + 8;
   
-  // ==================== DATA SISWA (TABEL SEDERHANA) ====================
-  const namaSiswa = data.namaLengkap || '-';
-  const nisn = data.nisn || '-';
-  const asalSekolah = data['Asal Sekolah'] || '-';
+  // ==================== DATA SISWA ====================
+  // Ambil data dari fullData (lebih lengkap) atau dari data
+  const namaSiswa = fullData?.['Nama Lengkap'] || data.namaLengkap || '-';
+  const nisn = fullData?.['NISN'] || data.nisn || '-';
+  const asalSekolah = fullData?.['Asal Sekolah'] || '-';
   
-  // Baris 1: Nama
+  doc.setTextColor(0, 0, 0);
+  
   doc.text("Nama", marginLeft, y);
   doc.text(":", marginLeft + 25, y);
   doc.text(namaSiswa, marginLeft + 30, y);
   y += 7;
   
-  // Baris 2: NISN
   doc.text("NISN", marginLeft, y);
   doc.text(":", marginLeft + 25, y);
   doc.text(nisn, marginLeft + 30, y);
   y += 7;
   
-  // Baris 3: Asal Sekolah
   doc.text("Asal Sekolah", marginLeft, y);
   doc.text(":", marginLeft + 25, y);
   doc.text(asalSekolah, marginLeft + 30, y);
@@ -332,22 +320,22 @@ const printBuktiLulus = (data: any, settings: any) => {
   // ==================== KETERANGAN KELULUSAN ====================
   const keterangan = `Berdasarkan Hasil Keputusan Rapat Kepala Sekolah dan Seluruh Dewan Guru dan Tenaga Administrasi, tentang penetapan kelulusan Sistem Penerimaan Murid Baru (SPMB) Jalur Tes Kompetensi Akademik (TKA) Tanggal 04 Juni ${tahun}, maka Peserta tersebut dinyatakan :`;
   const splitKeterangan = doc.splitTextToSize(keterangan, pageWidth - marginLeft - marginRight);
+  doc.setTextColor(0, 0, 0);
   doc.text(splitKeterangan, marginLeft, y);
   y += splitKeterangan.length * 5 + 12;
   
-  // ==================== TEKS LULUS (BESAR) ====================
+  // ==================== TEKS LULUS ====================
   doc.setFontSize(28);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 100, 0);
+  doc.setTextColor(0, 0, 0);
   doc.text("LULUS", pageWidth / 2, y, { align: "center" });
   y += 22;
   
-  // ==================== TANDA TANGAN (FORMAT RAPI) ====================
+  // ==================== TANDA TANGAN ====================
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
   
-  // Kiri - Kepala Sekolah
   const leftX = marginLeft + 15;
   const rightX = pageWidth - marginRight - 55;
   
@@ -357,27 +345,23 @@ const printBuktiLulus = (data: any, settings: any) => {
   y += 5;
   doc.text("NIP. 196803221991031004", leftX, y);
   
-  // Garis tanda tangan kiri
+  doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.3);
   doc.line(leftX - 5, y - 10, leftX + 55, y - 10);
   
-  // Reset y untuk kanan
   y -= 10;
   
-  // Kanan - Ketua Pelaksana
   doc.text("Ketua Pelaksana SPMB", rightX, y);
   y += 5;
   doc.text("HANDRI, S.Pd", rightX, y);
   y += 5;
   doc.text("NIP. 196907052007011078", rightX, y);
   
-  // Garis tanda tangan kanan
   doc.line(rightX - 5, y - 10, rightX + 55, y - 10);
   
   y += 22;
   
-  // ==================== NOTE / SYARAT DAFTAR ULANG ====================
-  // Garis pemisah
+  // ==================== SYARAT DAFTAR ULANG ====================
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
   doc.line(marginLeft, y, pageWidth - marginRight, y);
@@ -385,6 +369,7 @@ const printBuktiLulus = (data: any, settings: any) => {
   
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
   doc.text("Note:", marginLeft, y);
   y += 6;
   
@@ -394,6 +379,7 @@ const printBuktiLulus = (data: any, settings: any) => {
   
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
   
   const syarat = [
     "1. Membawa print out surat keterangan yang menyatakan lulus.",
@@ -414,17 +400,16 @@ const printBuktiLulus = (data: any, settings: any) => {
   
   // ==================== FOOTER ====================
   y += 10;
-  doc.setDrawColor(200, 200, 200);
+  doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.2);
   doc.line(marginLeft, y, pageWidth - marginRight, y);
   y += 5;
   
   doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
+  doc.setTextColor(0, 0, 0);
   const dateStr = new Date().toLocaleString('id-ID');
   doc.text(`Dicetak pada: ${dateStr}`, pageWidth / 2, y, { align: "center" });
   
-  // Simpan PDF
   doc.save(`Surat_Keterangan_Lulus_${data.noPendaftaran}.pdf`);
 };
 
@@ -440,7 +425,6 @@ export default function CheckStatus() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validasi kedua field harus diisi
     if (!noPendaftaran.trim() || !nisn.trim()) {
       setError('No Pendaftaran dan NISN harus diisi');
       return;
@@ -452,15 +436,20 @@ export default function CheckStatus() {
     setRegistrationData(null);
     
     try {
-      // Kirim kedua parameter ke API
       const response = await checkStatus(noPendaftaran, nisn);
       
       if (response.status === 'success') {
-        setResult(response.data);
-        if (response.data.status === 'Proses') {
-          const data = await getRegistrationByNo(noPendaftaran);
-          if (data) setRegistrationData(data);
+        // Ambil data lengkap dari sheet untuk semua status
+        const fullData = await getRegistrationByNo(noPendaftaran);
+        if (fullData) {
+          setRegistrationData(fullData);
         }
+        
+        setResult({
+          ...response.data,
+          // Tambahkan data dari fullData ke result
+          asalSekolah: fullData?.['Asal Sekolah'] || '-',
+        });
       } else {
         setError(response.message || 'Data tidak ditemukan');
       }
@@ -479,7 +468,7 @@ export default function CheckStatus() {
           <h3 className="text-2xl font-bold text-green-800 mb-2">Selamat! Anda Lulus</h3>
           <p className="text-green-700 mb-4">Silakan lakukan daftar ulang sesuai jadwal yang ditentukan.</p>
           <button 
-            onClick={() => printBuktiLulus(data, settings)} 
+            onClick={() => printBuktiLulus(data, registrationData, settings)} 
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition"
           >
             <Printer className="inline mr-2" size={18} /> Cetak Bukti Kelulusan
@@ -531,7 +520,6 @@ export default function CheckStatus() {
           
           <div className="p-8">
             <form onSubmit={handleSearch} className="mb-8 space-y-4">
-              {/* No Pendaftaran */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Nomor Pendaftaran <span className="text-red-500">*</span>
@@ -546,7 +534,6 @@ export default function CheckStatus() {
                 />
               </div>
               
-              {/* NISN */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   NISN <span className="text-red-500">*</span>
@@ -598,9 +585,13 @@ export default function CheckStatus() {
                       <span className="text-slate-500 text-sm">NISN</span>
                       <span className="font-semibold text-slate-800">{result.nisn || '-'}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                       <span className="text-slate-500 text-sm">Nama Lengkap</span>
                       <span className="font-semibold text-slate-800">{result.namaLengkap}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 text-sm">Asal Sekolah</span>
+                      <span className="font-semibold text-slate-800">{result.asalSekolah || '-'}</span>
                     </div>
                   </div>
                 </div>
@@ -610,7 +601,6 @@ export default function CheckStatus() {
           </div>
         </div>
         
-        {/* Informasi tambahan */}
         <div className="mt-6 text-center text-xs text-slate-400">
           <p>Pastikan data yang dimasukkan sesuai dengan bukti pendaftaran</p>
           <p className="mt-1">Jika mengalami kendala, hubungi panitia PPDB</p>
