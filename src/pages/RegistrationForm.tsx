@@ -26,7 +26,7 @@ const isBase64Image = (str: string) => {
   return str && (str.startsWith('data:image') || str.startsWith('/9j/'));
 };
 
-// Helper ekstrak fileId dari URL Google Drive (jika nanti foto URL)
+// Helper ekstrak fileId dari URL Google Drive
 const extractFileId = (url: string) => {
   if (!url) return null;
   const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -41,7 +41,6 @@ const toTitleCase = (str: string) => {
     return word.charAt(0).toUpperCase() + word.slice(1);
   }).join(' ');
 };
-// ========== SAMPAI SINI ==========
 
 export default function RegistrationForm() {
   const { settings } = useSettings();
@@ -77,7 +76,6 @@ export default function RegistrationForm() {
       setJalur2Options(allJalurOptions);
     }
   }, [settings]);
-  // ========== SAMPAI SINI ==========
 
   // ========== VALIDASI ==========
   const validateNIK = (nik: string): boolean => /^\d{16}$/.test(nik);
@@ -99,28 +97,24 @@ export default function RegistrationForm() {
       return;
     }
     
-    // ========== UNTUK JALUR 1 (update opsi Jalur 2) ==========
+    // UNTUK JALUR 1 (update opsi Jalur 2)
     if (name === 'Jalur 1') {
       setFormData(prev => ({ ...prev, [name]: value }));
-      // Reset Jalur 2
       setFormData(prev => ({ ...prev, 'Jalur 2': '' }));
       updateJalur2Options(value);
       return;
     }
-    // ========== SAMPAI SINI ==========
     
-    // ========== TITLE CASE UNTUK FIELD TERTENTU ==========
+    // TITLE CASE UNTUK FIELD TERTENTU
     const titleCaseFields = ['Nama Lengkap', 'Nama Ayah', 'Nama Ibu', 'Tempat Lahir'];
     if (titleCaseFields.includes(name)) {
       const formattedValue = toTitleCase(value);
       setFormData(prev => ({ ...prev, [name]: formattedValue }));
       return;
     }
-    // ========== SAMPAI SINI ==========
     
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  // ========== SAMPAI SINI ==========
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, fieldId: string) => {
     const file = e.target.files?.[0];
@@ -157,7 +151,6 @@ export default function RegistrationForm() {
     if (!formData) return;
     const data = { ...formData, 'No Pendaftaran': noPendaftaran };
     
-    // F4: lebar 210mm, tinggi 330mm
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -215,82 +208,78 @@ export default function RegistrationForm() {
     doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
     doc.text(`No. Pendaftaran: ${noPendaftaran}`, 115, 46, { align: "center" });
 
-             y = 62;  // setelah header, naikkan 10 mm
+    y = 62;
     const jalur1 = data['Jalur 1'] || '-';
     const jalur2 = data['Jalur 2'] || '-';
     
-    // Garis atas (tetap di y)
     doc.setDrawColor(0, 0, 0);
     doc.line(14, y - 2, 196, y - 2);
     
-    // === Dua kolom, lebih rapat ===
     doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text("JALUR 1", 55, y + 6, { align: "center" });
-  doc.setFontSize(14);
-  doc.setTextColor(37, 99, 235);
-  doc.setFont("helvetica", "bold");
-  doc.text(jalur1, 55, y + 18, { align: "center" });
-  
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text("JALUR 2", 155, y + 6, { align: "center" });
-  doc.setFontSize(14);
-  doc.setTextColor(37, 99, 235);
-  doc.setFont("helvetica", "bold");
-  doc.text(jalur2, 155, y + 18, { align: "center" });
-  
-  doc.setTextColor(0, 0, 0);
-  let garisBawahY = y + 28;
-  doc.line(14, garisBawahY, 196, garisBawahY);
-  y = garisBawahY + 8;
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text("JALUR 1", 55, y + 6, { align: "center" });
+    doc.setFontSize(14);
+    doc.setTextColor(37, 99, 235);
+    doc.setFont("helvetica", "bold");
+    doc.text(jalur1, 55, y + 18, { align: "center" });
+    
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text("JALUR 2", 155, y + 6, { align: "center" });
+    doc.setFontSize(14);
+    doc.setTextColor(37, 99, 235);
+    doc.setFont("helvetica", "bold");
+    doc.text(jalur2, 155, y + 18, { align: "center" });
+    
+    doc.setTextColor(0, 0, 0);
+    let garisBawahY = y + 28;
+    doc.line(14, garisBawahY, 196, garisBawahY);
+    y = garisBawahY + 8;
 
-  // TABEL DATA PRIBADI
-  const leftFields = [
-    "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
-    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
-  ];
-  const rightFields = [
-    "NISN", "Asal Sekolah",
-    "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
-  ];
+    const leftFields = [
+      "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
+      "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
+    ];
+    const rightFields = [
+      "NISN", "Asal Sekolah",
+      "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
+      "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
+    ];
 
-  const formatValue = (field: string, val: any) => {
-    if (field === "Tanggal Lahir") return formatDate(val);
-    if (val === undefined || val === null || val === "") return "-";
-    if (typeof val === "string" && val.startsWith("http")) return "File terupload";
-    // Tampilkan lengkap, biar autoTable yang bungkus
-    return String(val);
-  };
+    const formatValue = (field: string, val: any) => {
+      if (field === "Tanggal Lahir") return formatDate(val);
+      if (val === undefined || val === null || val === "") return "-";
+      if (typeof val === "string" && val.startsWith("http")) return "File terupload";
+      return String(val);
+    };
 
-  const tableBody = [];
-  const maxRows = Math.max(leftFields.length, rightFields.length);
-  for (let i = 0; i < maxRows; i++) {
-    const leftLabel = leftFields[i] || "";
-    const leftValue = leftLabel ? formatValue(leftLabel, data[leftLabel]) : "";
-    const rightLabel = rightFields[i] || "";
-    const rightValue = rightLabel ? formatValue(rightLabel, data[rightLabel]) : "";
-    tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
-  }
+    const tableBody = [];
+    const maxRows = Math.max(leftFields.length, rightFields.length);
+    for (let i = 0; i < maxRows; i++) {
+      const leftLabel = leftFields[i] || "";
+      const leftValue = leftLabel ? formatValue(leftLabel, data[leftLabel]) : "";
+      const rightLabel = rightFields[i] || "";
+      const rightValue = rightLabel ? formatValue(rightLabel, data[rightLabel]) : "";
+      tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
+    }
 
- autoTable(doc, {
-  startY: y,
-  head: [],
-  body: tableBody,
-  theme: 'plain',
-  styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
-  columnStyles: {
-    0: { cellWidth: 25, fontStyle: 'bold' },  // label kiri (diperkecil)
-    1: { cellWidth: 70 },                  // nilai kiri (auto)
-    2: { cellWidth: 25, fontStyle: 'bold' },  // label kanan (diperkecil)
-    3: { cellWidth: 'auto' },                  // nilai kanan (auto)
-  },
-  margin: { left: 12, right: 12 },
-  tableWidth: 'auto',
-});
+    autoTable(doc, {
+      startY: y,
+      head: [],
+      body: tableBody,
+      theme: 'plain',
+      styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
+      columnStyles: {
+        0: { cellWidth: 25, fontStyle: 'bold' },
+        1: { cellWidth: 70 },
+        2: { cellWidth: 25, fontStyle: 'bold' },
+        3: { cellWidth: 'auto' },
+      },
+      margin: { left: 12, right: 12 },
+      tableWidth: 'auto',
+    });
 
     let finalY = (doc as any).lastAutoTable.finalY + 5;
 
@@ -322,46 +311,58 @@ export default function RegistrationForm() {
       }
     }
 
-    // STATUS PENDAFTARAN
-  doc.setDrawColor(200, 200, 200);
-  doc.line(14, finalY, 196, finalY);
-  finalY += 8;
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
-  finalY += 10;
-  const status = data.Status || 'Proses';
-  let statusColor = [255, 193, 7];
-  if (status === 'Lulus') statusColor = [40, 167, 69];
-  if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
-  doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-  doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.text(status, 105, finalY + 2, { align: "center" });
-  doc.setTextColor(0, 0, 0);
-  finalY += 20;  // ← TAMBAHKAN JARAK (dari 15 ke 20)
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, finalY, 196, finalY);
+    finalY += 8;
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
+    finalY += 10;
+    const status = data.Status || 'Proses';
+    let statusColor = [255, 193, 7];
+    if (status === 'Lulus') statusColor = [40, 167, 69];
+    if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
+    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+    doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.text(status, 105, finalY + 2, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+    finalY += 20;
 
-  // FOOTER
-  doc.setDrawColor(200, 200, 200);
-  doc.line(20, finalY, 190, finalY);
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, finalY + 10, { align: "center" });
-  doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, finalY + 17, { align: "center" });
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, finalY, 190, finalY);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, finalY + 10, { align: "center" });
+    doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, finalY + 17, { align: "center" });
 
-  doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
-};  // ← PENUTUP FUNGSI printProof (SATU KURUNG)
+    doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
+  };
 
-  // ========== SUBMIT ==========
+  // ========== SUBMIT DENGAN ANTI DOUBLE SUBMIT ==========
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // CEK DOUBLE SUBMIT (TAMBAHKAN INI)
+    if (isSubmitting) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Proses Sedang Berjalan',
+        text: 'Pendaftaran sedang diproses, harap tunggu...',
+        confirmButtonColor: '#3b82f6',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      return;
+    }
+    
     if (!isAgreed) {
       Swal.fire({ icon: 'warning', title: 'Pernyataan Belum Disetujui', text: 'Anda harus menyetujui pernyataan kebenaran data sebelum mengirim formulir.', confirmButtonColor: '#3b82f6' });
       return;
     }
     
-    // ========== VALIDASI JALUR 1 DAN JALUR 2 TIDAK BOLEH SAMA ==========
+    // VALIDASI JALUR 1 DAN JALUR 2 TIDAK BOLEH SAMA
     const jalur1 = formData['Jalur 1'];
     const jalur2 = formData['Jalur 2'];
     
@@ -374,13 +375,13 @@ export default function RegistrationForm() {
       });
       return;
     }
-    // ========== SAMPAI SINI ==========
     
     const nikValue = formData['NIK'] || '';
     if (!validateNIK(nikValue)) {
       Swal.fire({ icon: 'error', title: 'NIK Tidak Valid', text: 'NIK harus terdiri dari 16 digit angka (0-9). Contoh: 3173010101010001', confirmButtonColor: '#3b82f6' });
       return;
     }
+    
     const nisnField = settings?.formFields?.find(f => f.id === 'NISN' || f.label === 'NISN');
     if (nisnField && nisnField.required) {
       const nisnValue = formData['NISN'] || '';
@@ -393,15 +394,18 @@ export default function RegistrationForm() {
         return;
       }
     }
+    
     const missingFiles = settings?.formFields?.filter(f => f.type === 'file' && f.required && !formData[f.label]);
     if (missingFiles && missingFiles.length > 0) {
       Swal.fire({ icon: 'warning', title: 'Berkas Belum Lengkap', text: `Mohon unggah dokumen: ${missingFiles.map(f => f.label).join(', ')}`, confirmButtonColor: '#3b82f6' });
       return;
     }
+    
     if (!mapLocation) {
       Swal.fire({ icon: 'warning', title: 'Lokasi Belum Ditandai', text: 'Mohon tandai lokasi rumah Anda di peta.', confirmButtonColor: '#3b82f6' });
       return;
     }
+    
     setIsSubmitting(true);
     try {
       const response = await submitRegistration(formData);
@@ -449,7 +453,7 @@ export default function RegistrationForm() {
       return <input type="text" name={field.label} required={field.required} value={formData[field.label] || ''} onChange={handleChange} className={commonClasses} placeholder="10 digit angka (contoh: 1234567890)" maxLength={10} minLength={10} pattern="\d{10}" title="NISN harus 10 digit angka" />;
     }
     
-    // ========== JALUR 1 (opsi tetap) ==========
+    // JALUR 1 (opsi tetap)
     if (field.id === 'Jalur 1' || field.label === 'Jalur 1') {
       return (
         <select
@@ -467,26 +471,25 @@ export default function RegistrationForm() {
       );
     }
     
-    // ========== JALUR 2 (opsi dinamis + tambahan "Hanya memilih 1 Jalur") ==========
-if (field.id === 'Jalur 2' || field.label === 'Jalur 2') {
-  const optionsToShow = jalur2Options.length > 0 ? jalur2Options : allJalurOptions;
-  return (
-    <select
-      name={field.label}
-      required={field.required}
-      value={formData[field.label] || ''}
-      onChange={handleChange}
-      className={`${commonClasses} bg-white`}
-    >
-      <option value="">Pilih {field.label}</option>
-      <option value="Hanya memilih 1 Jalur">Hanya memilih 1 Jalur</option>
-      {optionsToShow.map((opt: string) => (
-        <option key={opt} value={opt}>{opt}</option>
-      ))}
-    </select>
-  );
-}
-// ========== SAMPAI SINI ==========
+    // JALUR 2 (opsi dinamis + tambahan "Hanya memilih 1 Jalur")
+    if (field.id === 'Jalur 2' || field.label === 'Jalur 2') {
+      const optionsToShow = jalur2Options.length > 0 ? jalur2Options : allJalurOptions;
+      return (
+        <select
+          name={field.label}
+          required={field.required}
+          value={formData[field.label] || ''}
+          onChange={handleChange}
+          className={`${commonClasses} bg-white`}
+        >
+          <option value="">Pilih {field.label}</option>
+          <option value="Hanya memilih 1 Jalur">Hanya memilih 1 Jalur</option>
+          {optionsToShow.map((opt: string) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      );
+    }
     
     switch (field.type) {
       case 'textarea':
@@ -511,7 +514,6 @@ if (field.id === 'Jalur 2' || field.label === 'Jalur 2') {
         return <input type={field.type} name={field.label} required={field.required} value={formData[field.label] || ''} onChange={handleChange} className={commonClasses} placeholder={field.label} />;
     }
   };
-  // ========== SAMPAI SINI ==========
 
   const textFields = settings?.formFields?.filter(f => f.type !== 'file') || [];
   const fileFields = settings?.formFields?.filter(f => f.type === 'file') || [];
