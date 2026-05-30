@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sedang Perbaikan - SPMB SMAN 4 Pagar Alam</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 32px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        .icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1e3c72;
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+        p {
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            font-size: 16px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 24px 0;
+        }
+        .progress {
+            width: 60%;
+            height: 100%;
+            background: #2a5298;
+            border-radius: 10px;
+            animation: loading 2s ease-in-out infinite;
+        }
+        @keyframes loading {
+            0% { width: 0%; }
+            50% { width: 100%; }
+            100% { width: 0%; }
+        }
+        .btn {
+            display: inline-block;
+            background: #2a5298;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-top: 8px;
+        }
+        .btn:hover {
+            background: #1e3c72;
+        }
+        .info {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 24px;
+            border-top: 1px solid #f3f4f6;
+            padding-top: 20px;
+        }
+        .info span {
+            display: block;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">🔧</div>
+        <h1>Sistem Sedang Dalam Perbaikan</h1>
+        <p>Mohon maaf, website SPMB SMAN 4 Pagar Alam sedang dalam proses perbaikan dan peningkatan sistem.</p>
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+        <p style="font-size: 14px; margin-bottom: 0;">⏳ Estimasi selesai: <strong>Segera</strong></p>
+        <a href="https://sman4pagaralam.sch.id" class="btn">Kembali ke Beranda</a>
+        <div class="info">
+            📞 Informasi lebih lanjut hubungi panitia PPDB<br>
+            <span>📱 0857-8807-7437</span>
+        </div>
+    </div>
+</body>
+</html>
