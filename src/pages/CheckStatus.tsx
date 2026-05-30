@@ -78,7 +78,6 @@ const getDisplayStatus = (originalStatus: string, settings: any): string => {
 const printProof = async (data: any, settings: any) => {
   if (!data) return;
   
-  // ========== CEK TANGGAL PENGUMUMAN UNTUK STATUS ==========
   const originalStatus = data.Status || 'Proses';
   const displayStatus = getDisplayStatus(originalStatus, settings);
   
@@ -249,7 +248,6 @@ const printProof = async (data: any, settings: any) => {
     }
   }
 
-  // ========== STATUS PENDAFTARAN (menggunakan displayStatus) ==========
   doc.setDrawColor(200, 200, 200);
   doc.line(14, finalY, 196, finalY);
   finalY += 8;
@@ -258,9 +256,9 @@ const printProof = async (data: any, settings: any) => {
   doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
   finalY += 10;
   
-  let statusColor = [255, 193, 7]; // kuning untuk Proses
-  if (displayStatus === 'Lulus') statusColor = [40, 167, 69]; // hijau
-  if (displayStatus === 'Tidak Lulus') statusColor = [220, 53, 69]; // merah
+  let statusColor = [255, 193, 7];
+  if (displayStatus === 'Lulus') statusColor = [40, 167, 69];
+  if (displayStatus === 'Tidak Lulus') statusColor = [220, 53, 69];
   
   doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
@@ -290,7 +288,6 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
     format: 'a4'
   });
   
-  // ==================== LOAD TEMPLATE GAMBAR ====================
   const loadImageToBase64 = async (path: string): Promise<string | null> => {
     try {
       const response = await fetch(path);
@@ -306,62 +303,40 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
     }
   };
   
-  // Load template surat (background)
   const templateImg = await loadImageToBase64('/images/template_surat_lulus.jpg');
   
   if (templateImg) {
-    // Tempel gambar template sebagai background (full A4)
     doc.addImage(templateImg, 'JPEG', 0, 0, 210, 297);
   } else {
-    // Fallback: jika gambar tidak ada, tampilkan pesan
     doc.setFontSize(16);
     doc.setFont("times", "bold");
     doc.text("Gambar template tidak ditemukan", 105, 50, { align: "center" });
   }
   
-  // ==================== OVERLAY TEKS DATA SISWA ====================
-  // Ambil data dari API
   const namaSiswa = fullData?.['Nama Lengkap'] || data.namaLengkap || '-';
   const nisn = fullData?.['NISN'] || data.nisn || '-';
   const asalSekolah = fullData?.['Asal Sekolah'] || '-';
   const noPendaftaran = data.noPendaftaran || '-';
   
-  // ==================== SESUAIKAN KOORDINAT ====================
-  // No Pendaftaran (baris pertama)
   doc.setFontSize(11);
   doc.setFont("times", "bold");
   doc.setTextColor(0, 0, 0);
   doc.text(noPendaftaran, 70, 87);
-  
-  // Nama Siswa (baris kedua)
-  doc.setFontSize(11);
-  doc.setFont("times", "bold");
   doc.text(namaSiswa, 70, 94);
-  
-  // NISN (baris ketiga)
-  doc.setFontSize(11);
-  doc.setFont("times", "bold");
   doc.text(nisn, 70, 100.3);
-  
-  // Asal Sekolah (baris keempat)
-  doc.setFontSize(11);
-  doc.setFont("times", "bold");
   doc.text(asalSekolah, 70, 107.2);
   
-  // ==================== FOOTER ====================
   doc.setFontSize(7);
   doc.setFont("times", "normal");
   doc.setTextColor(150, 150, 150);
   doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, 285, { align: "center" });
   
-  // Simpan PDF
   doc.save(`Surat_Keterangan_Lulus_${data.noPendaftaran}.pdf`);
 };
 
 export default function CheckStatus() {
   const { settings } = useSettings();
-  const [noPendaftaran, setNoPendaftaran] = useState('');
-  const [nisn, setNisn] = useState('');
+  const [nisn, setNisn] = useState(''); // Hanya NISN
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
@@ -370,8 +345,9 @@ export default function CheckStatus() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!noPendaftaran.trim() || !nisn.trim()) {
-      setError('No Pendaftaran dan NISN harus diisi');
+    // Validasi NISN harus diisi
+    if (!nisn.trim()) {
+      setError('NISN harus diisi');
       return;
     }
     
@@ -381,22 +357,22 @@ export default function CheckStatus() {
     setRegistrationData(null);
     
     try {
-      const response = await checkStatus(noPendaftaran, nisn);
+      // Kirim NISN saja ke API
+      const response = await checkStatus(nisn);
       console.log("Response dari API:", response);
       
       if (response.status === 'success') {
-        // Ambil data lengkap dari sheet untuk semua status
-        const fullData = await getRegistrationByNo(noPendaftaran);
+        // Ambil data lengkap dari sheet menggunakan noPendaftaran dari response
+        const fullData = await getRegistrationByNo(response.data.noPendaftaran);
         if (fullData) {
           setRegistrationData(fullData);
         }
         
-        // Tentukan status yang ditampilkan berdasarkan tanggal pengumuman
         const displayStatus = getDisplayStatus(response.data.status, settings);
         
         setResult({
           ...response.data,
-          status: displayStatus, // Override status dengan yang sudah dicek tanggalnya
+          status: displayStatus,
           asalSekolah: fullData?.['Asal Sekolah'] || '-',
         });
       } else {
@@ -454,7 +430,6 @@ export default function CheckStatus() {
     );
   };
 
-  // Format tanggal pengumuman dengan aman
   const tanggalPengumuman = formatTanggalPengumuman(settings?.tanggalPengumuman);
 
   return (
@@ -467,12 +442,11 @@ export default function CheckStatus() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-8 text-white text-center">
             <h2 className="text-2xl font-bold mb-2">Cek Status Kelulusan</h2>
-            <p className="text-blue-100 text-sm">Masukkan No Pendaftaran dan NISN</p>
+            <p className="text-blue-100 text-sm">Masukkan NISN Anda</p>
           </div>
           
           <div className="p-8">
 
-            {/* ========== TAMPILAN TANGGAL PENGUMUMAN ========== */}
             {tanggalPengumuman && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg text-center">
                 <p className="text-sm text-blue-700">
@@ -480,23 +454,8 @@ export default function CheckStatus() {
                 </p>
               </div>
             )}
-            {/* ========== SAMPAI SINI ========== */}
             
             <form onSubmit={handleSearch} className="mb-8 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Nomor Pendaftaran <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={noPendaftaran}
-                  onChange={(e) => setNoPendaftaran(e.target.value.toUpperCase())}
-                  placeholder="Contoh: SPMB-2026-001"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                />
-              </div>
-              
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   NISN <span className="text-red-500">*</span>
@@ -565,7 +524,7 @@ export default function CheckStatus() {
         </div>
         
         <div className="mt-6 text-center text-xs text-slate-400">
-          <p>Pastikan data yang dimasukkan sesuai dengan bukti pendaftaran</p>
+          <p>Pastikan NISN yang dimasukkan sesuai dengan data pendaftaran</p>
           <p className="mt-1">Jika mengalami kendala, hubungi panitia SPMB</p>
         </div>
       </div>
