@@ -75,7 +75,7 @@ const getDefaultSettings = (): AppSettings => ({
   formFields: [
     { id: "Nama Lengkap", label: "Nama Lengkap", type: "text", required: true },
     { id: "NIK", label: "NIK", type: "text", required: true },
-    { id: "NISN", label: "NISN", type: "text", required: false },
+    { id: "NISN", label: "NISN", type: "text", required: true },
     { id: "Tempat Lahir", label: "Tempat Lahir", type: "text", required: true },
     { id: "Tanggal Lahir", label: "Tanggal Lahir", type: "date", required: true },
     { id: "Jenis Kelamin", label: "Jenis Kelamin", type: "select", options: ["Laki-laki", "Perempuan"], required: true },
@@ -223,14 +223,13 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
   }
 };
 
-// ========== FUNGSI CHECK STATUS YANG SUDAH DIUPDATE ==========
-// Memerlukan No Pendaftaran DAN NISN untuk validasi
-export const checkStatus = async (noPendaftaran: string, nisn: string) => {
-  // Validasi kedua parameter harus diisi
-  if (!noPendaftaran || !nisn) {
+// ========== FUNGSI CHECK STATUS (CUKUP NISN SAJA) ==========
+export const checkStatus = async (nisn: string) => {
+  // Validasi NISN harus diisi
+  if (!nisn) {
     return { 
       status: "error", 
-      message: "No Pendaftaran dan NISN harus diisi" 
+      message: "NISN harus diisi" 
     };
   }
 
@@ -240,7 +239,6 @@ export const checkStatus = async (noPendaftaran: string, nisn: string) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "checkStatus",
-        noPendaftaran: noPendaftaran,
         nisn: nisn
       }),
     });
@@ -251,10 +249,10 @@ export const checkStatus = async (noPendaftaran: string, nisn: string) => {
     throw new Error("Failed to check");
   } catch (error) {
     console.warn("Cannot check status:", error);
-    // Cek di fallback data dengan kedua kriteria
+    // Cek di fallback data berdasarkan NISN
+    const cleanNisn = String(nisn).replace(/\D/g, '');
     const localStudent = fallbackData.find(d => 
-      d['No Pendaftaran'] === noPendaftaran && 
-      String(d['NISN']) === String(nisn)
+      String(d['NISN']).replace(/\D/g, '') === cleanNisn
     );
     if (localStudent) {
       return { 
@@ -271,8 +269,7 @@ export const checkStatus = async (noPendaftaran: string, nisn: string) => {
   }
 };
 
-// ========== LOGIN ADMIN - TELAH DIPERBAIKI ==========
-// Sekarang benar-benar memanggil Google Apps Script untuk verifikasi
+// ========== LOGIN ADMIN ==========
 export const loginAdmin = async (username: string, password: string) => {
   try {
     const response = await fetch(GAS_WEB_APP_URL, {
@@ -330,7 +327,7 @@ export const getRegistrationByNo = async (noPendaftaran: string): Promise<AdminD
   }
 };
 
-// ========== FUNGSI BARU: getRegistrationByNisn ==========
+// ========== FUNGSI getRegistrationByNisn ==========
 export const getRegistrationByNisn = async (nisn: string): Promise<AdminData | null> => {
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getByNisn&nisn=${encodeURIComponent(nisn)}&t=${Date.now()}`, {
@@ -347,7 +344,7 @@ export const getRegistrationByNisn = async (nisn: string): Promise<AdminData | n
       }
     }
     
-    const localData = fallbackData.find(item => String(item['NISN']) === String(nisn));
+    const localData = fallbackData.find(item => String(item['NISN']).replace(/\D/g, '') === String(nisn).replace(/\D/g, ''));
     if (localData) {
       return localData;
     }
@@ -355,7 +352,7 @@ export const getRegistrationByNisn = async (nisn: string): Promise<AdminData | n
     return null;
   } catch (error) {
     console.warn("Error fetching registration by NISN:", error);
-    const localData = fallbackData.find(item => String(item['NISN']) === String(nisn));
+    const localData = fallbackData.find(item => String(item['NISN']).replace(/\D/g, '') === String(nisn).replace(/\D/g, ''));
     if (localData) {
       return localData;
     }
