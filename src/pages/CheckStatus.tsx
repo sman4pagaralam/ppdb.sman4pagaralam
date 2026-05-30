@@ -316,15 +316,13 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
   const namaSiswa = fullData?.['Nama Lengkap'] || data.namaLengkap || '-';
   const nisn = fullData?.['NISN'] || data.nisn || '-';
   const asalSekolah = fullData?.['Asal Sekolah'] || '-';
-  const noPendaftaran = data.noPendaftaran || '-';
   
   doc.setFontSize(11);
   doc.setFont("times", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text(noPendaftaran, 70, 87);
-  doc.text(namaSiswa, 70, 94);
-  doc.text(nisn, 70, 100.3);
-  doc.text(asalSekolah, 70, 107.2);
+  doc.text(namaSiswa, 70, 87);
+  doc.text(nisn, 70, 94);
+  doc.text(asalSekolah, 70, 100.3);
   
   doc.setFontSize(7);
   doc.setFont("times", "normal");
