@@ -344,7 +344,7 @@ export default function RegistrationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // CEK DOUBLE SUBMIT (TAMBAHKAN INI)
+    // CEK DOUBLE SUBMIT
     if (isSubmitting) {
       Swal.fire({
         icon: 'warning',
@@ -427,11 +427,26 @@ export default function RegistrationForm() {
         });
       } else {
         let errorMessage = response.message || 'Terjadi kesalahan. Silakan coba lagi.';
-        if (errorMessage.includes('NIK') && errorMessage.includes('sudah terdaftar')) {
+        
+        // ========== CEK ERROR UNTUK NAMA + TANGGAL LAHIR ==========
+        if (errorMessage.includes('nama') && errorMessage.includes('tanggal lahir')) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Data Sudah Terdaftar!',
+            html: `${errorMessage}<br><br>Silakan <a href="/check-status" style="color: #3b82f6;">cek status pendaftaran</a> Anda.`,
+            confirmButtonColor: '#3b82f6'
+          });
+        } 
+        // CEK ERROR UNTUK NIK
+        else if (errorMessage.includes('NIK') && errorMessage.includes('sudah terdaftar')) {
           Swal.fire({ icon: 'error', title: 'NIK Sudah Terdaftar!', html: `${errorMessage}<br><br>Jika Anda sudah mendaftar sebelumnya, silakan cek status pendaftaran Anda.`, confirmButtonColor: '#3b82f6' });
-        } else if (errorMessage.includes('NISN') && errorMessage.includes('sudah terdaftar')) {
+        } 
+        // CEK ERROR UNTUK NISN
+        else if (errorMessage.includes('NISN') && errorMessage.includes('sudah terdaftar')) {
           Swal.fire({ icon: 'error', title: 'NISN Sudah Terdaftar!', html: `${errorMessage}<br><br>Jika Anda sudah mendaftar sebelumnya, silakan cek status pendaftaran Anda.`, confirmButtonColor: '#3b82f6' });
-        } else {
+        } 
+        // ERROR LAINNYA
+        else {
           Swal.fire({ icon: 'error', title: 'Pendaftaran Gagal', text: errorMessage, confirmButtonColor: '#3b82f6' });
         }
       }
