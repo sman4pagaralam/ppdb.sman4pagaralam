@@ -178,8 +178,15 @@ export const getRegistrations = async (): Promise<AdminData[]> => {
     if (response.ok) {
       const result = await response.json();
       if (result.status === "success" && Array.isArray(result.data)) {
-        fallbackData = result.data;
-        return result.data;
+        // Filter data yang valid (pastikan ada No Pendaftaran dan bukan header)
+        const validData = result.data.filter(item => 
+          item && 
+          item['No Pendaftaran'] && 
+          item['No Pendaftaran'].toString().trim() !== "" &&
+          item['No Pendaftaran'] !== "No Pendaftaran" // filter header jika terlanjur masuk
+        );
+        fallbackData = validData;
+        return validData;
       }
     }
     throw new Error("Failed to fetch registrations");
