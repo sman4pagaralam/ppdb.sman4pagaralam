@@ -215,7 +215,7 @@ const leftData = [
     doc.setFont("helvetica", "bold");
     doc.text(labelText, leftX, startY);
     
-    const valueX = leftX + leftLabelMaxWidth + 2;
+    const valueX = leftX + leftLabelMaxWidth + 4;
     
     doc.setFont("helvetica", "normal");
     doc.text(item.value, valueX, startY);
@@ -241,7 +241,7 @@ const leftData = [
     doc.setFont("helvetica", "bold");
     doc.text(labelText, rightX, startYRight);
     
-    const valueX = rightX + rightLabelMaxWidth + 2;
+    const valueX = rightX + rightLabelMaxWidth + 4;
     
     doc.setFont("helvetica", "normal");
     doc.text(item.value, valueX, startYRight);
