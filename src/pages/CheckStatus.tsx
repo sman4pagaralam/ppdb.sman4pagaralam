@@ -171,17 +171,18 @@ const printProof = async (data: any, settings: any) => {
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
 
-  // Data untuk kolom kiri
-  const leftData = [
-    { label: "Nama Lengkap", value: data['Nama Lengkap'] || '-' },
-    { label: "NIK", value: data['NIK'] || '-' },
-    { label: "NISN", value: data['NISN'] || '-' },
-    { label: "Tempat, Tanggal Lahir", value: `${data['Tempat Lahir'] || '-'}, ${formatDate(data['Tanggal Lahir'])}` },
-    { label: "Jenis Kelamin", value: data['Jenis Kelamin'] || '-' },
-    { label: "Golongan Darah", value: data['Golongan Darah'] || '-' },
-    { label: "Tinggi / Berat Badan", value: `${data['Tinggi Badan'] || '-'} cm / ${data['Berat Badan'] || '-'} kg` },
-    { label: "Asal Sekolah", value: data['Asal Sekolah'] || '-' },
-  ];
+  /// Data untuk kolom kiri (Tempat dan Tanggal Lahir dipisah)
+const leftData = [
+  { label: "Nama Lengkap", value: data['Nama Lengkap'] || '-' },
+  { label: "NIK", value: data['NIK'] || '-' },
+  { label: "NISN", value: data['NISN'] || '-' },
+  { label: "Tempat Lahir", value: data['Tempat Lahir'] || '-' },
+  { label: "Tanggal Lahir", value: formatDate(data['Tanggal Lahir']) },
+  { label: "Jenis Kelamin", value: data['Jenis Kelamin'] || '-' },
+  { label: "Golongan Darah", value: data['Golongan Darah'] || '-' },
+  { label: "Tinggi / Berat Badan", value: `${data['Tinggi Badan'] || '-'} cm / ${data['Berat Badan'] || '-'} kg` },
+  { label: "Asal Sekolah", value: data['Asal Sekolah'] || '-' },
+];
 
   // Data untuk kolom kanan (TANPA koordinat dan jarak)
   const rightData = [
