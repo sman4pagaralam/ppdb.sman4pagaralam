@@ -164,78 +164,64 @@ const printProof = async (data: any, settings: any) => {
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 8;
 
-  const leftFields = [
-    "Nama Lengkap",
-    "NIK",
-    "Tempat Lahir",
-    "Tanggal Lahir",
-    "Jenis Kelamin",
-    "Golongan Darah",
-    "Tinggi Badan",
-    "Berat Badan"
-  ];
-  const rightFields = [
-    "NISN",
-    "Asal Sekolah",
-    "Nama Ayah",
-    "Pekerjaan Ayah",
-    "Nama Ibu",
-    "Pekerjaan Ibu",
-    "Nomor WA Aktif",
-    "No WA Aktif Orang Tua",
-    "Rata-Rata Nilai Akhir",
-    "Alamat Domisili Lengkap"
-  ];
+  const leftData = [
+  ["Nama Lengkap", data["Nama Lengkap"]],
+  ["NIK", data["NIK"]],
+  ["Tempat Lahir", data["Tempat Lahir"]],
+  ["Tanggal Lahir", formatDate(data["Tanggal Lahir"])],
+  ["Jenis Kelamin", data["Jenis Kelamin"]],
+  ["Golongan Darah", data["Golongan Darah"]],
+  ["Tinggi Badan", data["Tinggi Badan"]],
+  ["Berat Badan", data["Berat Badan"]],
+  ["Alamat Domisili", data["Alamat Domisili Lengkap"]]
+];
 
-  const formatValue = (field: string, val: any) => {
-    if (field === "Tanggal Lahir") return formatDate(val);
-    if (val === undefined || val === null || val === "") return "-";
-    if (typeof val === "string" && val.startsWith("http")) return "File terupload";
-    return String(val);
-  };
+const rightData = [
+  ["NISN", data["NISN"]],
+  ["Asal Sekolah", data["Asal Sekolah"]],
+  ["Nama Ayah", data["Nama Ayah"]],
+  ["Pekerjaan Ayah", data["Pekerjaan Ayah"]],
+  ["Nama Ibu", data["Nama Ibu"]],
+  ["Pekerjaan Ibu", data["Pekerjaan Ibu"]],
+  ["Nomor WA Aktif", data["Nomor WA Aktif"]],
+  ["WA Orang Tua", data["No WA Aktif Orang Tua"]],
+  ["Rata-Rata Nilai", data["Rata-Rata Nilai Akhir"]]
+];
 
-  
-  const fields = [
-    ["Nama Lengkap", data["Nama Lengkap"]],
-    ["NISN", data["NISN"]],
-    ["NIK", data["NIK"]],
-    ["Asal Sekolah", data["Asal Sekolah"]],
-    ["Tempat Lahir", data["Tempat Lahir"]],
-    ["Tanggal Lahir", formatDate(data["Tanggal Lahir"])],
-    ["Jenis Kelamin", data["Jenis Kelamin"]],
-    ["Golongan Darah", data["Golongan Darah"]],
-    ["Tinggi Badan", data["Tinggi Badan"]],
-    ["Berat Badan", data["Berat Badan"]],
-    ["Nama Ayah", data["Nama Ayah"]],
-    ["Pekerjaan Ayah", data["Pekerjaan Ayah"]],
-    ["Nama Ibu", data["Nama Ibu"]],
-    ["Pekerjaan Ibu", data["Pekerjaan Ibu"]],
-    ["Nomor WA Aktif", data["Nomor WA Aktif"]],
-    ["No WA Aktif Orang Tua", data["No WA Aktif Orang Tua"]],
-    ["Rata-Rata Nilai Akhir", data["Rata-Rata Nilai Akhir"]],
-    ["Alamat Domisili Lengkap", data["Alamat Domisili Lengkap"]]
-  ];
+let rowY = y;
+const rowHeight = 8;
 
-  let rowY = y;
+for (let i = 0; i < Math.max(leftData.length, rightData.length); i++) {
 
-  fields.forEach(([label, value]) => {
+  const left = leftData[i];
+  const right = rightData[i];
+
+  if (left) {
     doc.setFont("helvetica", "bold");
-    doc.text(String(label), 20, rowY);
+    doc.text(left[0], 15, rowY);
 
     doc.setFont("helvetica", "normal");
-    doc.text(":", 72, rowY);
+    doc.text(":", 52, rowY);
 
-    const val = value === undefined || value === null || value === ""
-      ? "-"
-      : String(value);
+    const leftText = left[1] ? String(left[1]) : "-";
+    doc.text(leftText, 56, rowY);
+  }
 
-    const wrapped = doc.splitTextToSize(val, 110);
-    doc.text(wrapped, 76, rowY);
+  if (right) {
+    doc.setFont("helvetica", "bold");
+    doc.text(right[0], 108, rowY);
 
-    rowY += Math.max(8, wrapped.length * 5);
-  });
+    doc.setFont("helvetica", "normal");
+    doc.text(":", 145, rowY);
 
-  let finalY = rowY + 5;
+    const rightText = right[1] ? String(right[1]) : "-";
+    doc.text(rightText, 149, rowY);
+  }
+
+  rowY += rowHeight;
+}
+
+let finalY = rowY + 5;
 
 
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
