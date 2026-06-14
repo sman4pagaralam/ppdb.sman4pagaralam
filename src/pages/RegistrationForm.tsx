@@ -214,7 +214,7 @@ const printProof = async (noPendaftaran: string) => {
 
   y = 62;
   
-  // ========== JALUR (CENTER) ==========
+  // JALUR (center)
   const jalur = data['Jalur 1'] || '-';
   
   doc.setDrawColor(0, 0, 0);
@@ -247,13 +247,11 @@ const printProof = async (noPendaftaran: string) => {
   const colTitikDuaKanan = 156;
   const colValueKanan = 158;
 
-  // Helper untuk memastikan string
   const toStr = (val: any): string => {
     if (val === null || val === undefined) return '-';
     return String(val);
   };
 
-  // Format value khusus
   const formatValue = (field: string, val: any): string => {
     if (field === "Tanggal Lahir") return toStr(formatDate(val));
     if (val === undefined || val === null || val === "") return "-";
@@ -261,39 +259,23 @@ const printProof = async (noPendaftaran: string) => {
     return toStr(val);
   };
 
-  // Data untuk kolom kiri
+  // Kolom kiri
   const leftLabels = [
-    "Nama Lengkap",
-    "NIK",
-    "Tempat Lahir",
-    "Tanggal Lahir",
-    "Jenis Kelamin",
-    "Golongan Darah",
-    "Tinggi Badan",
-    "Berat Badan",
-    "Nomor WA Aktif",
-    "No WA Aktif Orang Tua",
+    "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
+    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan",
+    "Nomor WA Aktif", "No WA Aktif Orang Tua"
   ];
-
   const leftValues = leftLabels.map(label => formatValue(label, data[label]));
 
-  // Data untuk kolom kanan
+  // Kolom kanan
   const rightLabels = [
-    "NISN",
-    "Asal Sekolah",
-    "Nama Ayah",
-    "Pekerjaan Ayah",
-    "Nama Ibu",
-    "Pekerjaan Ibu",
-    "Prestasi Akademik Jika Ada",
-    "Prestasi Non Akademik Jika Ada",
-    "Rata-Rata Nilai Akhir",
-    "Alamat Domisili Lengkap",
+    "NISN", "Asal Sekolah", "Nama Ayah", "Pekerjaan Ayah",
+    "Nama Ibu", "Pekerjaan Ibu", "Prestasi Akademik Jika Ada",
+    "Prestasi Non Akademik Jika Ada", "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
   ];
-
   const rightValues = rightLabels.map(label => formatValue(label, data[label]));
 
-  // Cetak kolom kiri
+  // Cetak kiri
   let startY = y;
   for (let i = 0; i < leftLabels.length; i++) {
     doc.setFont("helvetica", "bold");
@@ -304,7 +286,7 @@ const printProof = async (noPendaftaran: string) => {
     startY += 6;
   }
 
-  // Cetak kolom kanan
+  // Cetak kanan
   let startYRight = y;
   for (let i = 0; i < rightLabels.length; i++) {
     doc.setFont("helvetica", "bold");
@@ -312,7 +294,6 @@ const printProof = async (noPendaftaran: string) => {
     doc.setFont("helvetica", "normal");
     doc.text(":", colTitikDuaKanan, startYRight);
     
-    // Untuk Alamat Domisili yang mungkin panjang
     if (rightLabels[i] === "Alamat Domisili Lengkap") {
       const alamat = rightValues[i];
       const splitAlamat = doc.splitTextToSize(alamat, pageWidth - colValueKanan - 10);
@@ -326,7 +307,7 @@ const printProof = async (noPendaftaran: string) => {
 
   y = Math.max(startY, startYRight) + 10;
 
-  // ========== LOKASI DAN JARAK ==========
+  // LOKASI DAN JARAK
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
     doc.setDrawColor(200, 200, 200);
     doc.line(marginLeft, y, pageWidth - marginRight, y);
@@ -360,7 +341,7 @@ const printProof = async (noPendaftaran: string) => {
     }
   }
 
-  // ========== STATUS PENDAFTARAN ==========
+  // STATUS PENDAFTARAN
   doc.setDrawColor(200, 200, 200);
   doc.line(marginLeft, y, pageWidth - marginRight, y);
   y += 8;
@@ -390,6 +371,7 @@ const printProof = async (noPendaftaran: string) => {
 
   doc.save(`Bukti_Pendaftaran_${noPendaftaran}.pdf`);
 };
+  
   // ========== SUBMIT DENGAN ANTI DOUBLE SUBMIT ==========
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
