@@ -164,43 +164,46 @@ const printProof = async (data: any, settings: any) => {
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 8;
 
-  const leftFields = [
-    "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
-    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
-  ];
-  const rightFields = [
-    "NISN", "Asal Sekolah",
-    "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-    "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
+  // ========== DATA PRIBADI (FORMAT RAPI DENGAN TITIK DUA) ==========
+  const fields = [
+    { label: "Nama Lengkap", value: data['Nama Lengkap'] || '-' },
+    { label: "NIK", value: data['NIK'] || '-' },
+    { label: "NISN", value: data['NISN'] || '-' },
+    { label: "Tempat Lahir", value: data['Tempat Lahir'] || '-' },
+    { label: "Tanggal Lahir", value: formatDate(data['Tanggal Lahir']) },
+    { label: "Jenis Kelamin", value: data['Jenis Kelamin'] || '-' },
+    { label: "Golongan Darah", value: data['Golongan Darah'] || '-' },
+    { label: "Tinggi Badan", value: data['Tinggi Badan'] || '-' },
+    { label: "Berat Badan", value: data['Berat Badan'] || '-' },
+    { label: "Asal Sekolah", value: data['Asal Sekolah'] || '-' },
+    { label: "Nomor WA Aktif", value: data['Nomor WA Aktif'] || '-' },
+    { label: "No WA Aktif Orang Tua", value: data['No WA Aktif Orang Tua'] || '-' },
+    { label: "Nama Ayah", value: data['Nama Ayah'] || '-' },
+    { label: "Pekerjaan Ayah", value: data['Pekerjaan Ayah'] || '-' },
+    { label: "Nama Ibu", value: data['Nama Ibu'] || '-' },
+    { label: "Pekerjaan Ibu", value: data['Pekerjaan Ibu'] || '-' },
+    { label: "Rata-Rata Nilai Akhir", value: data['Rata-Rata Nilai Akhir'] || '-' },
+    { label: "Alamat Domisili Lengkap", value: data['Alamat Domisili Lengkap'] || '-' }
   ];
 
-  const formatValue = (field: string, val: any) => {
-    if (field === "Tanggal Lahir") return formatDate(val);
-    if (val === undefined || val === null || val === "") return "-";
-    if (typeof val === "string" && val.startsWith("http")) return "File terupload";
-    return String(val);
-  };
+  // Bagi menjadi 2 kolom
+  const midPoint = Math.ceil(fields.length / 2);
+  const leftFields = fields.slice(0, midPoint);
+  const rightFields = fields.slice(midPoint);
 
   const tableBody = [];
   const maxRows = Math.max(leftFields.length, rightFields.length);
-
+  
   for (let i = 0; i < maxRows; i++) {
-    const leftLabel = leftFields[i] || "";
-    const leftValue = leftLabel
-      ? formatValue(leftLabel, data[leftLabel])
-      : "";
-
-    const rightLabel = rightFields[i] || "";
-    const rightValue = rightLabel
-      ? formatValue(rightLabel, data[rightLabel])
-      : "";
-
-    tableBody.push([
-      leftLabel ? `${leftLabel}:` : "",
-      leftValue,
-      rightLabel ? `${rightLabel}:` : "",
-      rightValue
-    ]);
+    const left = leftFields[i];
+    const right = rightFields[i];
+    
+    const leftText = left ? `${left.label}:` : "";
+    const leftValue = left ? left.value : "";
+    const rightText = right ? `${right.label}:` : "";
+    const rightValue = right ? right.value : "";
+    
+    tableBody.push([leftText, leftValue, rightText, rightValue]);
   }
 
   autoTable(doc, {
@@ -210,10 +213,10 @@ const printProof = async (data: any, settings: any) => {
     theme: 'plain',
     styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
     columnStyles: {
-      0: { cellWidth: 25, fontStyle: 'bold' },
-      1: { cellWidth: 70 },
-      2: { cellWidth: 25, fontStyle: 'bold' },
-      3: { cellWidth: 'auto' },
+      0: { cellWidth: 30, fontStyle: 'bold', halign: 'right' },  // label kiri (rata kanan)
+      1: { cellWidth: 65, halign: 'left' },                       // nilai kiri (rata kiri)
+      2: { cellWidth: 30, fontStyle: 'bold', halign: 'right' },  // label kanan (rata kanan)
+      3: { cellWidth: 65, halign: 'left' },                       // nilai kanan (rata kiri)
     },
     margin: { left: 12, right: 12 },
     tableWidth: 'auto',
