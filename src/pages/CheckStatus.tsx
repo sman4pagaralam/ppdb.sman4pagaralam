@@ -164,17 +164,19 @@ const printProof = async (data: any, settings: any) => {
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 8;
 
-  const allFields = [
+  const leftFields = [
     "Nama Lengkap",
-    "NISN",
     "NIK",
-    "Asal Sekolah",
     "Tempat Lahir",
     "Tanggal Lahir",
     "Jenis Kelamin",
     "Golongan Darah",
     "Tinggi Badan",
-    "Berat Badan",
+    "Berat Badan"
+  ];
+  const rightFields = [
+    "NISN",
+    "Asal Sekolah",
     "Nama Ayah",
     "Pekerjaan Ayah",
     "Nama Ibu",
@@ -192,30 +194,49 @@ const printProof = async (data: any, settings: any) => {
     return String(val);
   };
 
-  const tableBody = allFields.map(field => [
-    field,
-    ":",
-    formatValue(field, data[field])
-  ]);
+  
+  const fields = [
+    ["Nama Lengkap", data["Nama Lengkap"]],
+    ["NISN", data["NISN"]],
+    ["NIK", data["NIK"]],
+    ["Asal Sekolah", data["Asal Sekolah"]],
+    ["Tempat Lahir", data["Tempat Lahir"]],
+    ["Tanggal Lahir", formatDate(data["Tanggal Lahir"])],
+    ["Jenis Kelamin", data["Jenis Kelamin"]],
+    ["Golongan Darah", data["Golongan Darah"]],
+    ["Tinggi Badan", data["Tinggi Badan"]],
+    ["Berat Badan", data["Berat Badan"]],
+    ["Nama Ayah", data["Nama Ayah"]],
+    ["Pekerjaan Ayah", data["Pekerjaan Ayah"]],
+    ["Nama Ibu", data["Nama Ibu"]],
+    ["Pekerjaan Ibu", data["Pekerjaan Ibu"]],
+    ["Nomor WA Aktif", data["Nomor WA Aktif"]],
+    ["No WA Aktif Orang Tua", data["No WA Aktif Orang Tua"]],
+    ["Rata-Rata Nilai Akhir", data["Rata-Rata Nilai Akhir"]],
+    ["Alamat Domisili Lengkap", data["Alamat Domisili Lengkap"]]
+  ];
 
-  autoTable(doc, {
-    startY: y,
-    body: tableBody,
-    theme: 'plain',
-    styles: {
-      fontSize: 10,
-      cellPadding: 2.5,
-      overflow: 'linebreak'
-    },
-    columnStyles: {
-      0: { cellWidth: 55, fontStyle: 'bold' },
-      1: { cellWidth: 5 },
-      2: { cellWidth: 110 }
-    },
-    margin: { left: 18, right: 18 }
+  let rowY = y;
+
+  fields.forEach(([label, value]) => {
+    doc.setFont("helvetica", "bold");
+    doc.text(String(label), 20, rowY);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(":", 72, rowY);
+
+    const val = value === undefined || value === null || value === ""
+      ? "-"
+      : String(value);
+
+    const wrapped = doc.splitTextToSize(val, 110);
+    doc.text(wrapped, 76, rowY);
+
+    rowY += Math.max(8, wrapped.length * 5);
   });
 
-  let finalY = (doc as any).lastAutoTable.finalY + 5;
+  let finalY = rowY + 5;
+
 
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
     doc.setDrawColor(200, 200, 200);
