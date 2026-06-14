@@ -168,8 +168,16 @@ const printProof = async (data: any, settings: any) => {
   y = garisBawahY + 12;
 
   // ========== DATA PRIBADI (LABEL, TITIK DUA, VALUE DI KOLOM TERPISAH) ==========
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
+
+  // Posisi kolom
+  const colLabelKiri = 20;
+  const colTitikDuaKiri = 50;
+  const colValueKiri = 53;
+  const colLabelKanan = 115;
+  const colTitikDuaKanan = 156;
+  const colValueKanan = 158;
 
   // Data untuk kolom kiri
   const leftLabels = [
@@ -219,62 +227,42 @@ const printProof = async (data: any, settings: any) => {
     data['Rata-Rata Nilai Akhir'] || '-',
   ];
 
-  // Posisi kolom (dalam mm)
-  const colLabelKiri = 20;     // Label kiri
-  const colTitikDuaKiri = 50;  // Titik dua kiri
-  const colValueKiri = 53;     // Value kiri
-
-  const colLabelKanan = 115;    // Label kanan
-  const colTitikDuaKanan = 156; // Titik dua kanan
-  const colValueKanan = 158;    // Value kanan
-
   // Cetak kolom kiri
   let startY = y;
   for (let i = 0; i < leftLabels.length; i++) {
-    // Label
     doc.setFont("helvetica", "bold");
     doc.text(leftLabels[i], colLabelKiri, startY);
-    
-    // Titik dua
     doc.setFont("helvetica", "normal");
     doc.text(":", colTitikDuaKiri, startY);
-    
-    // Value
     doc.text(leftValues[i], colValueKiri, startY);
-    
     startY += 6;
   }
 
   // Cetak kolom kanan
   let startYRight = y;
   for (let i = 0; i < rightLabels.length; i++) {
-    // Label
     doc.setFont("helvetica", "bold");
     doc.text(rightLabels[i], colLabelKanan, startYRight);
-    
-    // Titik dua
     doc.setFont("helvetica", "normal");
     doc.text(":", colTitikDuaKanan, startYRight);
-    
-    // Value
     doc.text(rightValues[i], colValueKanan, startYRight);
-    
     startYRight += 6;
   }
 
   y = Math.max(startY, startYRight) + 10;
 
-  // ALAMAT (full width)
+  // ========== ALAMAT ==========
   doc.setFont("helvetica", "bold");
-  doc.text("Alamat Domisili Lengkap:", marginLeft, y);
-  y += 5;
+  doc.text("Alamat Domisili Lengkap", colLabelKiri, y);
   doc.setFont("helvetica", "normal");
+  doc.text(":", colTitikDuaKiri, y);
+  y += 5;
   const alamat = data['Alamat Domisili Lengkap'] || '-';
-  const splitAlamat = doc.splitTextToSize(alamat, pageWidth - marginLeft - marginRight);
-  doc.text(splitAlamat, marginLeft, y);
+  const splitAlamat = doc.splitTextToSize(alamat, pageWidth - colValueKiri - 10);
+  doc.text(splitAlamat, colValueKiri, y);
   y += splitAlamat.length * 5 + 10;
 
-  // ========== LOKASI DAN JARAK (kembali ke posisi semula) ==========
+  // ========== LOKASI DAN JARAK ==========
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
     doc.setDrawColor(200, 200, 200);
     doc.line(marginLeft, y, pageWidth - marginRight, y);
@@ -288,24 +276,26 @@ const printProof = async (data: any, settings: any) => {
     
     if (data['Koordinat Lokasi']) {
       doc.setFont("helvetica", "bold");
-      doc.text("Koordinat Rumah:", marginLeft, y);
+      doc.text("Koordinat Rumah", colLabelKiri, y);
       doc.setFont("helvetica", "normal");
+      doc.text(":", colTitikDuaKiri, y);
       const koordinat = String(data['Koordinat Lokasi']);
       const splitKoor = doc.splitTextToSize(koordinat, 100);
-      doc.text(splitKoor, 70, y);
+      doc.text(splitKoor, colValueKiri, y);
       y += Math.max(6, splitKoor.length * 5);
     }
     
     if (data['Jarak ke Sekolah (km)']) {
       doc.setFont("helvetica", "bold");
-      doc.text("Jarak ke Sekolah:", marginLeft, y);
+      doc.text("Jarak ke Sekolah", colLabelKiri, y);
       doc.setFont("helvetica", "normal");
-      doc.text(`${data['Jarak ke Sekolah (km)']} km`, 70, y);
+      doc.text(":", colTitikDuaKiri, y);
+      doc.text(`${data['Jarak ke Sekolah (km)']} km`, colValueKiri, y);
       y += 10;
     }
   }
 
-  // STATUS PENDAFTARAN
+  // ========== STATUS PENDAFTARAN ==========
   doc.setDrawColor(200, 200, 200);
   doc.line(marginLeft, y, pageWidth - marginRight, y);
   y += 8;
