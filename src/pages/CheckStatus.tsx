@@ -84,6 +84,10 @@ const printProof = async (data: any, settings: any) => {
     format: [210, 330]
   });
   
+  const pageWidth = 210;
+  const marginLeft = 20;
+  const marginRight = 20;
+  
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
   let fotoBase64 = null;
 
@@ -168,7 +172,8 @@ const printProof = async (data: any, settings: any) => {
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   
-  const dataFields = [
+  // Data untuk kolom kiri
+  const leftData = [
     { label: "Nama Lengkap", value: data['Nama Lengkap'] || '-' },
     { label: "NIK", value: data['NIK'] || '-' },
     { label: "NISN", value: data['NISN'] || '-' },
@@ -177,6 +182,10 @@ const printProof = async (data: any, settings: any) => {
     { label: "Golongan Darah", value: data['Golongan Darah'] || '-' },
     { label: "Tinggi / Berat Badan", value: `${data['Tinggi Badan'] || '-'} cm / ${data['Berat Badan'] || '-'} kg` },
     { label: "Asal Sekolah", value: data['Asal Sekolah'] || '-' },
+  ];
+
+  // Data untuk kolom kanan
+  const rightData = [
     { label: "Nomor WA Aktif", value: data['Nomor WA Aktif'] || '-' },
     { label: "No WA Aktif Orang Tua", value: data['No WA Aktif Orang Tua'] || '-' },
     { label: "Nama Ayah", value: data['Nama Ayah'] || '-' },
@@ -186,34 +195,33 @@ const printProof = async (data: any, settings: any) => {
     { label: "Rata-Rata Nilai Akhir", value: data['Rata-Rata Nilai Akhir'] || '-' },
   ];
 
-  // Cetak data vertikal dengan label rata kanan, value rata kiri
-  const col1X = 20;      // posisi X untuk label
-  const col2X = 75;      // posisi X untuk nilai (setelah label)
+  // Cetak kolom kiri
   let startY = y;
+  let leftX = 20;
+  let rightX = 115;
   
-  for (let i = 0; i < dataFields.length; i++) {
-    const field = dataFields[i];
-    
-    // Label (rata kanan)
+  for (let i = 0; i < leftData.length; i++) {
+    const field = leftData[i];
     doc.setFont("helvetica", "bold");
-    doc.text(field.label + ":", col1X, startY, { align: "right" });
-    
-    // Value (rata kiri)
+    doc.text(field.label + ":", leftX, startY);
     doc.setFont("helvetica", "normal");
-    doc.text(field.value, col2X, startY);
-    
+    doc.text(field.value, leftX + 45, startY);
     startY += 6;
-    
-    // Pindah ke kolom kanan setelah setengah data
-    if (i === Math.floor(dataFields.length / 2) - 1) {
-      // Mulai kolom kanan
-      col1X = 120;
-      col2X = 165;
-      startY = y;
-    }
   }
-
-  y = startY + 10;
+  
+  // Cetak kolom kanan
+  let startYRight = y;
+  for (let i = 0; i < rightData.length; i++) {
+    const field = rightData[i];
+    doc.setFont("helvetica", "bold");
+    doc.text(field.label + ":", rightX, startYRight);
+    doc.setFont("helvetica", "normal");
+    doc.text(field.value, rightX + 50, startYRight);
+    startYRight += 6;
+  }
+  
+  // Update y setelah kedua kolom
+  y = Math.max(startY, startYRight) + 5;
 
   // ALAMAT (full width)
   doc.setFont("helvetica", "bold");
