@@ -167,11 +167,11 @@ const printProof = async (data: any, settings: any) => {
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 12;
 
-  // ========== DATA PRIBADI (FORMAT TABEL 6 KOLOM) ==========
+  // ========== DATA PRIBADI (LABEL, TITIK DUA, VALUE DI KOLOM TERPISAH) ==========
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
 
-  // Data untuk kolom kiri (label dan value dipisah dengan kolom :)
+  // Data untuk kolom kiri
   const leftLabels = [
     "Nama Lengkap",
     "NIK",
@@ -219,49 +219,49 @@ const printProof = async (data: any, settings: any) => {
     data['Rata-Rata Nilai Akhir'] || '-',
   ];
 
-  // Posisi kolom (dalam mm) - DIPERBAIKI RAPAT
-const col1 = 20;   // Label kiri
-const col2 = 42;   // Titik dua kiri (deket sama label)
-const col3 = 48;   // Value kiri (deket sama titik dua)
-const col4 = 115;  // Label kanan
-const col5 = 137;  // Titik dua kanan (deket sama label kanan)
-const col6 = 143;  // Value kanan (deket sama titik dua kanan)
+  // Posisi kolom (dalam mm)
+  const colLabelKiri = 20;     // Label kiri
+  const colTitikDuaKiri = 65;  // Titik dua kiri
+  const colValueKiri = 72;     // Value kiri
 
-  // Cetak kolom kiri (10 baris)
+  const colLabelKanan = 115;    // Label kanan
+  const colTitikDuaKanan = 155; // Titik dua kanan
+  const colValueKanan = 162;    // Value kanan
+
+  // Cetak kolom kiri
   let startY = y;
   for (let i = 0; i < leftLabels.length; i++) {
-    // Label di kolom 1
+    // Label
     doc.setFont("helvetica", "bold");
-    doc.text(leftLabels[i], col1, startY);
+    doc.text(leftLabels[i], colLabelKiri, startY);
     
-    // Titik dua di kolom 2
+    // Titik dua
     doc.setFont("helvetica", "normal");
-    doc.text(":", col2, startY);
+    doc.text(":", colTitikDuaKiri, startY);
     
-    // Value di kolom 3
-    doc.text(leftValues[i], col3, startY);
+    // Value
+    doc.text(leftValues[i], colValueKiri, startY);
     
     startY += 6;
   }
 
-  // Cetak kolom kanan (7 baris)
+  // Cetak kolom kanan
   let startYRight = y;
   for (let i = 0; i < rightLabels.length; i++) {
-    // Label di kolom 4
+    // Label
     doc.setFont("helvetica", "bold");
-    doc.text(rightLabels[i], col4, startYRight);
+    doc.text(rightLabels[i], colLabelKanan, startYRight);
     
-    // Titik dua di kolom 5
+    // Titik dua
     doc.setFont("helvetica", "normal");
-    doc.text(":", col5, startYRight);
+    doc.text(":", colTitikDuaKanan, startYRight);
     
-    // Value di kolom 6
-    doc.text(rightValues[i], col6, startYRight);
+    // Value
+    doc.text(rightValues[i], colValueKanan, startYRight);
     
     startYRight += 6;
   }
 
-  // Update y setelah kedua kolom
   y = Math.max(startY, startYRight) + 10;
 
   // ALAMAT (full width)
