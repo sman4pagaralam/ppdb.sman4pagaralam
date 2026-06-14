@@ -225,7 +225,7 @@ const printProof = async (data: any, settings: any) => {
   const colValueKiri = 53;     // Value kiri
 
   const colLabelKanan = 115;    // Label kanan
-  const colTitikDuaKanan = 155; // Titik dua kanan
+  const colTitikDuaKanan = 156; // Titik dua kanan
   const colValueKanan = 162;    // Value kanan
 
   // Cetak kolom kiri
