@@ -164,65 +164,62 @@ const printProof = async (data: any, settings: any) => {
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 8;
 
-  const leftData = [
-  ["Nama Lengkap", data["Nama Lengkap"]],
-  ["NIK", data["NIK"]],
-  ["Tempat Lahir", data["Tempat Lahir"]],
-  ["Tanggal Lahir", formatDate(data["Tanggal Lahir"])],
-  ["Jenis Kelamin", data["Jenis Kelamin"]],
-  ["Golongan Darah", data["Golongan Darah"]],
-  ["Tinggi Badan", data["Tinggi Badan"]],
-  ["Berat Badan", data["Berat Badan"]],
-  ["Alamat Domisili", data["Alamat Domisili Lengkap"]]
-];
+  const leftFields = [
+    "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
+    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
+  ];
+  const rightFields = [
+    "NISN", "Asal Sekolah",
+    "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
+    "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
+  ];
 
-const rightData = [
-  ["NISN", data["NISN"]],
-  ["Asal Sekolah", data["Asal Sekolah"]],
-  ["Nama Ayah", data["Nama Ayah"]],
-  ["Pekerjaan Ayah", data["Pekerjaan Ayah"]],
-  ["Nama Ibu", data["Nama Ibu"]],
-  ["Pekerjaan Ibu", data["Pekerjaan Ibu"]],
-  ["Nomor WA Aktif", data["Nomor WA Aktif"]],
-  ["WA Orang Tua", data["No WA Aktif Orang Tua"]],
-  ["Rata-Rata Nilai", data["Rata-Rata Nilai Akhir"]]
-];
+  const formatValue = (field: string, val: any) => {
+    if (field === "Tanggal Lahir") return formatDate(val);
+    if (val === undefined || val === null || val === "") return "-";
+    if (typeof val === "string" && val.startsWith("http")) return "File terupload";
+    return String(val);
+  };
 
-let rowY = y;
-const rowHeight = 8;
+  const tableBody = [];
+  const maxRows = Math.max(leftFields.length, rightFields.length);
 
-for (let i = 0; i < Math.max(leftData.length, rightData.length); i++) {
+  for (let i = 0; i < maxRows; i++) {
+    const leftLabel = leftFields[i] || "";
+    const leftValue = leftLabel
+      ? formatValue(leftLabel, data[leftLabel])
+      : "";
 
-  const left = leftData[i];
-  const right = rightData[i];
+    const rightLabel = rightFields[i] || "";
+    const rightValue = rightLabel
+      ? formatValue(rightLabel, data[rightLabel])
+      : "";
 
-  if (left) {
-    doc.setFont("helvetica", "bold");
-    doc.text(left[0], 15, rowY);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(":", 52, rowY);
-
-    const leftText = left[1] ? String(left[1]) : "-";
-    doc.text(leftText, 56, rowY);
+    tableBody.push([
+      leftLabel ? `${leftLabel}:` : "",
+      leftValue,
+      rightLabel ? `${rightLabel}:` : "",
+      rightValue
+    ]);
   }
 
-  if (right) {
-    doc.setFont("helvetica", "bold");
-    doc.text(right[0], 108, rowY);
+  autoTable(doc, {
+    startY: y,
+    head: [],
+    body: tableBody,
+    theme: 'plain',
+    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
+    columnStyles: {
+      0: { cellWidth: 25, fontStyle: 'bold' },
+      1: { cellWidth: 70 },
+      2: { cellWidth: 25, fontStyle: 'bold' },
+      3: { cellWidth: 'auto' },
+    },
+    margin: { left: 12, right: 12 },
+    tableWidth: 'auto',
+  });
 
-    doc.setFont("helvetica", "normal");
-    doc.text(":", 145, rowY);
-
-    const rightText = right[1] ? String(right[1]) : "-";
-    doc.text(rightText, 149, rowY);
-  }
-
-  rowY += rowHeight;
-}
-
-let finalY = rowY + 5;
-
+  let finalY = (doc as any).lastAutoTable.finalY + 5;
 
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
     doc.setDrawColor(200, 200, 200);
