@@ -168,7 +168,7 @@ const printProof = async (data: any, settings: any) => {
   y = garisBawahY + 12;
 
   // ========== DATA PRIBADI (FORMAT LABEL : VALUE DENGAN PENJAJARAN RAPI) ==========
-  doc.setFontSize(8);
+  doc.setFontSize(6);
   doc.setFont("helvetica", "normal");
 
   // Data untuk kolom kiri
