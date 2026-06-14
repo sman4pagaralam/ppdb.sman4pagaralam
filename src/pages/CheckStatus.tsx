@@ -168,7 +168,7 @@ const printProof = async (data: any, settings: any) => {
   y = garisBawahY + 12;
 
   // ========== DATA PRIBADI (LABEL, TITIK DUA, VALUE DI KOLOM TERPISAH) ==========
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
 
   // Data untuk kolom kiri
@@ -226,7 +226,7 @@ const printProof = async (data: any, settings: any) => {
 
   const colLabelKanan = 115;    // Label kanan
   const colTitikDuaKanan = 156; // Titik dua kanan
-  const colValueKanan = 162;    // Value kanan
+  const colValueKanan = 158;    // Value kanan
 
   // Cetak kolom kiri
   let startY = y;
