@@ -147,8 +147,16 @@ export default function RegistrationForm() {
 
   // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
   const printProof = async (noPendaftaran: string) => {
-    if (!formData) return;
-    const data = { ...formData, 'No Pendaftaran': noPendaftaran };
+    // Ambil data terbaru dari state formData
+    const currentFormData = formData;
+    
+    if (!currentFormData || Object.keys(currentFormData).length === 0) {
+      console.error("Form data kosong!");
+      Swal.fire('Error', 'Data tidak ditemukan, silakan coba lagi', 'error');
+      return;
+    }
+    
+    const data = { ...currentFormData, 'No Pendaftaran': noPendaftaran };
     
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -235,11 +243,10 @@ export default function RegistrationForm() {
     doc.line(14, garisBawahY, 196, garisBawahY);
     y = garisBawahY + 12;
 
-    // ========== DATA PRIBADI (LABEL, TITIK DUA, VALUE DI KOLOM TERPISAH) ==========
+    // ========== DATA PRIBADI ==========
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
 
-    // Posisi kolom
     const colLabelKiri = 20;
     const colTitikDuaKiri = 50;
     const colValueKiri = 53;
@@ -247,7 +254,6 @@ export default function RegistrationForm() {
     const colTitikDuaKanan = 156;
     const colValueKanan = 158;
 
-    // Helper untuk memastikan string
     const toStr = (val: any): string => {
       if (val === null || val === undefined) return '-';
       return String(val);
@@ -275,16 +281,16 @@ export default function RegistrationForm() {
     ];
 
     const leftValues = [
-      toStr(data['Nama Lengkap']),
-      toStr(data['NIK']),
-      toStr(data['NISN']),
-      toStr(data['Tempat Lahir']),
-      toStr(formatDate(data['Tanggal Lahir'])),
-      toStr(data['Jenis Kelamin']),
-      toStr(data['Golongan Darah']),
-      toStr(`${data['Tinggi Badan'] || '-'} cm`),
-      toStr(`${data['Berat Badan'] || '-'} kg`),
-      toStr(data['Asal Sekolah']),
+      formatValue("Nama Lengkap", data['Nama Lengkap']),
+      formatValue("NIK", data['NIK']),
+      formatValue("NISN", data['NISN']),
+      formatValue("Tempat Lahir", data['Tempat Lahir']),
+      formatValue("Tanggal Lahir", data['Tanggal Lahir']),
+      formatValue("Jenis Kelamin", data['Jenis Kelamin']),
+      formatValue("Golongan Darah", data['Golongan Darah']),
+      formatValue("Tinggi Badan", data['Tinggi Badan'] ? `${data['Tinggi Badan']} cm` : '-'),
+      formatValue("Berat Badan", data['Berat Badan'] ? `${data['Berat Badan']} kg` : '-'),
+      formatValue("Asal Sekolah", data['Asal Sekolah']),
     ];
 
     // Data untuk kolom kanan
@@ -299,13 +305,13 @@ export default function RegistrationForm() {
     ];
 
     const rightValues = [
-      toStr(data['Nomor WA Aktif']),
-      toStr(data['No WA Aktif Orang Tua']),
-      toStr(data['Nama Ayah']),
-      toStr(data['Pekerjaan Ayah']),
-      toStr(data['Nama Ibu']),
-      toStr(data['Pekerjaan Ibu']),
-      toStr(data['Rata-Rata Nilai Akhir']),
+      formatValue("Nomor WA Aktif", data['Nomor WA Aktif']),
+      formatValue("No WA Aktif Orang Tua", data['No WA Aktif Orang Tua']),
+      formatValue("Nama Ayah", data['Nama Ayah']),
+      formatValue("Pekerjaan Ayah", data['Pekerjaan Ayah']),
+      formatValue("Nama Ibu", data['Nama Ibu']),
+      formatValue("Pekerjaan Ibu", data['Pekerjaan Ibu']),
+      formatValue("Rata-Rata Nilai Akhir", data['Rata-Rata Nilai Akhir']),
     ];
 
     // Cetak kolom kiri
@@ -412,7 +418,6 @@ export default function RegistrationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // CEK DOUBLE SUBMIT
     if (isSubmitting) {
       Swal.fire({
         icon: 'warning',
@@ -430,7 +435,6 @@ export default function RegistrationForm() {
       return;
     }
     
-    // VALIDASI JALUR 1 DAN JALUR 2 TIDAK BOLEH SAMA
     const jalur1 = formData['Jalur 1'];
     const jalur2 = formData['Jalur 2'];
     
@@ -478,10 +482,12 @@ export default function RegistrationForm() {
     try {
       const response = await submitRegistration(formData);
       if (response.status === 'success') {
+        const noPendaftaranBaru = response.noPendaftaran;
+        
         Swal.fire({
           icon: 'success',
           title: 'Pendaftaran Berhasil!',
-          html: `Nomor Pendaftaran Anda:<br><b style="font-size: 1.5rem; color: #2563eb;">${response.noPendaftaran}</b><br><br>Simpan nomor ini untuk mengecek status kelulusan.`,
+          html: `Nomor Pendaftaran Anda:<br><b style="font-size: 1.5rem; color: #2563eb;">${noPendaftaranBaru}</b><br><br>Simpan nomor ini untuk mengecek status kelulusan.`,
           confirmButtonColor: '#3b82f6',
           confirmButtonText: 'Unduh Bukti Pendaftaran',
           showCancelButton: true,
@@ -489,14 +495,13 @@ export default function RegistrationForm() {
           allowOutsideClick: false
         }).then((result) => {
           if (result.isConfirmed) {
-            printProof(response.noPendaftaran);
+            printProof(noPendaftaranBaru);
           }
           window.location.href = '/';
         });
       } else {
         let errorMessage = response.message || 'Terjadi kesalahan. Silakan coba lagi.';
         
-        // CEK ERROR UNTUK NAMA + TANGGAL LAHIR
         if (errorMessage.includes('nama') && errorMessage.includes('tanggal lahir')) {
           Swal.fire({
             icon: 'error',
@@ -505,15 +510,12 @@ export default function RegistrationForm() {
             confirmButtonColor: '#3b82f6'
           });
         } 
-        // CEK ERROR UNTUK NIK
         else if (errorMessage.includes('NIK') && errorMessage.includes('sudah terdaftar')) {
           Swal.fire({ icon: 'error', title: 'NIK Sudah Terdaftar!', html: `${errorMessage}<br><br>Jika Anda sudah mendaftar sebelumnya, silakan cek status pendaftaran Anda.`, confirmButtonColor: '#3b82f6' });
         } 
-        // CEK ERROR UNTUK NISN
         else if (errorMessage.includes('NISN') && errorMessage.includes('sudah terdaftar')) {
           Swal.fire({ icon: 'error', title: 'NISN Sudah Terdaftar!', html: `${errorMessage}<br><br>Jika Anda sudah mendaftar sebelumnya, silakan cek status pendaftaran Anda.`, confirmButtonColor: '#3b82f6' });
         } 
-        // ERROR LAINNYA
         else {
           Swal.fire({ icon: 'error', title: 'Pendaftaran Gagal', text: errorMessage, confirmButtonColor: '#3b82f6' });
         }
@@ -536,7 +538,6 @@ export default function RegistrationForm() {
       return <input type="text" name={field.label} required={field.required} value={formData[field.label] || ''} onChange={handleChange} className={commonClasses} placeholder="10 digit angka (contoh: 1234567890)" maxLength={10} minLength={10} pattern="\d{10}" title="NISN harus 10 digit angka" />;
     }
     
-    // JALUR 1 (opsi tetap)
     if (field.id === 'Jalur 1' || field.label === 'Jalur 1') {
       return (
         <select
@@ -554,7 +555,6 @@ export default function RegistrationForm() {
       );
     }
     
-    // JALUR 2 (opsi dinamis + tambahan "Hanya memilih 1 Jalur")
     if (field.id === 'Jalur 2' || field.label === 'Jalur 2') {
       const optionsToShow = jalur2Options.length > 0 ? jalur2Options : allJalurOptions;
       return (
