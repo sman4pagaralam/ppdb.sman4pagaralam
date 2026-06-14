@@ -144,7 +144,7 @@ const printProof = async (data: any, settings: any) => {
   y = 62;
   
   // JALUR (center)
-  const jalur = data['Jalur 1'] || '-';
+  const jalur = data['Jalur'] || '-';
   
   doc.setDrawColor(0, 0, 0);
   doc.line(14, y - 2, 196, y - 2);
