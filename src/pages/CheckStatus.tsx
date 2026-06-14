@@ -221,7 +221,7 @@ const printProof = async (data: any, settings: any) => {
 
   // Posisi kolom (dalam mm)
   const colLabelKiri = 20;     // Label kiri
-  const colTitikDuaKiri = 65;  // Titik dua kiri
+  const colTitikDuaKiri = 55;  // Titik dua kiri
   const colValueKiri = 72;     // Value kiri
 
   const colLabelKanan = 115;    // Label kanan
