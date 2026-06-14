@@ -167,84 +167,97 @@ const printProof = async (data: any, settings: any) => {
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 12;
 
-  // ========== DATA PRIBADI (FORMAT LABEL : VALUE DENGAN PENJAJARAN RAPI) ==========
+  // ========== DATA PRIBADI (FORMAT TABEL 6 KOLOM) ==========
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
 
-// Data untuk kolom kiri (SEMUA DIPISAH)
-const leftData = [
-  { label: "Nama Lengkap", value: data['Nama Lengkap'] || '-' },
-  { label: "NIK", value: data['NIK'] || '-' },
-  { label: "NISN", value: data['NISN'] || '-' },
-  { label: "Tempat Lahir", value: data['Tempat Lahir'] || '-' },
-  { label: "Tanggal Lahir", value: formatDate(data['Tanggal Lahir']) },
-  { label: "Jenis Kelamin", value: data['Jenis Kelamin'] || '-' },
-  { label: "Golongan Darah", value: data['Golongan Darah'] || '-' },
-  { label: "Tinggi Badan", value: `${data['Tinggi Badan'] || '-'} cm` },
-  { label: "Berat Badan", value: `${data['Berat Badan'] || '-'} kg` },
-  { label: "Asal Sekolah", value: data['Asal Sekolah'] || '-' },
-];
-
-  // Data untuk kolom kanan (TANPA koordinat dan jarak)
-  const rightData = [
-    { label: "Nomor WA Aktif", value: data['Nomor WA Aktif'] || '-' },
-    { label: "No WA Aktif Orang Tua", value: data['No WA Aktif Orang Tua'] || '-' },
-    { label: "Nama Ayah", value: data['Nama Ayah'] || '-' },
-    { label: "Pekerjaan Ayah", value: data['Pekerjaan Ayah'] || '-' },
-    { label: "Nama Ibu", value: data['Nama Ibu'] || '-' },
-    { label: "Pekerjaan Ibu", value: data['Pekerjaan Ibu'] || '-' },
-    { label: "Rata-Rata Nilai Akhir", value: data['Rata-Rata Nilai Akhir'] || '-' },
+  // Data untuk kolom kiri (label dan value dipisah dengan kolom :)
+  const leftLabels = [
+    "Nama Lengkap",
+    "NIK",
+    "NISN",
+    "Tempat Lahir",
+    "Tanggal Lahir",
+    "Jenis Kelamin",
+    "Golongan Darah",
+    "Tinggi Badan",
+    "Berat Badan",
+    "Asal Sekolah",
   ];
 
-  // Cetak kolom kiri
+  const leftValues = [
+    data['Nama Lengkap'] || '-',
+    data['NIK'] || '-',
+    data['NISN'] || '-',
+    data['Tempat Lahir'] || '-',
+    formatDate(data['Tanggal Lahir']),
+    data['Jenis Kelamin'] || '-',
+    data['Golongan Darah'] || '-',
+    `${data['Tinggi Badan'] || '-'} cm`,
+    `${data['Berat Badan'] || '-'} kg`,
+    data['Asal Sekolah'] || '-',
+  ];
+
+  // Data untuk kolom kanan
+  const rightLabels = [
+    "Nomor WA Aktif",
+    "No WA Aktif Orang Tua",
+    "Nama Ayah",
+    "Pekerjaan Ayah",
+    "Nama Ibu",
+    "Pekerjaan Ibu",
+    "Rata-Rata Nilai Akhir",
+  ];
+
+  const rightValues = [
+    data['Nomor WA Aktif'] || '-',
+    data['No WA Aktif Orang Tua'] || '-',
+    data['Nama Ayah'] || '-',
+    data['Pekerjaan Ayah'] || '-',
+    data['Nama Ibu'] || '-',
+    data['Pekerjaan Ibu'] || '-',
+    data['Rata-Rata Nilai Akhir'] || '-',
+  ];
+
+  // Posisi kolom (dalam mm)
+  const col1 = 20;   // Label kiri
+  const col2 = 70;   // Titik dua kiri
+  const col3 = 78;   // Value kiri
+  const col4 = 115;  // Label kanan
+  const col5 = 160;  // Titik dua kanan
+  const col6 = 168;  // Value kanan
+
+  // Cetak kolom kiri (10 baris)
   let startY = y;
-  let leftX = 20;
-  let leftLabelMaxWidth = 0;
-
-  // Hitung lebar label terpanjang di kolom kiri
-  for (const item of leftData) {
-    const labelWidth = doc.getTextWidth(item.label + " : ");
-    if (labelWidth > leftLabelMaxWidth) leftLabelMaxWidth = labelWidth;
-  }
-
-  // Cetak kolom kiri dengan penjajaran rapi
-  for (let i = 0; i < leftData.length; i++) {
-    const item = leftData[i];
-    const labelText = item.label + " : ";
-    
+  for (let i = 0; i < leftLabels.length; i++) {
+    // Label di kolom 1
     doc.setFont("helvetica", "bold");
-    doc.text(labelText, leftX, startY);
+    doc.text(leftLabels[i], col1, startY);
     
-    const valueX = leftX + leftLabelMaxWidth + 4;
-    
+    // Titik dua di kolom 2
     doc.setFont("helvetica", "normal");
-    doc.text(item.value, valueX, startY);
+    doc.text(":", col2, startY);
+    
+    // Value di kolom 3
+    doc.text(leftValues[i], col3, startY);
+    
     startY += 6;
   }
 
-  // Cetak kolom kanan
+  // Cetak kolom kanan (7 baris)
   let startYRight = y;
-  let rightX = 115;
-  let rightLabelMaxWidth = 0;
-
-  // Hitung lebar label terpanjang di kolom kanan
-  for (const item of rightData) {
-    const labelWidth = doc.getTextWidth(item.label + " : ");
-    if (labelWidth > rightLabelMaxWidth) rightLabelMaxWidth = labelWidth;
-  }
-
-  // Cetak kolom kanan dengan penjajaran rapi
-  for (let i = 0; i < rightData.length; i++) {
-    const item = rightData[i];
-    const labelText = item.label + " : ";
-    
+  for (let i = 0; i < rightLabels.length; i++) {
+    // Label di kolom 4
     doc.setFont("helvetica", "bold");
-    doc.text(labelText, rightX, startYRight);
+    doc.text(rightLabels[i], col4, startYRight);
     
-    const valueX = rightX + rightLabelMaxWidth + 4;
-    
+    // Titik dua di kolom 5
     doc.setFont("helvetica", "normal");
-    doc.text(item.value, valueX, startYRight);
+    doc.text(":", col5, startYRight);
+    
+    // Value di kolom 6
+    doc.text(rightValues[i], col6, startYRight);
+    
     startYRight += 6;
   }
 
