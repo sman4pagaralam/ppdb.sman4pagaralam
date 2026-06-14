@@ -147,9 +147,8 @@ export default function RegistrationForm() {
   };
 
 // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
-const printProof = async (noPendaftaran: string) => {
-  if (!formData) return;
-  const data = { ...formData, 'No Pendaftaran': noPendaftaran };
+const printProof = async (data: any, settings: any) => {
+  if (!data) return;
   
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -163,9 +162,8 @@ const printProof = async (noPendaftaran: string) => {
   
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
   let fotoBase64 = null;
-  if (fotoField && typeof fotoField === 'string' && isBase64Image(fotoField)) {
-    fotoBase64 = fotoField;
-  } else if (fotoField && typeof fotoField === 'string' && fotoField.startsWith('http')) {
+
+  if (fotoField && typeof fotoField === 'string') {
     const fileId = extractFileId(fotoField);
     if (fileId) {
       try {
@@ -175,11 +173,14 @@ const printProof = async (noPendaftaran: string) => {
         if (result.status === 'success' && result.data) {
           fotoBase64 = `data:${result.mimeType};base64,${result.data}`;
         }
-      } catch (err) { console.warn(err); }
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
     }
   }
 
   let y = 15;
+
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 210, 65, 'F');
 
@@ -189,8 +190,12 @@ const printProof = async (noPendaftaran: string) => {
       doc.setDrawColor(0, 0, 0);
       doc.setLineWidth(0.5);
       doc.rect(14, 8, 35, 45);
-    } catch (e) { drawPlaceholder(doc); }
-  } else { drawPlaceholder(doc); }
+    } catch (e) {
+      drawPlaceholder(doc);
+    }
+  } else {
+    drawPlaceholder(doc);
+  }
 
   function drawPlaceholder(doc: any) {
     doc.setDrawColor(200, 200, 200);
@@ -210,12 +215,12 @@ const printProof = async (noPendaftaran: string) => {
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
-  doc.text(`No. Pendaftaran: ${noPendaftaran}`, 115, 46, { align: "center" });
+  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 115, 46, { align: "center" });
 
   y = 62;
   
   // JALUR (center)
-  const jalur = data['Jalur 1'] || '-';
+  const jalur = data['Jalur'] || '-';
   
   doc.setDrawColor(0, 0, 0);
   doc.line(14, y - 2, 196, y - 2);
@@ -247,35 +252,61 @@ const printProof = async (noPendaftaran: string) => {
   const colTitikDuaKanan = 156;
   const colValueKanan = 158;
 
+  // Helper untuk memastikan string
   const toStr = (val: any): string => {
     if (val === null || val === undefined) return '-';
     return String(val);
   };
 
-  const formatValue = (field: string, val: any): string => {
-    if (field === "Tanggal Lahir") return toStr(formatDate(val));
-    if (val === undefined || val === null || val === "") return "-";
-    if (typeof val === "string" && val.startsWith("http")) return "File terupload";
-    return toStr(val);
-  };
-
-  // Kolom kiri
+  // Data untuk kolom kiri
   const leftLabels = [
-    "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
-    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan",
-    "Nomor WA Aktif", "No WA Aktif Orang Tua"
+    "Nama Lengkap",
+    "NIK",
+    "NISN",
+    "Tempat Lahir",
+    "Tanggal Lahir",
+    "Jenis Kelamin",
+    "Golongan Darah",
+    "Tinggi Badan",
+    "Berat Badan",
+    "Asal Sekolah",
   ];
-  const leftValues = leftLabels.map(label => formatValue(label, data[label]));
 
-  // Kolom kanan
+  const leftValues = [
+    toStr(data['Nama Lengkap']),
+    toStr(data['NIK']),
+    toStr(data['NISN']),
+    toStr(data['Tempat Lahir']),
+    toStr(formatDate(data['Tanggal Lahir'])),
+    toStr(data['Jenis Kelamin']),
+    toStr(data['Golongan Darah']),
+    toStr(`${data['Tinggi Badan'] || '-'} cm`),
+    toStr(`${data['Berat Badan'] || '-'} kg`),
+    toStr(data['Asal Sekolah']),
+  ];
+
+  // Data untuk kolom kanan
   const rightLabels = [
-    "NISN", "Asal Sekolah", "Nama Ayah", "Pekerjaan Ayah",
-    "Nama Ibu", "Pekerjaan Ibu", "Prestasi Akademik Jika Ada",
-    "Prestasi Non Akademik Jika Ada", "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
+    "Nomor WA Aktif",
+    "No WA Aktif Orang Tua",
+    "Nama Ayah",
+    "Pekerjaan Ayah",
+    "Nama Ibu",
+    "Pekerjaan Ibu",
+    "Rata-Rata Nilai Akhir",
   ];
-  const rightValues = rightLabels.map(label => formatValue(label, data[label]));
 
-  // Cetak kiri
+  const rightValues = [
+    toStr(data['Nomor WA Aktif']),
+    toStr(data['No WA Aktif Orang Tua']),
+    toStr(data['Nama Ayah']),
+    toStr(data['Pekerjaan Ayah']),
+    toStr(data['Nama Ibu']),
+    toStr(data['Pekerjaan Ibu']),
+    toStr(data['Rata-Rata Nilai Akhir']),
+  ];
+
+  // Cetak kolom kiri
   let startY = y;
   for (let i = 0; i < leftLabels.length; i++) {
     doc.setFont("helvetica", "bold");
@@ -286,28 +317,31 @@ const printProof = async (noPendaftaran: string) => {
     startY += 6;
   }
 
-  // Cetak kanan
+  // Cetak kolom kanan
   let startYRight = y;
   for (let i = 0; i < rightLabels.length; i++) {
     doc.setFont("helvetica", "bold");
     doc.text(rightLabels[i], colLabelKanan, startYRight);
     doc.setFont("helvetica", "normal");
     doc.text(":", colTitikDuaKanan, startYRight);
-    
-    if (rightLabels[i] === "Alamat Domisili Lengkap") {
-      const alamat = rightValues[i];
-      const splitAlamat = doc.splitTextToSize(alamat, pageWidth - colValueKanan - 10);
-      doc.text(splitAlamat, colValueKanan, startYRight);
-      startYRight += (splitAlamat.length - 1) * 5;
-    } else {
-      doc.text(rightValues[i], colValueKanan, startYRight);
-    }
+    doc.text(rightValues[i], colValueKanan, startYRight);
     startYRight += 6;
   }
 
   y = Math.max(startY, startYRight) + 10;
 
-  // LOKASI DAN JARAK
+  // ========== ALAMAT ==========
+  doc.setFont("helvetica", "bold");
+  doc.text("Alamat", colLabelKiri, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(":", colTitikDuaKiri, y);
+  y += 5;
+  const alamat = toStr(data['Alamat Domisili Lengkap']);
+  const splitAlamat = doc.splitTextToSize(alamat, pageWidth - colValueKiri - 10);
+  doc.text(splitAlamat, colValueKiri, y);
+  y += splitAlamat.length * 5 + 10;
+
+  // ========== LOKASI DAN JARAK ==========
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
     doc.setDrawColor(200, 200, 200);
     doc.line(marginLeft, y, pageWidth - marginRight, y);
@@ -341,7 +375,7 @@ const printProof = async (noPendaftaran: string) => {
     }
   }
 
-  // STATUS PENDAFTARAN
+  // ========== STATUS PENDAFTARAN ==========
   doc.setDrawColor(200, 200, 200);
   doc.line(marginLeft, y, pageWidth - marginRight, y);
   y += 8;
@@ -369,7 +403,7 @@ const printProof = async (noPendaftaran: string) => {
   doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, pageWidth / 2, y + 10, { align: "center" });
   doc.text("Simpan bukti ini untuk mengecek status kelulusan.", pageWidth / 2, y + 17, { align: "center" });
 
-  doc.save(`Bukti_Pendaftaran_${noPendaftaran}.pdf`);
+  doc.save(`Bukti_Pendaftaran_${toStr(data['No Pendaftaran'])}.pdf`);
 };
   
   // ========== SUBMIT DENGAN ANTI DOUBLE SUBMIT ==========
