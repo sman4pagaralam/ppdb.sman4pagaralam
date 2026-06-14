@@ -111,6 +111,12 @@ export default function RegistrationForm() {
       setFormData(prev => ({ ...prev, [name]: formattedValue }));
       return;
     }
+
+    // UPPERCASE UNTUK ASAL SEKOLAH
+if (name === 'Asal Sekolah') {
+  setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
+  return;
+}
     
     setFormData(prev => ({ ...prev, [name]: value }));
   };
