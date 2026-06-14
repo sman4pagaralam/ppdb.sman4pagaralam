@@ -165,13 +165,26 @@ const printProof = async (data: any, settings: any) => {
   y = garisBawahY + 8;
 
   const leftFields = [
-    "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
-    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
+    "Nama Lengkap",
+    "NIK",
+    "Tempat Lahir",
+    "Tanggal Lahir",
+    "Jenis Kelamin",
+    "Golongan Darah",
+    "Tinggi Badan",
+    "Berat Badan"
   ];
   const rightFields = [
-    "NISN", "Asal Sekolah",
-    "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-    "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
+    "NISN",
+    "Asal Sekolah",
+    "Nama Ayah",
+    "Pekerjaan Ayah",
+    "Nama Ibu",
+    "Pekerjaan Ibu",
+    "Nomor WA Aktif",
+    "No WA Aktif Orang Tua",
+    "Rata-Rata Nilai Akhir",
+    "Alamat Domisili Lengkap"
   ];
 
   const formatValue = (field: string, val: any) => {
@@ -199,7 +212,7 @@ const printProof = async (data: any, settings: any) => {
   autoTable(doc, {
     startY: y,
     body: tableBody,
-    theme: 'grid',
+    theme: 'plain',
     styles: {
       fontSize: 9,
       cellPadding: 2.5,
@@ -209,10 +222,10 @@ const printProof = async (data: any, settings: any) => {
       valign: 'middle'
     },
     columnStyles: {
-      0: { cellWidth: 30, fontStyle: 'bold' },
-      1: { cellWidth: 60 },
-      2: { cellWidth: 30, fontStyle: 'bold' },
-      3: { cellWidth: 60 }
+      0: { cellWidth: 38, fontStyle: 'bold' },
+      1: { cellWidth: 52 },
+      2: { cellWidth: 38, fontStyle: 'bold' },
+      3: { cellWidth: 52 }
     },
     margin: { left: 12, right: 12 },
     tableWidth: 'auto'
