@@ -160,7 +160,7 @@ const printProof = async (data: any, settings: any) => {
   doc.setFontSize(14);
   doc.setTextColor(37, 99, 235);
   doc.setFont("helvetica", "bold");
-  doc.text(jalur, 105, y + 18, { align: "center" });
+  doc.text(String(jalur), 105, y + 18, { align: "center" });
   
   doc.setTextColor(0, 0, 0);
   let garisBawahY = y + 28;
@@ -179,6 +179,12 @@ const printProof = async (data: any, settings: any) => {
   const colTitikDuaKanan = 156;
   const colValueKanan = 158;
 
+  // Helper untuk memastikan string
+  const toStr = (val: any): string => {
+    if (val === null || val === undefined) return '-';
+    return String(val);
+  };
+
   // Data untuk kolom kiri
   const leftLabels = [
     "Nama Lengkap",
@@ -194,16 +200,16 @@ const printProof = async (data: any, settings: any) => {
   ];
 
   const leftValues = [
-    data['Nama Lengkap'] || '-',
-    data['NIK'] || '-',
-    data['NISN'] || '-',
-    data['Tempat Lahir'] || '-',
-    formatDate(data['Tanggal Lahir']),
-    data['Jenis Kelamin'] || '-',
-    data['Golongan Darah'] || '-',
-    `${data['Tinggi Badan'] || '-'} cm`,
-    `${data['Berat Badan'] || '-'} kg`,
-    data['Asal Sekolah'] || '-',
+    toStr(data['Nama Lengkap']),
+    toStr(data['NIK']),
+    toStr(data['NISN']),
+    toStr(data['Tempat Lahir']),
+    toStr(formatDate(data['Tanggal Lahir'])),
+    toStr(data['Jenis Kelamin']),
+    toStr(data['Golongan Darah']),
+    toStr(`${data['Tinggi Badan'] || '-'} cm`),
+    toStr(`${data['Berat Badan'] || '-'} kg`),
+    toStr(data['Asal Sekolah']),
   ];
 
   // Data untuk kolom kanan
@@ -218,13 +224,13 @@ const printProof = async (data: any, settings: any) => {
   ];
 
   const rightValues = [
-    data['Nomor WA Aktif'] || '-',
-    data['No WA Aktif Orang Tua'] || '-',
-    data['Nama Ayah'] || '-',
-    data['Pekerjaan Ayah'] || '-',
-    data['Nama Ibu'] || '-',
-    data['Pekerjaan Ibu'] || '-',
-    data['Rata-Rata Nilai Akhir'] || '-',
+    toStr(data['Nomor WA Aktif']),
+    toStr(data['No WA Aktif Orang Tua']),
+    toStr(data['Nama Ayah']),
+    toStr(data['Pekerjaan Ayah']),
+    toStr(data['Nama Ibu']),
+    toStr(data['Pekerjaan Ibu']),
+    toStr(data['Rata-Rata Nilai Akhir']),
   ];
 
   // Cetak kolom kiri
@@ -252,15 +258,15 @@ const printProof = async (data: any, settings: any) => {
   y = Math.max(startY, startYRight) + 10;
 
   // ========== ALAMAT ==========
-doc.setFont("helvetica", "bold");
-doc.text("Alamat", colLabelKiri, y);  // Cuma "Alamat"
-doc.setFont("helvetica", "normal");
-doc.text(":", colTitikDuaKiri, y);
-y += 5;
-const alamat = data['Alamat Domisili Lengkap'] || '-';
-const splitAlamat = doc.splitTextToSize(alamat, pageWidth - colValueKiri - 10);
-doc.text(splitAlamat, colValueKiri, y);
-y += splitAlamat.length * 5 + 10;
+  doc.setFont("helvetica", "bold");
+  doc.text("Alamat", colLabelKiri, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(":", colTitikDuaKiri, y);
+  y += 5;
+  const alamat = toStr(data['Alamat Domisili Lengkap']);
+  const splitAlamat = doc.splitTextToSize(alamat, pageWidth - colValueKiri - 10);
+  doc.text(splitAlamat, colValueKiri, y);
+  y += splitAlamat.length * 5 + 10;
 
   // ========== LOKASI DAN JARAK ==========
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
@@ -279,7 +285,7 @@ y += splitAlamat.length * 5 + 10;
       doc.text("Koordinat Rumah", colLabelKiri, y);
       doc.setFont("helvetica", "normal");
       doc.text(":", colTitikDuaKiri, y);
-      const koordinat = String(data['Koordinat Lokasi']);
+      const koordinat = toStr(data['Koordinat Lokasi']);
       const splitKoor = doc.splitTextToSize(koordinat, 100);
       doc.text(splitKoor, colValueKiri, y);
       y += Math.max(6, splitKoor.length * 5);
@@ -290,7 +296,8 @@ y += splitAlamat.length * 5 + 10;
       doc.text("Jarak ke Sekolah", colLabelKiri, y);
       doc.setFont("helvetica", "normal");
       doc.text(":", colTitikDuaKiri, y);
-      doc.text(`${data['Jarak ke Sekolah (km)']} km`, colValueKiri, y);
+      const jarak = toStr(data['Jarak ke Sekolah (km)']);
+      doc.text(`${jarak} km`, colValueKiri, y);
       y += 10;
     }
   }
@@ -303,7 +310,7 @@ y += splitAlamat.length * 5 + 10;
   doc.setFont("helvetica", "bold");
   doc.text("STATUS PENDAFTARAN", pageWidth / 2, y, { align: "center" });
   y += 10;
-  const status = data.Status || 'Proses';
+  const status = toStr(data['Status'] || 'Proses');
   let statusColor = [255, 193, 7];
   if (status === 'Lulus') statusColor = [40, 167, 69];
   if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
@@ -323,7 +330,7 @@ y += splitAlamat.length * 5 + 10;
   doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, pageWidth / 2, y + 10, { align: "center" });
   doc.text("Simpan bukti ini untuk mengecek status kelulusan.", pageWidth / 2, y + 17, { align: "center" });
 
-  doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
+  doc.save(`Bukti_Pendaftaran_${toStr(data['No Pendaftaran'])}.pdf`);
 };
 
 // ========== BUKTI KELULUSAN (TEMPLATE GAMBAR + OVERLAY TEKS) ==========
