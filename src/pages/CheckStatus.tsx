@@ -181,31 +181,41 @@ const printProof = async (data: any, settings: any) => {
     return String(val);
   };
 
-  const allFields = [
-    ...leftFields,
-    ...rightFields
-  ];
+  const tableBody = [];
+  const maxRows = Math.max(leftFields.length, rightFields.length);
 
-  const tableBody = allFields.map(field => [
-    `${field}:`,
-    formatValue(field, data[field])
-  ]);
+  for (let i = 0; i < maxRows; i++) {
+    const leftLabel = leftFields[i] || "";
+    const rightLabel = rightFields[i] || "";
+
+    tableBody.push([
+      leftLabel ? `${leftLabel} :` : "",
+      leftLabel ? formatValue(leftLabel, data[leftLabel]) : "",
+      rightLabel ? `${rightLabel} :` : "",
+      rightLabel ? formatValue(rightLabel, data[rightLabel]) : ""
+    ]);
+  }
 
   autoTable(doc, {
     startY: y,
     body: tableBody,
-    theme: 'plain',
+    theme: 'grid',
     styles: {
       fontSize: 9,
       cellPadding: 2.5,
+      lineColor: [220,220,220],
+      lineWidth: 0.1,
       overflow: 'linebreak',
-      valign: 'top'
+      valign: 'middle'
     },
     columnStyles: {
-      0: { cellWidth: 50, fontStyle: 'bold' },
-      1: { cellWidth: 130 }
+      0: { cellWidth: 30, fontStyle: 'bold' },
+      1: { cellWidth: 60 },
+      2: { cellWidth: 30, fontStyle: 'bold' },
+      3: { cellWidth: 60 }
     },
-    margin: { left: 12, right: 12 }
+    margin: { left: 12, right: 12 },
+    tableWidth: 'auto'
   });
 
   let finalY = (doc as any).lastAutoTable.finalY + 5;
