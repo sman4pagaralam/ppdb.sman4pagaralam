@@ -75,9 +75,8 @@ const getDisplayStatus = (originalStatus: string, settings: any): string => {
 };
 
 // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
-const printProof = async (noPendaftaran: string) => {
-  if (!formData) return;
-  const data = { ...formData, 'No Pendaftaran': noPendaftaran };
+const printProof = async (data: any, settings: any) => {
+  if (!data) return;
   
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -87,9 +86,8 @@ const printProof = async (noPendaftaran: string) => {
   
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
   let fotoBase64 = null;
-  if (fotoField && typeof fotoField === 'string' && isBase64Image(fotoField)) {
-    fotoBase64 = fotoField;
-  } else if (fotoField && typeof fotoField === 'string' && fotoField.startsWith('http')) {
+
+  if (fotoField && typeof fotoField === 'string') {
     const fileId = extractFileId(fotoField);
     if (fileId) {
       try {
@@ -99,11 +97,14 @@ const printProof = async (noPendaftaran: string) => {
         if (result.status === 'success' && result.data) {
           fotoBase64 = `data:${result.mimeType};base64,${result.data}`;
         }
-      } catch (err) { console.warn(err); }
+      } catch (error) {
+        console.error('Error fetching image:', error);
+      }
     }
   }
 
   let y = 15;
+
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 210, 65, 'F');
 
@@ -113,8 +114,12 @@ const printProof = async (noPendaftaran: string) => {
       doc.setDrawColor(0, 0, 0);
       doc.setLineWidth(0.5);
       doc.rect(14, 8, 35, 45);
-    } catch (e) { drawPlaceholder(doc); }
-  } else { drawPlaceholder(doc); }
+    } catch (e) {
+      drawPlaceholder(doc);
+    }
+  } else {
+    drawPlaceholder(doc);
+  }
 
   function drawPlaceholder(doc: any) {
     doc.setDrawColor(200, 200, 200);
@@ -134,36 +139,31 @@ const printProof = async (noPendaftaran: string) => {
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
-  doc.text(`No. Pendaftaran: ${noPendaftaran}`, 115, 46, { align: "center" });
+  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 115, 46, { align: "center" });
 
   y = 62;
   
-  // ========== JALUR (CENTER) ==========
+  // JALUR (center)
   const jalur = data['Jalur 1'] || '-';
   
-  // Garis atas
   doc.setDrawColor(0, 0, 0);
   doc.line(14, y - 2, 196, y - 2);
   
-  // Label JALUR (center)
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
   doc.text("JALUR", 105, y + 6, { align: "center" });
   
-  // Value JALUR (center, lebih besar)
   doc.setFontSize(14);
   doc.setTextColor(37, 99, 235);
   doc.setFont("helvetica", "bold");
   doc.text(jalur, 105, y + 18, { align: "center" });
   
-  // Garis bawah
   doc.setTextColor(0, 0, 0);
   let garisBawahY = y + 28;
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 8;
 
-  // TABEL DATA PRIBADI
   const leftFields = [
     "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
     "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
@@ -237,7 +237,6 @@ const printProof = async (noPendaftaran: string) => {
     }
   }
 
-  // STATUS PENDAFTARAN
   doc.setDrawColor(200, 200, 200);
   doc.line(14, finalY, 196, finalY);
   finalY += 8;
