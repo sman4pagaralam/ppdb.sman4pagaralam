@@ -168,7 +168,7 @@ const printProof = async (data: any, settings: any) => {
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 12;
 
-  // ========== DATA PRIBADI (FORMAT VERTIKAL RAPI) ==========
+  // ========== DATA PRIBADI (FORMAT VERTIKAL RAPI DENGAN KOORDINAT & JARAK DI KOLOM KANAN) ==========
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   
@@ -184,7 +184,7 @@ const printProof = async (data: any, settings: any) => {
     { label: "Asal Sekolah", value: data['Asal Sekolah'] || '-' },
   ];
 
-  // Data untuk kolom kanan
+  // Data untuk kolom kanan (dengan koordinat dan jarak)
   const rightData = [
     { label: "Nomor WA Aktif", value: data['Nomor WA Aktif'] || '-' },
     { label: "No WA Aktif Orang Tua", value: data['No WA Aktif Orang Tua'] || '-' },
@@ -193,6 +193,8 @@ const printProof = async (data: any, settings: any) => {
     { label: "Nama Ibu", value: data['Nama Ibu'] || '-' },
     { label: "Pekerjaan Ibu", value: data['Pekerjaan Ibu'] || '-' },
     { label: "Rata-Rata Nilai Akhir", value: data['Rata-Rata Nilai Akhir'] || '-' },
+    { label: "Koordinat Lokasi", value: data['Koordinat Lokasi'] || '-' },
+    { label: "Jarak ke Sekolah", value: data['Jarak ke Sekolah (km)'] ? `${data['Jarak ke Sekolah (km)']} km` : '-' },
   ];
 
   // Cetak kolom kiri
@@ -216,12 +218,20 @@ const printProof = async (data: any, settings: any) => {
     doc.setFont("helvetica", "bold");
     doc.text(field.label + ":", rightX, startYRight);
     doc.setFont("helvetica", "normal");
-    doc.text(field.value, rightX + 50, startYRight);
+    const valueWidth = doc.getTextWidth(field.value);
+    if (valueWidth > 50 && field.label === "Koordinat Lokasi") {
+      // Jika koordinat terlalu panjang, wrap text
+      const splitValue = doc.splitTextToSize(field.value, 50);
+      doc.text(splitValue, rightX + 50, startYRight);
+      startYRight += (splitValue.length - 1) * 5;
+    } else {
+      doc.text(field.value, rightX + 50, startYRight);
+    }
     startYRight += 6;
   }
   
   // Update y setelah kedua kolom
-  y = Math.max(startY, startYRight) + 5;
+  y = Math.max(startY, startYRight) + 10;
 
   // ALAMAT (full width)
   doc.setFont("helvetica", "bold");
@@ -231,36 +241,9 @@ const printProof = async (data: any, settings: any) => {
   const alamat = data['Alamat Domisili Lengkap'] || '-';
   const splitAlamat = doc.splitTextToSize(alamat, pageWidth - marginLeft - marginRight);
   doc.text(splitAlamat, marginLeft, y);
-  y += splitAlamat.length * 5 + 10;
+  y += splitAlamat.length * 5 + 15;
 
-  if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
-    doc.setDrawColor(200, 200, 200);
-    doc.line(marginLeft, y, pageWidth - marginRight, y);
-    y += 8;
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.text("LOKASI DAN JARAK", pageWidth / 2, y, { align: "center" });
-    y += 10;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    if (data['Koordinat Lokasi']) {
-      doc.setFont("helvetica", "bold");
-      doc.text("Koordinat Rumah:", marginLeft, y);
-      doc.setFont("helvetica", "normal");
-      const koordinat = String(data['Koordinat Lokasi']);
-      const splitKoor = doc.splitTextToSize(koordinat, 100);
-      doc.text(splitKoor, 70, y);
-      y += Math.max(6, splitKoor.length * 5);
-    }
-    if (data['Jarak ke Sekolah (km)']) {
-      doc.setFont("helvetica", "bold");
-      doc.text("Jarak ke Sekolah:", marginLeft, y);
-      doc.setFont("helvetica", "normal");
-      doc.text(`${data['Jarak ke Sekolah (km)']} km`, 70, y);
-      y += 10;
-    }
-  }
-
+  // STATUS PENDAFTARAN
   doc.setDrawColor(200, 200, 200);
   doc.line(marginLeft, y, pageWidth - marginRight, y);
   y += 8;
