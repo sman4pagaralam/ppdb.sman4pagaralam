@@ -219,13 +219,13 @@ const printProof = async (data: any, settings: any) => {
     data['Rata-Rata Nilai Akhir'] || '-',
   ];
 
-  // Posisi kolom (dalam mm)
-  const col1 = 20;   // Label kiri
-  const col2 = 70;   // Titik dua kiri
-  const col3 = 78;   // Value kiri
-  const col4 = 115;  // Label kanan
-  const col5 = 160;  // Titik dua kanan
-  const col6 = 168;  // Value kanan
+  // Posisi kolom (dalam mm) - DIPERBAIKI RAPAT
+const col1 = 20;   // Label kiri
+const col2 = 42;   // Titik dua kiri (deket sama label)
+const col3 = 48;   // Value kiri (deket sama titik dua)
+const col4 = 115;  // Label kanan
+const col5 = 137;  // Titik dua kanan (deket sama label kanan)
+const col6 = 143;  // Value kanan (deket sama titik dua kanan)
 
   // Cetak kolom kiri (10 baris)
   let startY = y;
