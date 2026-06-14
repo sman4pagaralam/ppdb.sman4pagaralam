@@ -183,12 +183,24 @@ const printProof = async (data: any, settings: any) => {
 
   const tableBody = [];
   const maxRows = Math.max(leftFields.length, rightFields.length);
+
   for (let i = 0; i < maxRows; i++) {
     const leftLabel = leftFields[i] || "";
-    const leftValue = leftLabel ? formatValue(leftLabel, data[leftLabel]) : "";
+    const leftValue = leftLabel
+      ? formatValue(leftLabel, data[leftLabel])
+      : "";
+
     const rightLabel = rightFields[i] || "";
-    const rightValue = rightLabel ? formatValue(rightLabel, data[rightLabel]) : "";
-    tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
+    const rightValue = rightLabel
+      ? formatValue(rightLabel, data[rightLabel])
+      : "";
+
+    tableBody.push([
+      leftLabel ? `${leftLabel}:` : "",
+      leftValue,
+      rightLabel ? `${rightLabel}:` : "",
+      rightValue
+    ]);
   }
 
   autoTable(doc, {
