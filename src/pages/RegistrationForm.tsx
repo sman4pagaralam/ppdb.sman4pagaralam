@@ -223,7 +223,7 @@ export default function RegistrationForm() {
     y = 62;
     
     // JALUR (center)
-    const jalur = data['Jalur 1'] || '-';
+    const jalur = data['Jalur'] || '-';
     
     doc.setDrawColor(0, 0, 0);
     doc.line(14, y - 2, 196, y - 2);
@@ -340,7 +340,7 @@ export default function RegistrationForm() {
 
     // ALAMAT
     doc.setFont("helvetica", "bold");
-    doc.text("Alamat Domisili Lengkap", colLabelKiri, y);
+    doc.text("Alamat Domisili", colLabelKiri, y);
     doc.setFont("helvetica", "normal");
     doc.text(":", colTitikDuaKiri, y);
     y += 5;
