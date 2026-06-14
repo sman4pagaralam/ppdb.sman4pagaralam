@@ -171,7 +171,7 @@ const printProof = async (data: any, settings: any) => {
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
 
-  /// Data untuk kolom kiri (Tempat dan Tanggal Lahir dipisah)
+// Data untuk kolom kiri (SEMUA DIPISAH)
 const leftData = [
   { label: "Nama Lengkap", value: data['Nama Lengkap'] || '-' },
   { label: "NIK", value: data['NIK'] || '-' },
@@ -180,7 +180,8 @@ const leftData = [
   { label: "Tanggal Lahir", value: formatDate(data['Tanggal Lahir']) },
   { label: "Jenis Kelamin", value: data['Jenis Kelamin'] || '-' },
   { label: "Golongan Darah", value: data['Golongan Darah'] || '-' },
-  { label: "Tinggi / Berat Badan", value: `${data['Tinggi Badan'] || '-'} cm / ${data['Berat Badan'] || '-'} kg` },
+  { label: "Tinggi Badan", value: `${data['Tinggi Badan'] || '-'} cm` },
+  { label: "Berat Badan", value: `${data['Berat Badan'] || '-'} kg` },
   { label: "Asal Sekolah", value: data['Asal Sekolah'] || '-' },
 ];
 
