@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 import { checkStatus, getRegistrationByNo } from '../services/api';
 import { cn } from '../lib/utils';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { useSettings } from '../context/SettingsContext';
 
 const formatDate = (dateString: string) => {
@@ -320,60 +319,6 @@ const printProof = async (data: any, settings: any) => {
   doc.text("Simpan bukti ini untuk mengecek status kelulusan.", pageWidth / 2, y + 17, { align: "center" });
 
   doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
-}; // <==== INI KURUNG TUTUP YANG DITAMBAHKAN
-
-// ========== BUKTI KELULUSAN (TEMPLATE GAMBAR + OVERLAY TEKS) ==========
-const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
-  if (!data) return;
-  
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-  
-  const loadImageToBase64 = async (path: string): Promise<string | null> => {
-    try {
-      const response = await fetch(path);
-      const blob = await response.blob();
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.error(`Error loading image ${path}:`, error);
-      return null;
-    }
-  };
-  
-  const templateImg = await loadImageToBase64('/images/template_surat_lulus.jpg');
-  
-  if (templateImg) {
-    doc.addImage(templateImg, 'JPEG', 0, 0, 210, 297);
-  } else {
-    doc.setFontSize(16);
-    doc.setFont("times", "bold");
-    doc.text("Gambar template tidak ditemukan", 105, 50, { align: "center" });
-  }
-  
-  const namaSiswa = fullData?.['Nama Lengkap'] || data.namaLengkap || '-';
-  const nisn = fullData?.['NISN'] || data.nisn || '-';
-  const asalSekolah = fullData?.['Asal Sekolah'] || '-';
-  
-  doc.setFontSize(11);
-  doc.setFont("times", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text(namaSiswa, 70, 87);
-  doc.text(nisn, 70, 94);
-  doc.text(asalSekolah, 70, 100.3);
-  
-  doc.setFontSize(7);
-  doc.setFont("times", "normal");
-  doc.setTextColor(150, 150, 150);
-  doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, 285, { align: "center" });
-  
-  doc.save(`Surat_Keterangan_Lulus_${data.noPendaftaran}.pdf`);
 };
 
 // ========== BUKTI KELULUSAN (TEMPLATE GAMBAR + OVERLAY TEKS) ==========
@@ -432,7 +377,7 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
 
 export default function CheckStatus() {
   const { settings } = useSettings();
-  const [nisn, setNisn] = useState(''); // Hanya NISN
+  const [nisn, setNisn] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
@@ -441,7 +386,6 @@ export default function CheckStatus() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validasi NISN harus diisi
     if (!nisn.trim()) {
       setError('NISN harus diisi');
       return;
@@ -453,12 +397,10 @@ export default function CheckStatus() {
     setRegistrationData(null);
     
     try {
-      // Kirim NISN saja ke API
       const response = await checkStatus(nisn);
       console.log("Response dari API:", response);
       
       if (response.status === 'success') {
-        // Ambil data lengkap dari sheet menggunakan noPendaftaran dari response
         const fullData = await getRegistrationByNo(response.data.noPendaftaran);
         if (fullData) {
           setRegistrationData(fullData);
@@ -542,7 +484,6 @@ export default function CheckStatus() {
           </div>
           
           <div className="p-8">
-
             {tanggalPengumuman && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg text-center">
                 <p className="text-sm text-blue-700">
