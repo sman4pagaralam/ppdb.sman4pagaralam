@@ -146,199 +146,198 @@ export default function RegistrationForm() {
     }
   };
 
-  // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
-  const printProof = async (noPendaftaran: string) => {
-    if (!formData) return;
-    const data = { ...formData, 'No Pendaftaran': noPendaftaran };
-    
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: [210, 330]
-    });
-    
-    const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
-    let fotoBase64 = null;
-    if (fotoField && typeof fotoField === 'string' && isBase64Image(fotoField)) {
-      fotoBase64 = fotoField;
-    } else if (fotoField && typeof fotoField === 'string' && fotoField.startsWith('http')) {
-      const fileId = extractFileId(fotoField);
-      if (fileId) {
-        try {
-          const proxyUrl = '/api/gas-proxy';
-          const response = await fetch(`${proxyUrl}?action=getImage&fileId=${fileId}&t=${Date.now()}`);
-          const result = await response.json();
-          if (result.status === 'success' && result.data) {
-            fotoBase64 = `data:${result.mimeType};base64,${result.data}`;
-          }
-        } catch (err) { console.warn(err); }
-      }
-    }
-
-    let y = 15;
-    doc.setFillColor(255, 255, 255);
-    doc.rect(0, 0, 210, 65, 'F');
-
-    if (fotoBase64) {
+ // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
+const printProof = async (noPendaftaran: string) => {
+  if (!formData) return;
+  const data = { ...formData, 'No Pendaftaran': noPendaftaran };
+  
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [210, 330]
+  });
+  
+  const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
+  let fotoBase64 = null;
+  if (fotoField && typeof fotoField === 'string' && isBase64Image(fotoField)) {
+    fotoBase64 = fotoField;
+  } else if (fotoField && typeof fotoField === 'string' && fotoField.startsWith('http')) {
+    const fileId = extractFileId(fotoField);
+    if (fileId) {
       try {
-        doc.addImage(fotoBase64, 'JPEG', 14, 8, 35, 45);
-        doc.setDrawColor(0, 0, 0);
-        doc.setLineWidth(0.5);
-        doc.rect(14, 8, 35, 45);
-      } catch (e) { drawPlaceholder(doc); }
-    } else { drawPlaceholder(doc); }
-
-    function drawPlaceholder(doc: any) {
-      doc.setDrawColor(200, 200, 200);
-      doc.setFillColor(240, 240, 240);
-      doc.rect(14, 8, 35, 45, 'FD');
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text("Foto", 31, 30, { align: "center" });
-      doc.text("3x4", 31, 38, { align: "center" });
-      doc.setTextColor(0, 0, 0);
+        const proxyUrl = '/api/gas-proxy';
+        const response = await fetch(`${proxyUrl}?action=getImage&fileId=${fileId}&t=${Date.now()}`);
+        const result = await response.json();
+        if (result.status === 'success' && result.data) {
+          fotoBase64 = `data:${result.mimeType};base64,${result.data}`;
+        }
+      } catch (err) { console.warn(err); }
     }
+  }
 
+  let y = 15;
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, 210, 65, 'F');
+
+  if (fotoBase64) {
+    try {
+      doc.addImage(fotoBase64, 'JPEG', 14, 8, 35, 45);
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
+      doc.rect(14, 8, 35, 45);
+    } catch (e) { drawPlaceholder(doc); }
+  } else { drawPlaceholder(doc); }
+
+  function drawPlaceholder(doc: any) {
+    doc.setDrawColor(200, 200, 200);
+    doc.setFillColor(240, 240, 240);
+    doc.rect(14, 8, 35, 45, 'FD');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Foto", 31, 30, { align: "center" });
+    doc.text("3x4", 31, 38, { align: "center" });
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("BUKTI PENDAFTARAN SPMB", 115, 22, { align: "center" });
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
-    doc.text(`No. Pendaftaran: ${noPendaftaran}`, 115, 46, { align: "center" });
+  }
 
-    y = 62;
-    const jalur1 = data['Jalur 1'] || '-';
-    const jalur2 = data['Jalur 2'] || '-';
-    
-    doc.setDrawColor(0, 0, 0);
-    doc.line(14, y - 2, 196, y - 2);
-    
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
-    doc.text("JALUR 1", 55, y + 6, { align: "center" });
-    doc.setFontSize(14);
-    doc.setTextColor(37, 99, 235);
-    doc.setFont("helvetica", "bold");
-    doc.text(jalur1, 55, y + 18, { align: "center" });
-    
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
-    doc.text("JALUR 2", 155, y + 6, { align: "center" });
-    doc.setFontSize(14);
-    doc.setTextColor(37, 99, 235);
-    doc.setFont("helvetica", "bold");
-    doc.text(jalur2, 155, y + 18, { align: "center" });
-    
-    doc.setTextColor(0, 0, 0);
-    let garisBawahY = y + 28;
-    doc.line(14, garisBawahY, 196, garisBawahY);
-    y = garisBawahY + 8;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("BUKTI PENDAFTARAN SPMB", 115, 22, { align: "center" });
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
+  doc.text(`No. Pendaftaran: ${noPendaftaran}`, 115, 46, { align: "center" });
 
-    const leftFields = [
-      "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
-      "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
-    ];
-    const rightFields = [
-      "NISN", "Asal Sekolah",
-      "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
-      "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
-    ];
+  y = 62;
+  
+  // ========== JALUR (CENTER) ==========
+  const jalur = data['Jalur 1'] || '-';
+  
+  // Garis atas
+  doc.setDrawColor(0, 0, 0);
+  doc.line(14, y - 2, 196, y - 2);
+  
+  // Label JALUR (center)
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text("JALUR", 105, y + 6, { align: "center" });
+  
+  // Value JALUR (center, lebih besar)
+  doc.setFontSize(14);
+  doc.setTextColor(37, 99, 235);
+  doc.setFont("helvetica", "bold");
+  doc.text(jalur, 105, y + 18, { align: "center" });
+  
+  // Garis bawah
+  doc.setTextColor(0, 0, 0);
+  let garisBawahY = y + 28;
+  doc.line(14, garisBawahY, 196, garisBawahY);
+  y = garisBawahY + 8;
 
-    const formatValue = (field: string, val: any) => {
-      if (field === "Tanggal Lahir") return formatDate(val);
-      if (val === undefined || val === null || val === "") return "-";
-      if (typeof val === "string" && val.startsWith("http")) return "File terupload";
-      return String(val);
-    };
+  // TABEL DATA PRIBADI
+  const leftFields = [
+    "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
+    "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
+  ];
+  const rightFields = [
+    "NISN", "Asal Sekolah",
+    "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu",
+    "Prestasi Akademik Jika Ada", "Prestasi Non Akademik Jika Ada", "Rata-Rata Nilai Akhir", "Alamat Domisili Lengkap"
+  ];
 
-    const tableBody = [];
-    const maxRows = Math.max(leftFields.length, rightFields.length);
-    for (let i = 0; i < maxRows; i++) {
-      const leftLabel = leftFields[i] || "";
-      const leftValue = leftLabel ? formatValue(leftLabel, data[leftLabel]) : "";
-      const rightLabel = rightFields[i] || "";
-      const rightValue = rightLabel ? formatValue(rightLabel, data[rightLabel]) : "";
-      tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
-    }
+  const formatValue = (field: string, val: any) => {
+    if (field === "Tanggal Lahir") return formatDate(val);
+    if (val === undefined || val === null || val === "") return "-";
+    if (typeof val === "string" && val.startsWith("http")) return "File terupload";
+    return String(val);
+  };
 
-    autoTable(doc, {
-      startY: y,
-      head: [],
-      body: tableBody,
-      theme: 'plain',
-      styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
-      columnStyles: {
-        0: { cellWidth: 25, fontStyle: 'bold' },
-        1: { cellWidth: 70 },
-        2: { cellWidth: 25, fontStyle: 'bold' },
-        3: { cellWidth: 'auto' },
-      },
-      margin: { left: 12, right: 12 },
-      tableWidth: 'auto',
-    });
+  const tableBody = [];
+  const maxRows = Math.max(leftFields.length, rightFields.length);
+  for (let i = 0; i < maxRows; i++) {
+    const leftLabel = leftFields[i] || "";
+    const leftValue = leftLabel ? formatValue(leftLabel, data[leftLabel]) : "";
+    const rightLabel = rightFields[i] || "";
+    const rightValue = rightLabel ? formatValue(rightLabel, data[rightLabel]) : "";
+    tableBody.push([`${leftLabel}:`, leftValue, `${rightLabel}:`, rightValue]);
+  }
 
-    let finalY = (doc as any).lastAutoTable.finalY + 5;
+  autoTable(doc, {
+    startY: y,
+    head: [],
+    body: tableBody,
+    theme: 'plain',
+    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
+    columnStyles: {
+      0: { cellWidth: 25, fontStyle: 'bold' },
+      1: { cellWidth: 70 },
+      2: { cellWidth: 25, fontStyle: 'bold' },
+      3: { cellWidth: 'auto' },
+    },
+    margin: { left: 12, right: 12 },
+    tableWidth: 'auto',
+  });
 
-    if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
-      doc.setDrawColor(200, 200, 200);
-      doc.line(14, finalY, 196, finalY);
-      finalY += 8;
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("LOKASI DAN JARAK", 105, finalY, { align: "center" });
-      finalY += 10;
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      if (data['Koordinat Lokasi']) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Koordinat Rumah:", 20, finalY);
-        doc.setFont("helvetica", "normal");
-        const koordinat = String(data['Koordinat Lokasi']);
-        const splitKoor = doc.splitTextToSize(koordinat, 100);
-        doc.text(splitKoor, 70, finalY);
-        finalY += Math.max(6, splitKoor.length * 5);
-      }
-      if (data['Jarak ke Sekolah (km)']) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Jarak ke Sekolah:", 20, finalY);
-        doc.setFont("helvetica", "normal");
-        doc.text(`${data['Jarak ke Sekolah (km)']} km`, 70, finalY);
-        finalY += 10;
-      }
-    }
+  let finalY = (doc as any).lastAutoTable.finalY + 5;
 
+  if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
     doc.setDrawColor(200, 200, 200);
     doc.line(14, finalY, 196, finalY);
     finalY += 8;
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
+    doc.text("LOKASI DAN JARAK", 105, finalY, { align: "center" });
     finalY += 10;
-    const status = data.Status || 'Proses';
-    let statusColor = [255, 193, 7];
-    if (status === 'Lulus') statusColor = [40, 167, 69];
-    if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
-    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-    doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.text(status, 105, finalY + 2, { align: "center" });
-    doc.setTextColor(0, 0, 0);
-    finalY += 20;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    if (data['Koordinat Lokasi']) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Koordinat Rumah:", 20, finalY);
+      doc.setFont("helvetica", "normal");
+      const koordinat = String(data['Koordinat Lokasi']);
+      const splitKoor = doc.splitTextToSize(koordinat, 100);
+      doc.text(splitKoor, 70, finalY);
+      finalY += Math.max(6, splitKoor.length * 5);
+    }
+    if (data['Jarak ke Sekolah (km)']) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Jarak ke Sekolah:", 20, finalY);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${data['Jarak ke Sekolah (km)']} km`, 70, finalY);
+      finalY += 10;
+    }
+  }
 
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, finalY, 190, finalY);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, finalY + 10, { align: "center" });
-    doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, finalY + 17, { align: "center" });
+  // STATUS PENDAFTARAN
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, finalY, 196, finalY);
+  finalY += 8;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
+  finalY += 10;
+  const status = data.Status || 'Proses';
+  let statusColor = [255, 193, 7];
+  if (status === 'Lulus') statusColor = [40, 167, 69];
+  if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
+  doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.text(status, 105, finalY + 2, { align: "center" });
+  doc.setTextColor(0, 0, 0);
+  finalY += 20;
 
-    doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
-  };
+  doc.setDrawColor(200, 200, 200);
+  doc.line(20, finalY, 190, finalY);
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, 105, finalY + 10, { align: "center" });
+  doc.text("Simpan bukti ini untuk mengecek status kelulusan.", 105, finalY + 17, { align: "center" });
+
+  doc.save(`Bukti_Pendaftaran_${data['No Pendaftaran']}.pdf`);
+};
 
   // ========== SUBMIT DENGAN ANTI DOUBLE SUBMIT ==========
   const handleSubmit = async (e: React.FormEvent) => {
