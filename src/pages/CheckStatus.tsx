@@ -75,11 +75,9 @@ const getDisplayStatus = (originalStatus: string, settings: any): string => {
 };
 
 // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
-const printProof = async (data: any, settings: any) => {
-  if (!data) return;
-  
-  const originalStatus = data.Status || 'Proses';
-  const displayStatus = getDisplayStatus(originalStatus, settings);
+const printProof = async (noPendaftaran: string) => {
+  if (!formData) return;
+  const data = { ...formData, 'No Pendaftaran': noPendaftaran };
   
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -89,8 +87,9 @@ const printProof = async (data: any, settings: any) => {
   
   const fotoField = data['Foto Siswa'] || data['File Pas Foto'] || data['Pas Foto'];
   let fotoBase64 = null;
-
-  if (fotoField && typeof fotoField === 'string') {
+  if (fotoField && typeof fotoField === 'string' && isBase64Image(fotoField)) {
+    fotoBase64 = fotoField;
+  } else if (fotoField && typeof fotoField === 'string' && fotoField.startsWith('http')) {
     const fileId = extractFileId(fotoField);
     if (fileId) {
       try {
@@ -100,14 +99,11 @@ const printProof = async (data: any, settings: any) => {
         if (result.status === 'success' && result.data) {
           fotoBase64 = `data:${result.mimeType};base64,${result.data}`;
         }
-      } catch (error) {
-        console.error('Error fetching image:', error);
-      }
+      } catch (err) { console.warn(err); }
     }
   }
 
   let y = 15;
-
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 210, 65, 'F');
 
@@ -117,12 +113,8 @@ const printProof = async (data: any, settings: any) => {
       doc.setDrawColor(0, 0, 0);
       doc.setLineWidth(0.5);
       doc.rect(14, 8, 35, 45);
-    } catch (e) {
-      drawPlaceholder(doc);
-    }
-  } else {
-    drawPlaceholder(doc);
-  }
+    } catch (e) { drawPlaceholder(doc); }
+  } else { drawPlaceholder(doc); }
 
   function drawPlaceholder(doc: any) {
     doc.setDrawColor(200, 200, 200);
@@ -142,38 +134,36 @@ const printProof = async (data: any, settings: any) => {
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
-  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 115, 46, { align: "center" });
+  doc.text(`No. Pendaftaran: ${noPendaftaran}`, 115, 46, { align: "center" });
 
   y = 62;
-  const jalur1 = data['Jalur 1'] || '-';
-  const jalur2 = data['Jalur 2'] || '-';
   
+  // ========== JALUR (CENTER) ==========
+  const jalur = data['Jalur 1'] || '-';
+  
+  // Garis atas
   doc.setDrawColor(0, 0, 0);
   doc.line(14, y - 2, 196, y - 2);
   
+  // Label JALUR (center)
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.text("JALUR 1", 55, y + 6, { align: "center" });
+  doc.text("JALUR", 105, y + 6, { align: "center" });
+  
+  // Value JALUR (center, lebih besar)
   doc.setFontSize(14);
   doc.setTextColor(37, 99, 235);
   doc.setFont("helvetica", "bold");
-  doc.text(jalur1, 55, y + 18, { align: "center" });
+  doc.text(jalur, 105, y + 18, { align: "center" });
   
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text("JALUR 2", 155, y + 6, { align: "center" });
-  doc.setFontSize(14);
-  doc.setTextColor(37, 99, 235);
-  doc.setFont("helvetica", "bold");
-  doc.text(jalur2, 155, y + 18, { align: "center" });
-  
+  // Garis bawah
   doc.setTextColor(0, 0, 0);
   let garisBawahY = y + 28;
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 8;
 
+  // TABEL DATA PRIBADI
   const leftFields = [
     "Nama Lengkap", "NIK", "Tempat Lahir", "Tanggal Lahir",
     "Jenis Kelamin", "Golongan Darah", "Tinggi Badan", "Berat Badan", "Nomor WA Aktif", "No WA Aktif Orang Tua"
@@ -229,7 +219,6 @@ const printProof = async (data: any, settings: any) => {
     finalY += 10;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-
     if (data['Koordinat Lokasi']) {
       doc.setFont("helvetica", "bold");
       doc.text("Koordinat Rumah:", 20, finalY);
@@ -248,6 +237,7 @@ const printProof = async (data: any, settings: any) => {
     }
   }
 
+  // STATUS PENDAFTARAN
   doc.setDrawColor(200, 200, 200);
   doc.line(14, finalY, 196, finalY);
   finalY += 8;
@@ -255,16 +245,15 @@ const printProof = async (data: any, settings: any) => {
   doc.setFont("helvetica", "bold");
   doc.text("STATUS PENDAFTARAN", 105, finalY, { align: "center" });
   finalY += 10;
-  
+  const status = data.Status || 'Proses';
   let statusColor = [255, 193, 7];
-  if (displayStatus === 'Lulus') statusColor = [40, 167, 69];
-  if (displayStatus === 'Tidak Lulus') statusColor = [220, 53, 69];
-  
+  if (status === 'Lulus') statusColor = [40, 167, 69];
+  if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
   doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.roundedRect(70, finalY - 5, 70, 10, 3, 3, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.text(displayStatus, 105, finalY + 2, { align: "center" });
+  doc.text(status, 105, finalY + 2, { align: "center" });
   doc.setTextColor(0, 0, 0);
   finalY += 20;
 
