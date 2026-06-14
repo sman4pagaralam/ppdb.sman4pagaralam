@@ -252,15 +252,15 @@ const printProof = async (data: any, settings: any) => {
   y = Math.max(startY, startYRight) + 10;
 
   // ========== ALAMAT ==========
-  doc.setFont("helvetica", "bold");
-  doc.text("Alamat Domisili Lengkap", colLabelKiri, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(":", colTitikDuaKiri, y);
-  y += 5;
-  const alamat = data['Alamat Domisili Lengkap'] || '-';
-  const splitAlamat = doc.splitTextToSize(alamat, pageWidth - colValueKiri - 10);
-  doc.text(splitAlamat, colValueKiri, y);
-  y += splitAlamat.length * 5 + 10;
+doc.setFont("helvetica", "bold");
+doc.text("Alamat", colLabelKiri, y);  // Cuma "Alamat"
+doc.setFont("helvetica", "normal");
+doc.text(":", colTitikDuaKiri, y);
+y += 5;
+const alamat = data['Alamat Domisili Lengkap'] || '-';
+const splitAlamat = doc.splitTextToSize(alamat, pageWidth - colValueKiri - 10);
+doc.text(splitAlamat, colValueKiri, y);
+y += splitAlamat.length * 5 + 10;
 
   // ========== LOKASI DAN JARAK ==========
   if (data['Koordinat Lokasi'] || data['Jarak ke Sekolah (km)']) {
