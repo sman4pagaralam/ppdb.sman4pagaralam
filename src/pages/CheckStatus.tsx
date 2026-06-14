@@ -164,19 +164,17 @@ const printProof = async (data: any, settings: any) => {
   doc.line(14, garisBawahY, 196, garisBawahY);
   y = garisBawahY + 8;
 
-  const leftFields = [
+  const allFields = [
     "Nama Lengkap",
+    "NISN",
     "NIK",
+    "Asal Sekolah",
     "Tempat Lahir",
     "Tanggal Lahir",
     "Jenis Kelamin",
     "Golongan Darah",
     "Tinggi Badan",
-    "Berat Badan"
-  ];
-  const rightFields = [
-    "NISN",
-    "Asal Sekolah",
+    "Berat Badan",
     "Nama Ayah",
     "Pekerjaan Ayah",
     "Nama Ibu",
@@ -194,41 +192,27 @@ const printProof = async (data: any, settings: any) => {
     return String(val);
   };
 
-  const tableBody = [];
-  const maxRows = Math.max(leftFields.length, rightFields.length);
-
-  for (let i = 0; i < maxRows; i++) {
-    const leftLabel = leftFields[i] || "";
-    const rightLabel = rightFields[i] || "";
-
-    tableBody.push([
-      leftLabel ? `${leftLabel} :` : "",
-      leftLabel ? formatValue(leftLabel, data[leftLabel]) : "",
-      rightLabel ? `${rightLabel} :` : "",
-      rightLabel ? formatValue(rightLabel, data[rightLabel]) : ""
-    ]);
-  }
+  const tableBody = allFields.map(field => [
+    field,
+    ":",
+    formatValue(field, data[field])
+  ]);
 
   autoTable(doc, {
     startY: y,
     body: tableBody,
     theme: 'plain',
     styles: {
-      fontSize: 9,
+      fontSize: 10,
       cellPadding: 2.5,
-      lineColor: [220,220,220],
-      lineWidth: 0.1,
-      overflow: 'linebreak',
-      valign: 'middle'
+      overflow: 'linebreak'
     },
     columnStyles: {
-      0: { cellWidth: 38, fontStyle: 'bold' },
-      1: { cellWidth: 52 },
-      2: { cellWidth: 38, fontStyle: 'bold' },
-      3: { cellWidth: 52 }
+      0: { cellWidth: 55, fontStyle: 'bold' },
+      1: { cellWidth: 5 },
+      2: { cellWidth: 110 }
     },
-    margin: { left: 12, right: 12 },
-    tableWidth: 'auto'
+    margin: { left: 18, right: 18 }
   });
 
   let finalY = (doc as any).lastAutoTable.finalY + 5;
