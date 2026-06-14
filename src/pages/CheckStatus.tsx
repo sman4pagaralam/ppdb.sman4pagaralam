@@ -259,7 +259,7 @@ const printProof = async (data: any, settings: any) => {
 
   // ========== ALAMAT ==========
   doc.setFont("helvetica", "bold");
-  doc.text("Alamat", colLabelKiri, y);
+  doc.text("Alamat Domisli", colLabelKiri, y);
   doc.setFont("helvetica", "normal");
   doc.text(":", colTitikDuaKiri, y);
   y += 5;
