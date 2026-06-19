@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Users, Building2, Trophy, ChevronRight, Calendar, FileText, CheckCircle, Clock, Upload } from 'lucide-react';
+import { BookOpen, Users, Building2, Trophy, ChevronRight, Calendar, FileText, CheckCircle, Clock, Upload, X } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 import { cn } from '../lib/utils';
 
@@ -30,6 +30,7 @@ function AnimatedImage({ src, alt, delay = 0 }: { src: string; alt: string; dela
 
 export default function Home() {
   const { settings } = useSettings();
+  const [showAnnouncement, setShowAnnouncement] = React.useState(true);
 
   // Daftar foto yang akan ditampilkan
   const galleryImages = [
@@ -57,6 +58,46 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      {/* ANNOUNCEMENT BANNER - Paling Atas */}
+      {showAnnouncement && (
+        <div className="relative bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 px-4">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4 flex-1 justify-center sm:justify-start">
+              <div className="flex-shrink-0">
+                <img 
+                  src="/images/pengumuman-jadwal-tes.jpg" 
+                  alt="Pengumuman Jadwal Tes" 
+                  className="h-12 w-auto object-contain rounded border border-white/20"
+                />
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-sm font-semibold">
+                  📢 PENGUMUMAN PENTING
+                </p>
+                <p className="text-xs text-blue-100">
+                  Jadwal Tes SPMB 2026 telah dirilis. Klik untuk info selengkapnya!
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/pengumuman"
+                className="text-xs bg-white/20 hover:bg-white/30 px-4 py-1.5 rounded-full font-medium transition-colors whitespace-nowrap"
+              >
+                Lihat Detail
+              </Link>
+              <button
+                onClick={() => setShowAnnouncement(false)}
+                className="text-white/70 hover:text-white transition-colors"
+                aria-label="Tutup pengumuman"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section dengan Background Foto Lapangan Sekolah */}
       <section className="relative overflow-hidden py-20 lg:py-32">
         {/* Background Image - Foto Lapangan Sekolah */}
