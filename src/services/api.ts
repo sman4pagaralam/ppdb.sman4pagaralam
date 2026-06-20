@@ -8,16 +8,9 @@ let settingsCache: AppSettings | null = null;
 let settingsCacheTime: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 menit
 
-// Cache untuk registrations dengan pagination
-interface RegistrationsCache {
-  data: AdminData[];
-  total: number;
-  timestamp: number;
-  limit: number;
-  offset: number;
-}
-let registrationsCache: RegistrationsCache | null = null;
-const REGISTRATION_CACHE_DURATION = 60 * 1000; // 1 menit
+let registrationsCache: AdminData[] | null = null;
+let registrationsCacheTime: number = 0;
+const REGISTRATION_CACHE_DURATION = 2 * 60 * 1000; // 2 menit
 
 export interface FormField {
   id: string;
@@ -211,24 +204,14 @@ export const submitRegistration = async (data: RegistrationData) => {
   }
 };
 
-// ========== GET REGISTRATIONS DENGAN PAGINATION ==========
-export const getRegistrations = async (limit: number = 50, offset: number = 0): Promise<{ data: AdminData[]; total: number; hasMore: boolean }> => {
-  // Cek cache
-  if (registrationsCache && 
-      registrationsCache.limit === limit && 
-      registrationsCache.offset === offset &&
-      (Date.now() - registrationsCache.timestamp) < REGISTRATION_CACHE_DURATION) {
-    console.log('📦 Pakai cache registrations (1 menit)');
-    return {
-      data: registrationsCache.data,
-      total: registrationsCache.total,
-      hasMore: (offset + limit) < registrationsCache.total
-    };
+export const getRegistrations = async (): Promise<AdminData[]> => {
+  if (registrationsCache && (Date.now() - registrationsCacheTime) < REGISTRATION_CACHE_DURATION) {
+    console.log('📦 Pakai cache registrations (2 menit)');
+    return registrationsCache;
   }
 
   try {
-    const url = `${GAS_WEB_APP_URL}?limit=${limit}&offset=${offset}&t=${Date.now()}`;
-    const response = await fetch(url, {
+    const response = await fetch(`${GAS_WEB_APP_URL}?t=${Date.now()}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -244,49 +227,20 @@ export const getRegistrations = async (limit: number = 50, offset: number = 0): 
           item['No Pendaftaran'].toString().trim() !== "" &&
           item['No Pendaftaran'] !== "No Pendaftaran"
         );
-        
-        const total = result.pagination?.total || validData.length;
-        const hasMore = result.pagination?.hasMore || (validData.length === limit);
-        
-        registrationsCache = {
-          data: validData,
-          total: total,
-          timestamp: Date.now(),
-          limit: limit,
-          offset: offset
-        };
-        
         fallbackData = validData;
         
-        return {
-          data: validData,
-          total: total,
-          hasMore: hasMore
-        };
+        registrationsCache = validData;
+        registrationsCacheTime = Date.now();
+        
+        return validData;
       }
     }
     throw new Error("Failed to fetch registrations");
   } catch (error) {
     console.warn("Using fallback data (API unavailable):", error);
-    if (registrationsCache) {
-      return {
-        data: registrationsCache.data,
-        total: registrationsCache.total,
-        hasMore: (offset + limit) < registrationsCache.total
-      };
-    }
-    return {
-      data: fallbackData,
-      total: fallbackData.length,
-      hasMore: false
-    };
+    if (registrationsCache) return registrationsCache;
+    return fallbackData;
   }
-};
-
-// ✅ GET ALL REGISTRATIONS (untuk kompatibilitas dengan kode lama)
-export const getAllRegistrations = async (): Promise<AdminData[]> => {
-  const result = await getRegistrations(9999, 0);
-  return result.data;
 };
 
 export const updateStatus = async (noPendaftaran: string, newStatus: string, alasan?: string) => {
@@ -311,12 +265,12 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
       );
       
       if (registrationsCache) {
-        registrationsCache.data = registrationsCache.data.map(item => 
+        registrationsCache = registrationsCache.map(item => 
           item['No Pendaftaran'] === noPendaftaran 
             ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
             : item
         );
-        registrationsCache.timestamp = Date.now();
+        registrationsCacheTime = Date.now();
       }
       
       return result;
