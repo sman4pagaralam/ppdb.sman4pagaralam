@@ -89,6 +89,7 @@ const getDefaultSettings = (): AppSettings => ({
   ],
   tahunPendaftaran: new Date().getFullYear().toString(),
   koordinatSekolah: "-6.200000, 106.816666",
+  maintenanceMode: false,
 });
 
 // Fallback data jika API tidak bisa diakses
@@ -114,7 +115,14 @@ export const getSettings = async (): Promise<AppSettings> => {
             formFields = getDefaultSettings().formFields;
           }
         }
-        return { ...result.data, formFields };
+        
+        // Pastikan maintenanceMode ada
+        const settings = { ...result.data, formFields };
+        if (settings.maintenanceMode === undefined) {
+          settings.maintenanceMode = false;
+        }
+        
+        return settings;
       }
     }
     throw new Error("Failed to fetch settings");
@@ -126,13 +134,19 @@ export const getSettings = async (): Promise<AppSettings> => {
 
 export const updateSettings = async (settings: Partial<AppSettings>) => {
   try {
+    // Pastikan maintenanceMode terkirim
+    const payload = {
+      action: "updateSettings",
+      settings: {
+        ...settings,
+        maintenanceMode: settings.maintenanceMode || false
+      }
+    };
+    
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "updateSettings",
-        settings
-      }),
+      body: JSON.stringify(payload),
     });
     
     if (response.ok) {
