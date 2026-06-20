@@ -210,8 +210,15 @@ export default function AdminDashboard() {
     if (!localSettings) return;
     setIsSavingSettings(true);
     try {
+      // Simpan ke database
       await updateSettings(localSettings);
       await refreshSettings();
+      
+      // Simpan maintenanceMode ke localStorage
+      if (localSettings.maintenanceMode !== undefined) {
+        localStorage.setItem('maintenanceMode', String(localSettings.maintenanceMode));
+      }
+      
       Swal.fire({
         icon: 'success',
         title: 'Berhasil',
@@ -575,7 +582,7 @@ export default function AdminDashboard() {
                 >
                   Panduan
                 </button>
-                {/* 👇 TAMBAHKAN TAB MAINTENANCE */}
+                {/* TAB MAINTENANCE */}
                 <button
                   onClick={() => setSettingsTab('maintenance')}
                   className={cn("px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap", 
@@ -1169,7 +1176,7 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
-                {/* 👇 TAB MAINTENANCE MODE */}
+                {/* TAB MAINTENANCE MODE */}
                 {settingsTab === 'maintenance' && (
                   <div>
                     <div className={cn("p-6 rounded-xl border mb-6", 
@@ -1283,7 +1290,7 @@ export default function AdminDashboard() {
                         </li>
                         <li className="flex items-start gap-2">
                           <span>•</span>
-                          <span>Pengaturan ini disimpan di database dan berlaku untuk semua pengguna</span>
+                          <span>Pengaturan ini disimpan di database dan localStorage</span>
                         </li>
                         <li className="flex items-start gap-2">
                           <span>•</span>
