@@ -3,6 +3,15 @@
 // ✅ Google Apps Script URL yang SUDAH TERBUKTI BERHASIL
 const GAS_WEB_APP_URL = "/api/gas-proxy";
 
+// ========== CACHE ==========
+let settingsCache: AppSettings | null = null;
+let settingsCacheTime: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 menit
+
+let registrationsCache: AdminData[] | null = null;
+let registrationsCacheTime: number = 0;
+const REGISTRATION_CACHE_DURATION = 2 * 60 * 1000; // 2 menit
+
 export interface FormField {
   id: string;
   label: string;
@@ -96,6 +105,12 @@ const getDefaultSettings = (): AppSettings => ({
 let fallbackData: AdminData[] = [];
 
 export const getSettings = async (): Promise<AppSettings> => {
+  // ✅ Cek cache dulu
+  if (settingsCache && (Date.now() - settingsCacheTime) < CACHE_DURATION) {
+    console.log('📦 Pakai cache settings (5 menit)');
+    return settingsCache;
+  }
+
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getSettings&t=${Date.now()}`, {
       method: 'GET',
@@ -116,11 +131,14 @@ export const getSettings = async (): Promise<AppSettings> => {
           }
         }
         
-        // Pastikan maintenanceMode ada
         const settings = { ...result.data, formFields };
         if (settings.maintenanceMode === undefined) {
           settings.maintenanceMode = false;
         }
+        
+        // ✅ Simpan ke cache
+        settingsCache = settings;
+        settingsCacheTime = Date.now();
         
         return settings;
       }
@@ -128,13 +146,14 @@ export const getSettings = async (): Promise<AppSettings> => {
     throw new Error("Failed to fetch settings");
   } catch (error) {
     console.warn("Using default settings (API unavailable):", error);
+    // ✅ Pakai cache lama atau default
+    if (settingsCache) return settingsCache;
     return getDefaultSettings();
   }
 };
 
 export const updateSettings = async (settings: Partial<AppSettings>) => {
   try {
-    // Pastikan maintenanceMode terkirim
     const payload = {
       action: "updateSettings",
       settings: {
@@ -150,7 +169,15 @@ export const updateSettings = async (settings: Partial<AppSettings>) => {
     });
     
     if (response.ok) {
-      return await response.json();
+      const result = await response.json();
+      
+      // ✅ Update cache setelah simpan
+      if (settingsCache) {
+        settingsCache = { ...settingsCache, ...settings };
+        settingsCacheTime = Date.now();
+      }
+      
+      return result;
     }
     throw new Error("Failed to update");
   } catch (error) {
@@ -182,6 +209,12 @@ export const submitRegistration = async (data: RegistrationData) => {
 };
 
 export const getRegistrations = async (): Promise<AdminData[]> => {
+  // ✅ Cek cache dulu
+  if (registrationsCache && (Date.now() - registrationsCacheTime) < REGISTRATION_CACHE_DURATION) {
+    console.log('📦 Pakai cache registrations (2 menit)');
+    return registrationsCache;
+  }
+
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?t=${Date.now()}`, {
       method: 'GET',
@@ -193,20 +226,26 @@ export const getRegistrations = async (): Promise<AdminData[]> => {
     if (response.ok) {
       const result = await response.json();
       if (result.status === "success" && Array.isArray(result.data)) {
-        // Filter data yang valid (pastikan ada No Pendaftaran dan bukan header)
         const validData = result.data.filter(item => 
           item && 
           item['No Pendaftaran'] && 
           item['No Pendaftaran'].toString().trim() !== "" &&
-          item['No Pendaftaran'] !== "No Pendaftaran" // filter header jika terlanjur masuk
+          item['No Pendaftaran'] !== "No Pendaftaran"
         );
         fallbackData = validData;
+        
+        // ✅ Simpan ke cache
+        registrationsCache = validData;
+        registrationsCacheTime = Date.now();
+        
         return validData;
       }
     }
     throw new Error("Failed to fetch registrations");
   } catch (error) {
     console.warn("Using fallback data (API unavailable):", error);
+    // ✅ Pakai cache atau fallback
+    if (registrationsCache) return registrationsCache;
     return fallbackData;
   }
 };
@@ -231,6 +270,17 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
           ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
           : item
       );
+      
+      // ✅ Update cache setelah update status
+      if (registrationsCache) {
+        registrationsCache = registrationsCache.map(item => 
+          item['No Pendaftaran'] === noPendaftaran 
+            ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
+            : item
+        );
+        registrationsCacheTime = Date.now();
+      }
+      
       return result;
     }
     throw new Error("Failed to update");
@@ -247,7 +297,6 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
 
 // ========== FUNGSI CHECK STATUS (CUKUP NISN SAJA) ==========
 export const checkStatus = async (nisn: string) => {
-  // Validasi NISN harus diisi
   if (!nisn) {
     return { 
       status: "error", 
@@ -271,7 +320,6 @@ export const checkStatus = async (nisn: string) => {
     throw new Error("Failed to check");
   } catch (error) {
     console.warn("Cannot check status:", error);
-    // Cek di fallback data berdasarkan NISN
     const cleanNisn = String(nisn).replace(/\D/g, '');
     const localStudent = fallbackData.find(d => 
       String(d['NISN']).replace(/\D/g, '') === cleanNisn
