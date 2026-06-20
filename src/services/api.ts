@@ -51,6 +51,7 @@ export interface AppSettings {
   panduanPeringatan?: string;
   panduanDokumen?: PanduanDokumen[];
   panduanAlur?: string[];
+  maintenanceMode?: boolean;
 }
 
 export interface RegistrationData {
