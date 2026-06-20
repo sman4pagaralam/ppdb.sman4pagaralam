@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { getRegistrations, updateStatus, AdminData, updateSettings, getAllRegistrations } from '../services/api';
+import { getRegistrations, updateStatus, AdminData, updateSettings } from '../services/api';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
@@ -81,8 +81,6 @@ const safeToString = (value: any): string => {
 export default function AdminDashboard() {
   const { settings, refreshSettings } = useSettings();
   const [data, setData] = useState<AdminData[]>([]);
-  const [totalData, setTotalData] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
@@ -96,7 +94,6 @@ export default function AdminDashboard() {
 
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [localSettings, setLocalSettings] = useState(settings);
-  const [allDataForExport, setAllDataForExport] = useState<AdminData[]>([]);
 
   const getFieldValue = useCallback((item: any, fieldId: string): string => {
     if (!item) return '';
@@ -120,38 +117,31 @@ export default function AdminDashboard() {
     }
   }, [settings]);
 
-  // Fetch data dengan pagination dari API
- const fetchData = async () => {
-  setIsLoading(true);
-  try {
-    const result = await getRegistrations();
-    setData(Array.isArray(result) ? result : []);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    Swal.fire('Error', 'Gagal mengambil data dari server', 'error');
-    setData([]);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  useEffect(() => {
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    if (!isAdmin) {
+      navigate('/admin/login');
+      return;
+    }
+    fetchData();
+  }, [navigate]);
 
-  // Refresh data (ambil ulang dari server)
-  const handleRefreshData = async () => {
-    // Reset cache dengan timestamp
-    await fetchData(currentPage);
-    // Reset all data untuk export
+  const fetchData = async () => {
+    setIsLoading(true);
     try {
-      const allData = await getAllRegistrations();
-      setAllDataForExport(allData);
-    } catch (e) {
-      console.warn('Gagal ambil semua data untuk export');
+      const result = await getRegistrations();
+      setData(Array.isArray(result) ? result : []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      Swal.fire('Error', 'Gagal mengambil data dari server', 'error');
+      setData([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Handle page change
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-    fetchData(newPage);
+  const handleRefreshData = async () => {
+    await fetchData();
   };
 
   const handleLogout = () => {
@@ -204,13 +194,7 @@ export default function AdminDashboard() {
 
       await updateStatus(noPendaftaran, newStatus, alasan);
       
-      // Update local data
       setData(prev => prev.map(item => 
-        item && item['No Pendaftaran'] === noPendaftaran ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan } : item
-      ));
-
-      // Update all data for export
-      setAllDataForExport(prev => prev.map(item => 
         item && item['No Pendaftaran'] === noPendaftaran ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan } : item
       ));
 
@@ -262,14 +246,12 @@ export default function AdminDashboard() {
   };
 
   const exportToExcel = () => {
-    const exportData = allDataForExport.length > 0 ? allDataForExport : data;
-    
-    if (!exportData || exportData.length === 0) {
+    if (!data || data.length === 0) {
       Swal.fire('Info', 'Tidak ada data untuk diekspor', 'info');
       return;
     }
     
-    const formattedData = exportData.map(item => {
+    const exportData = data.map(item => {
       const formattedItem: any = { ...item };
       
       const tglLahir = getFieldValue(item, 'Tanggal Lahir');
@@ -291,7 +273,7 @@ export default function AdminDashboard() {
       return formattedItem;
     });
     
-    const ws = XLSX.utils.json_to_sheet(formattedData);
+    const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Data Pendaftar");
     XLSX.writeFile(wb, `Data_SPMB_${new Date().toISOString().split('T')[0]}.xlsx`);
@@ -364,7 +346,6 @@ export default function AdminDashboard() {
     doc.save(`Kartu_SPMB_${student['No Pendaftaran']}.pdf`);
   };
 
-  // Filter data local (search & status filter)
   const filteredData = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) {
       return [];
@@ -399,7 +380,8 @@ export default function AdminDashboard() {
     });
   }, [data, searchTerm, statusFilter, getFieldValue]);
 
-  const totalPages = Math.ceil(totalData / itemsPerPage);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getStatusBadge = (status: string) => {
     const safeStatus = safeToString(status);
@@ -447,7 +429,7 @@ export default function AdminDashboard() {
             {/* Statistics */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               {[
-                { label: 'Total Pendaftar', value: totalData || 0, color: 'bg-blue-500 text-white' },
+                { label: 'Total Pendaftar', value: Array.isArray(data) ? data.length : 0, color: 'bg-blue-500 text-white' },
                 { label: 'Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Lulus').length : 0, color: 'bg-green-500 text-white' },
                 { label: 'Tidak Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Tidak Lulus').length : 0, color: 'bg-red-500 text-white' },
                 { label: 'Laki-laki', value: Array.isArray(data) ? data.filter(item => { const jk = item ? safeToString(getFieldValue(item, 'Jenis Kelamin')).toLowerCase() : ''; return jk.includes('laki'); }).length : 0, color: 'bg-indigo-500 text-white' },
@@ -506,10 +488,10 @@ export default function AdminDashboard() {
                   <tbody className={cn("divide-y", isDarkMode ? "divide-slate-700" : "divide-slate-200")}>
                     {isLoading ? (
                       <tr><td colSpan={7} className="px-6 py-12 text-center"><Loader2 className="animate-spin h-8 w-8 mx-auto text-blue-500 mb-4" /><p>Memuat data...</p></td></tr>
-                    ) : !filteredData || filteredData.length === 0 ? (
+                    ) : !currentData || currentData.length === 0 ? (
                       <tr><td colSpan={7} className="px-6 py-12 text-center"><FileText size={48} className="mx-auto text-slate-400 mb-4" /><p>Tidak ada data ditemukan</p>{(searchTerm || statusFilter !== 'Semua') && (<button onClick={() => { setSearchTerm(''); setStatusFilter('Semua'); }} className="mt-2 text-blue-500 hover:underline text-sm">Reset filter</button>)}</td></tr>
                     ) : (
-                      filteredData.map((item, idx) => (
+                      currentData.map((item, idx) => (
                         <tr key={item?.['No Pendaftaran'] || idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{safeToString(item?.['No Pendaftaran'])}</td>
                           <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium">{getFieldValue(item, 'Nama Lengkap') || '-'}</div><div className="text-xs text-slate-500">{getFieldValue(item, 'Tempat Lahir') || '-'}, {formatDate(getFieldValue(item, 'Tanggal Lahir'))}</div></td>
@@ -532,14 +514,14 @@ export default function AdminDashboard() {
                 </table>
               </div>
               
-              {!isLoading && totalData > 0 && (
+              {!isLoading && filteredData.length > 0 && (
                 <div className="px-6 py-4 border-t flex justify-between items-center flex-wrap gap-2">
                   <div className="text-sm text-slate-500">
-                    Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalData)} dari {totalData} data
+                    Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} data
                   </div>
                   <div className="flex gap-2 items-center">
                     <button 
-                      onClick={() => handlePageChange(currentPage - 1)} 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
                       disabled={currentPage === 1}
                       className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                     >
@@ -549,8 +531,8 @@ export default function AdminDashboard() {
                       Halaman {currentPage} dari {Math.max(1, totalPages)}
                     </span>
                     <button 
-                      onClick={() => handlePageChange(currentPage + 1)} 
-                      disabled={!hasMore}
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                      disabled={currentPage === totalPages}
                       className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                     >
                       Selanjutnya
