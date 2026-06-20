@@ -111,15 +111,14 @@ const getDefaultSettings = (): AppSettings => ({
 // Fallback data jika API tidak bisa diakses
 let fallbackData: AdminData[] = [];
 
-export const getRegistrations = async (): Promise<AdminData[]> => {
-  // Cek cache dulu
-  if (registrationsCache && (Date.now() - registrationsCacheTime) < REGISTRATION_CACHE_DURATION) {
-    console.log('📦 Pakai cache registrations (2 menit)');
-    return registrationsCache;
+export const getSettings = async (): Promise<AppSettings> => {
+  if (settingsCache && (Date.now() - settingsCacheTime) < CACHE_DURATION) {
+    console.log('📦 Pakai cache settings (5 menit)');
+    return settingsCache;
   }
 
   try {
-    const response = await fetch(`${GAS_WEB_APP_URL}?t=${Date.now()}`, {
+    const response = await fetch(`${GAS_WEB_APP_URL}?action=getSettings&t=${Date.now()}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -128,27 +127,32 @@ export const getRegistrations = async (): Promise<AdminData[]> => {
     
     if (response.ok) {
       const result = await response.json();
-      if (result.status === "success" && Array.isArray(result.data)) {
-        const validData = result.data.filter(item => 
-          item && 
-          item['No Pendaftaran'] && 
-          item['No Pendaftaran'].toString().trim() !== "" &&
-          item['No Pendaftaran'] !== "No Pendaftaran"
-        );
-        fallbackData = validData;
+      if (result.status === "success") {
+        let formFields = result.data.formFields;
+        if (typeof formFields === 'string') {
+          try {
+            formFields = JSON.parse(formFields);
+          } catch (e) {
+            formFields = getDefaultSettings().formFields;
+          }
+        }
         
-        // Simpan ke cache
-        registrationsCache = validData;
-        registrationsCacheTime = Date.now();
+        const settings = { ...result.data, formFields };
+        if (settings.maintenanceMode === undefined) {
+          settings.maintenanceMode = false;
+        }
         
-        return validData;
+        settingsCache = settings;
+        settingsCacheTime = Date.now();
+        
+        return settings;
       }
     }
-    throw new Error("Failed to fetch registrations");
+    throw new Error("Failed to fetch settings");
   } catch (error) {
-    console.warn("Using fallback data (API unavailable):", error);
-    if (registrationsCache) return registrationsCache;
-    return fallbackData;
+    console.warn("Using default settings (API unavailable):", error);
+    if (settingsCache) return settingsCache;
+    return getDefaultSettings();
   }
 };
 
@@ -171,7 +175,6 @@ export const updateSettings = async (settings: Partial<AppSettings>) => {
     if (response.ok) {
       const result = await response.json();
       
-      // ✅ Update cache setelah simpan
       if (settingsCache) {
         settingsCache = { ...settingsCache, ...settings };
         settingsCacheTime = Date.now();
@@ -245,7 +248,6 @@ export const getRegistrations = async (limit: number = 50, offset: number = 0): 
         const total = result.pagination?.total || validData.length;
         const hasMore = result.pagination?.hasMore || (validData.length === limit);
         
-        // Simpan cache
         registrationsCache = {
           data: validData,
           total: total,
@@ -308,7 +310,6 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
           : item
       );
       
-      // ✅ Update cache setelah update status
       if (registrationsCache) {
         registrationsCache.data = registrationsCache.data.map(item => 
           item['No Pendaftaran'] === noPendaftaran 
