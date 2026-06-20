@@ -209,21 +209,27 @@ export default function AdminDashboard() {
  const handleSaveSettings = async () => {
   if (!localSettings) return;
   
-  // SIMPAN KE LOCALSTORAGE
-  localStorage.setItem('maintenanceMode', String(localSettings.maintenanceMode || false));
-  
   setIsSavingSettings(true);
   try {
     await updateSettings(localSettings);
     await refreshSettings();
     
+    // Update cache
+    if (localSettings.maintenanceMode !== undefined) {
+      localStorage.setItem('maintenanceMode', String(localSettings.maintenanceMode));
+    }
+    
+    // Refresh halaman agar efek langsung terlihat
     Swal.fire({
       icon: 'success',
       title: 'Berhasil',
       text: 'Pengaturan berhasil disimpan',
       timer: 1500,
       showConfirmButton: false
+    }).then(() => {
+      window.location.reload();
     });
+    
   } catch (error) {
     console.error('Error saving settings:', error);
     Swal.fire('Error', 'Gagal menyimpan pengaturan', 'error');
