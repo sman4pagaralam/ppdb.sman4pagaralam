@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycby9EvY_LZdPcdofu8wuiO4w8ZE0pganFmhEGovKqbCvvdeCQM9GN8jJe0UQ2YpjoQ-KNw/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxPRCg8Cnb3lFiUJvCJRrggPXZq7tTCl5yarEhPbeOwaim2qiEz87V5cc3n0mgM6YaM8A/exec';
   
   try {
     let url = GAS_URL;
