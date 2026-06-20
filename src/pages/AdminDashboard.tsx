@@ -107,10 +107,19 @@ export default function AdminDashboard() {
   }, [settings]);
 
   useEffect(() => {
-    if (settings) {
-      setLocalSettings(settings);
-    }
-  }, [settings]);
+  if (settings) {
+    // Ambil nilai maintenanceMode dari localStorage (jika ada)
+    const savedMaintenance = localStorage.getItem('maintenanceMode');
+    const maintenanceMode = savedMaintenance !== null 
+      ? savedMaintenance === 'true' 
+      : settings.maintenanceMode || false;
+    
+    setLocalSettings({
+      ...settings,
+      maintenanceMode: maintenanceMode
+    });
+  }
+}, [settings]);
 
   useEffect(() => {
     const isAdmin = sessionStorage.getItem('isAdmin');
@@ -207,32 +216,46 @@ export default function AdminDashboard() {
   };
 
   const handleSaveSettings = async () => {
-    if (!localSettings) return;
-    setIsSavingSettings(true);
+  if (!localSettings) return;
+  setIsSavingSettings(true);
+  try {
+    // 1. SIMPAN KE LOCALSTORAGE DULU
+    if (localSettings.maintenanceMode !== undefined) {
+      localStorage.setItem('maintenanceMode', String(localSettings.maintenanceMode));
+      console.log('✅ Maintenance mode saved to localStorage:', localSettings.maintenanceMode);
+    }
+    
+    // 2. COBA SIMPAN KE DATABASE
     try {
-      // Simpan ke database
       await updateSettings(localSettings);
       await refreshSettings();
-      
-      // Simpan maintenanceMode ke localStorage
-      if (localSettings.maintenanceMode !== undefined) {
-        localStorage.setItem('maintenanceMode', String(localSettings.maintenanceMode));
-      }
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Berhasil',
-        text: 'Pengaturan berhasil disimpan',
-        timer: 1500,
-        showConfirmButton: false
-      });
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      Swal.fire('Error', 'Gagal menyimpan pengaturan', 'error');
-    } finally {
-      setIsSavingSettings(false);
+    } catch (apiError) {
+      console.warn('⚠️ API error, but localStorage already saved');
     }
-  };
+    
+    // 3. PAKSA AMBIL DARI LOCALSTORAGE
+    const saved = localStorage.getItem('maintenanceMode');
+    if (saved !== null) {
+      setLocalSettings(prev => ({
+        ...prev,
+        maintenanceMode: saved === 'true'
+      }));
+    }
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Berhasil',
+      text: 'Pengaturan berhasil disimpan',
+      timer: 1500,
+      showConfirmButton: false
+    });
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    Swal.fire('Error', 'Gagal menyimpan pengaturan', 'error');
+  } finally {
+    setIsSavingSettings(false);
+  }
+};
 
   const exportToExcel = () => {
     if (!data || data.length === 0) {
