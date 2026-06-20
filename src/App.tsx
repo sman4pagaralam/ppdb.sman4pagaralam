@@ -19,12 +19,10 @@ function RouteHandler() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect to home on initial load/reload if not on home or admin pages
     if (location.pathname !== '/' && !location.pathname.startsWith('/admin')) {
       navigate('/', { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array ensures this only runs once on app mount (reload)
+  }, []);
 
   return null;
 }
