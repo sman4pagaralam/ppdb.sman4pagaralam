@@ -121,35 +121,19 @@ export default function AdminDashboard() {
   }, [settings]);
 
   // Fetch data dengan pagination dari API
-  const fetchData = async (page: number = 1) => {
-    setIsLoading(true);
-    try {
-      const limit = itemsPerPage;
-      const offset = (page - 1) * limit;
-      const result = await getRegistrations(limit, offset);
-      
-      setData(Array.isArray(result.data) ? result.data : []);
-      setTotalData(result.total || 0);
-      setHasMore(result.hasMore || false);
-      
-      // Simpan semua data untuk export (ambil sekali)
-      if (page === 1 && allDataForExport.length === 0) {
-        try {
-          const allData = await getAllRegistrations();
-          setAllDataForExport(allData);
-        } catch (e) {
-          console.warn('Gagal ambil semua data untuk export');
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      Swal.fire('Error', 'Gagal mengambil data dari server', 'error');
-      setData([]);
-      setTotalData(0);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const fetchData = async () => {
+  setIsLoading(true);
+  try {
+    const result = await getRegistrations();
+    setData(Array.isArray(result) ? result : []);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    Swal.fire('Error', 'Gagal mengambil data dari server', 'error');
+    setData([]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Refresh data (ambil ulang dari server)
   const handleRefreshData = async () => {
