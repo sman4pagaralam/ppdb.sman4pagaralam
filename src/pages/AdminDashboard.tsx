@@ -108,27 +108,18 @@ export default function AdminDashboard() {
 
   useEffect(() => {
   if (settings) {
-    // Ambil nilai maintenanceMode dari localStorage (jika ada)
-    const savedMaintenance = localStorage.getItem('maintenanceMode');
-    const maintenanceMode = savedMaintenance !== null 
-      ? savedMaintenance === 'true' 
-      : settings.maintenanceMode || false;
+    // ✅ PRIORITASKAN DARI SERVER (Google Sheets)
+    const serverMaintenance = settings.maintenanceMode || false;
+    
+    // Sync localStorage dengan server
+    localStorage.setItem('maintenanceMode', String(serverMaintenance));
     
     setLocalSettings({
       ...settings,
-      maintenanceMode: maintenanceMode
+      maintenanceMode: serverMaintenance
     });
   }
 }, [settings]);
-
-  useEffect(() => {
-    const isAdmin = sessionStorage.getItem('isAdmin');
-    if (!isAdmin) {
-      navigate('/admin/login');
-      return;
-    }
-    fetchData();
-  }, [navigate]);
 
   const fetchData = async () => {
     setIsLoading(true);
