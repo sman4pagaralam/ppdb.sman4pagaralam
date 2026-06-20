@@ -121,7 +121,7 @@ export default function AdminDashboard() {
   }, [settings]);
 
   // Fetch data dengan pagination dari API
-  const fetchData = async () => {
+ const fetchData = async () => {
   setIsLoading(true);
   try {
     const result = await getRegistrations();
