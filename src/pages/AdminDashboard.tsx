@@ -215,32 +215,16 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSaveSettings = async () => {
+ const handleSaveSettings = async () => {
   if (!localSettings) return;
+  
+  // SIMPAN KE LOCALSTORAGE
+  localStorage.setItem('maintenanceMode', String(localSettings.maintenanceMode || false));
+  
   setIsSavingSettings(true);
   try {
-    // 1. SIMPAN KE LOCALSTORAGE DULU
-    if (localSettings.maintenanceMode !== undefined) {
-      localStorage.setItem('maintenanceMode', String(localSettings.maintenanceMode));
-      console.log('✅ Maintenance mode saved to localStorage:', localSettings.maintenanceMode);
-    }
-    
-    // 2. COBA SIMPAN KE DATABASE
-    try {
-      await updateSettings(localSettings);
-      await refreshSettings();
-    } catch (apiError) {
-      console.warn('⚠️ API error, but localStorage already saved');
-    }
-    
-    // 3. PAKSA AMBIL DARI LOCALSTORAGE
-    const saved = localStorage.getItem('maintenanceMode');
-    if (saved !== null) {
-      setLocalSettings(prev => ({
-        ...prev,
-        maintenanceMode: saved === 'true'
-      }));
-    }
+    await updateSettings(localSettings);
+    await refreshSettings();
     
     Swal.fire({
       icon: 'success',
