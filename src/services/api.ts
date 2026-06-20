@@ -1,16 +1,5 @@
 // Service to interact with Google Apps Script Backend
-
-// ✅ Google Apps Script URL yang SUDAH TERBUKTI BERHASIL
 const GAS_WEB_APP_URL = "/api/gas-proxy";
-
-// ========== CACHE ==========
-let settingsCache: AppSettings | null = null;
-let settingsCacheTime: number = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 menit
-
-let registrationsCache: AdminData[] | null = null;
-let registrationsCacheTime: number = 0;
-const REGISTRATION_CACHE_DURATION = 2 * 60 * 1000; // 2 menit
 
 export interface FormField {
   id: string;
@@ -74,7 +63,6 @@ export interface AdminData extends RegistrationData {
   'Alasan Penolakan'?: string;
 }
 
-// Default Mock Data (akan digunakan jika API tidak bisa diakses)
 const getDefaultSettings = (): AppSettings => ({
   namaSekolah: "SDN Harapan Bangsa",
   alamat: "Jl. Pendidikan No. 123, Kota Pelajar, Indonesia 12345",
@@ -101,21 +89,13 @@ const getDefaultSettings = (): AppSettings => ({
   maintenanceMode: false,
 });
 
-// Fallback data jika API tidak bisa diakses
 let fallbackData: AdminData[] = [];
 
 export const getSettings = async (): Promise<AppSettings> => {
-  if (settingsCache && (Date.now() - settingsCacheTime) < CACHE_DURATION) {
-    console.log('📦 Pakai cache settings (5 menit)');
-    return settingsCache;
-  }
-
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getSettings&t=${Date.now()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: { 'Accept': 'application/json' },
     });
     
     if (response.ok) {
@@ -123,58 +103,28 @@ export const getSettings = async (): Promise<AppSettings> => {
       if (result.status === "success") {
         let formFields = result.data.formFields;
         if (typeof formFields === 'string') {
-          try {
-            formFields = JSON.parse(formFields);
-          } catch (e) {
-            formFields = getDefaultSettings().formFields;
-          }
+          try { formFields = JSON.parse(formFields); } catch (e) { formFields = getDefaultSettings().formFields; }
         }
-        
         const settings = { ...result.data, formFields };
-        if (settings.maintenanceMode === undefined) {
-          settings.maintenanceMode = false;
-        }
-        
-        settingsCache = settings;
-        settingsCacheTime = Date.now();
-        
+        if (settings.maintenanceMode === undefined) settings.maintenanceMode = false;
         return settings;
       }
     }
     throw new Error("Failed to fetch settings");
   } catch (error) {
     console.warn("Using default settings (API unavailable):", error);
-    if (settingsCache) return settingsCache;
     return getDefaultSettings();
   }
 };
 
 export const updateSettings = async (settings: Partial<AppSettings>) => {
   try {
-    const payload = {
-      action: "updateSettings",
-      settings: {
-        ...settings,
-        maintenanceMode: settings.maintenanceMode || false
-      }
-    };
-    
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ action: "updateSettings", settings: { ...settings, maintenanceMode: settings.maintenanceMode || false } }),
     });
-    
-    if (response.ok) {
-      const result = await response.json();
-      
-      if (settingsCache) {
-        settingsCache = { ...settingsCache, ...settings };
-        settingsCacheTime = Date.now();
-      }
-      
-      return result;
-    }
+    if (response.ok) return await response.json();
     throw new Error("Failed to update");
   } catch (error) {
     console.warn("Settings saved locally only:", error);
@@ -189,57 +139,34 @@ export const submitRegistration = async (data: RegistrationData) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    
-    if (response.ok) {
-      return await response.json();
-    }
+    if (response.ok) return await response.json();
     throw new Error("Failed to submit");
   } catch (error) {
     console.warn("Registration saved locally only:", error);
-    return { 
-      status: "success", 
-      message: "Pendaftaran berhasil (disimpan lokal)",
-      noPendaftaran: `LOCAL-${Date.now()}`
-    };
+    return { status: "success", message: "Pendaftaran berhasil (disimpan lokal)", noPendaftaran: `LOCAL-${Date.now()}` };
   }
 };
 
-// ✅ SATU FUNGSI getRegistrations (TANPA pagination)
 export const getRegistrations = async (): Promise<AdminData[]> => {
-  if (registrationsCache && (Date.now() - registrationsCacheTime) < REGISTRATION_CACHE_DURATION) {
-    console.log('📦 Pakai cache registrations (2 menit)');
-    return registrationsCache;
-  }
-
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?t=${Date.now()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: { 'Accept': 'application/json' },
     });
     
     if (response.ok) {
       const result = await response.json();
       if (result.status === "success" && Array.isArray(result.data)) {
         const validData = result.data.filter(item => 
-          item && 
-          item['No Pendaftaran'] && 
-          item['No Pendaftaran'].toString().trim() !== "" &&
-          item['No Pendaftaran'] !== "No Pendaftaran"
+          item && item['No Pendaftaran'] && item['No Pendaftaran'].toString().trim() !== "" && item['No Pendaftaran'] !== "No Pendaftaran"
         );
         fallbackData = validData;
-        
-        registrationsCache = validData;
-        registrationsCacheTime = Date.now();
-        
         return validData;
       }
     }
     throw new Error("Failed to fetch registrations");
   } catch (error) {
     console.warn("Using fallback data (API unavailable):", error);
-    if (registrationsCache) return registrationsCache;
     return fallbackData;
   }
 };
@@ -249,107 +176,59 @@ export const updateStatus = async (noPendaftaran: string, newStatus: string, ala
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "updateStatus",
-        noPendaftaran,
-        newStatus,
-        alasan
-      }),
+      body: JSON.stringify({ action: "updateStatus", noPendaftaran, newStatus, alasan }),
     });
-    
     if (response.ok) {
       const result = await response.json();
       fallbackData = fallbackData.map(item => 
-        item['No Pendaftaran'] === noPendaftaran 
-          ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
-          : item
+        item['No Pendaftaran'] === noPendaftaran ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan } : item
       );
-      
-      if (registrationsCache) {
-        registrationsCache = registrationsCache.map(item => 
-          item['No Pendaftaran'] === noPendaftaran 
-            ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
-            : item
-        );
-        registrationsCacheTime = Date.now();
-      }
-      
       return result;
     }
     throw new Error("Failed to update");
   } catch (error) {
     console.warn("Status updated locally only:", error);
     fallbackData = fallbackData.map(item => 
-      item['No Pendaftaran'] === noPendaftaran 
-        ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan }
-        : item
+      item['No Pendaftaran'] === noPendaftaran ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan } : item
     );
     return { status: "success" };
   }
 };
 
-// ========== FUNGSI CHECK STATUS (CUKUP NISN SAJA) ==========
 export const checkStatus = async (nisn: string) => {
-  if (!nisn) {
-    return { 
-      status: "error", 
-      message: "NISN harus diisi" 
-    };
-  }
-
+  if (!nisn) return { status: "error", message: "NISN harus diisi" };
   try {
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "checkStatus",
-        nisn: nisn
-      }),
+      body: JSON.stringify({ action: "checkStatus", nisn: nisn }),
     });
-    
-    if (response.ok) {
-      return await response.json();
-    }
+    if (response.ok) return await response.json();
     throw new Error("Failed to check");
   } catch (error) {
     console.warn("Cannot check status:", error);
     const cleanNisn = String(nisn).replace(/\D/g, '');
-    const localStudent = fallbackData.find(d => 
-      String(d['NISN']).replace(/\D/g, '') === cleanNisn
-    );
+    const localStudent = fallbackData.find(d => String(d['NISN']).replace(/\D/g, '') === cleanNisn);
     if (localStudent) {
-      return { 
-        status: "success", 
-        data: {
-          noPendaftaran: localStudent['No Pendaftaran'],
-          nisn: localStudent['NISN'],
-          namaLengkap: localStudent['Nama Lengkap'] || "Siswa",
-          status: localStudent.Status
-        }
-      };
+      return { status: "success", data: {
+        noPendaftaran: localStudent['No Pendaftaran'],
+        nisn: localStudent['NISN'],
+        namaLengkap: localStudent['Nama Lengkap'] || "Siswa",
+        status: localStudent.Status
+      }};
     }
     return { status: "error", message: "Layanan tidak tersedia saat ini" };
   }
 };
 
-// ========== LOGIN ADMIN ==========
 export const loginAdmin = async (username: string, password: string) => {
   try {
     const response = await fetch(GAS_WEB_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "login",
-        username,
-        password
-      }),
+      body: JSON.stringify({ action: "login", username, password }),
     });
-    
-    if (response.ok) {
-      const result = await response.json();
-      return result;
-    }
-    
+    if (response.ok) return await response.json();
     return { status: "error", message: "Login gagal, coba lagi" };
   } catch (error) {
     console.error("Error logging in:", error);
@@ -357,68 +236,40 @@ export const loginAdmin = async (username: string, password: string) => {
   }
 };
 
-// ========== FUNGSI getRegistrationByNo ==========
 export const getRegistrationByNo = async (noPendaftaran: string): Promise<AdminData | null> => {
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getRegistration&noPendaftaran=${encodeURIComponent(noPendaftaran)}&t=${Date.now()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: { 'Accept': 'application/json' },
     });
-    
     if (response.ok) {
       const result = await response.json();
-      if (result.status === "success" && result.data) {
-        return result.data;
-      }
+      if (result.status === "success" && result.data) return result.data;
     }
-    
     const localData = fallbackData.find(item => item['No Pendaftaran'] === noPendaftaran);
-    if (localData) {
-      return localData;
-    }
-    
-    return null;
+    return localData || null;
   } catch (error) {
     console.warn("Error fetching registration by number:", error);
     const localData = fallbackData.find(item => item['No Pendaftaran'] === noPendaftaran);
-    if (localData) {
-      return localData;
-    }
-    return null;
+    return localData || null;
   }
 };
 
-// ========== FUNGSI getRegistrationByNisn ==========
 export const getRegistrationByNisn = async (nisn: string): Promise<AdminData | null> => {
   try {
     const response = await fetch(`${GAS_WEB_APP_URL}?action=getByNisn&nisn=${encodeURIComponent(nisn)}&t=${Date.now()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: { 'Accept': 'application/json' },
     });
-    
     if (response.ok) {
       const result = await response.json();
-      if (result.status === "success" && result.data) {
-        return result.data;
-      }
+      if (result.status === "success" && result.data) return result.data;
     }
-    
     const localData = fallbackData.find(item => String(item['NISN']).replace(/\D/g, '') === String(nisn).replace(/\D/g, ''));
-    if (localData) {
-      return localData;
-    }
-    
-    return null;
+    return localData || null;
   } catch (error) {
     console.warn("Error fetching registration by NISN:", error);
     const localData = fallbackData.find(item => String(item['NISN']).replace(/\D/g, '') === String(nisn).replace(/\D/g, ''));
-    if (localData) {
-      return localData;
-    }
-    return null;
+    return localData || null;
   }
 };
