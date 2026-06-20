@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { getRegistrations, updateStatus, AdminData, updateSettings } from '../services/api';
+import { getRegistrations, updateStatus, AdminData, updateSettings, getAllRegistrations } from '../services/api';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
@@ -81,6 +81,8 @@ const safeToString = (value: any): string => {
 export default function AdminDashboard() {
   const { settings, refreshSettings } = useSettings();
   const [data, setData] = useState<AdminData[]>([]);
+  const [totalData, setTotalData] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua');
@@ -94,6 +96,7 @@ export default function AdminDashboard() {
 
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [localSettings, setLocalSettings] = useState(settings);
+  const [allDataForExport, setAllDataForExport] = useState<AdminData[]>([]);
 
   const getFieldValue = useCallback((item: any, fieldId: string): string => {
     if (!item) return '';
@@ -107,32 +110,64 @@ export default function AdminDashboard() {
   }, [settings]);
 
   useEffect(() => {
-  if (settings) {
-    // ✅ PRIORITASKAN DARI SERVER (Google Sheets)
-    const serverMaintenance = settings.maintenanceMode || false;
-    
-    // Sync localStorage dengan server
-    localStorage.setItem('maintenanceMode', String(serverMaintenance));
-    
-    setLocalSettings({
-      ...settings,
-      maintenanceMode: serverMaintenance
-    });
-  }
-}, [settings]);
+    if (settings) {
+      const serverMaintenance = settings.maintenanceMode || false;
+      localStorage.setItem('maintenanceMode', String(serverMaintenance));
+      setLocalSettings({
+        ...settings,
+        maintenanceMode: serverMaintenance
+      });
+    }
+  }, [settings]);
 
-  const fetchData = async () => {
+  // Fetch data dengan pagination dari API
+  const fetchData = async (page: number = 1) => {
     setIsLoading(true);
     try {
-      const result = await getRegistrations();
-      setData(Array.isArray(result) ? result : []);
+      const limit = itemsPerPage;
+      const offset = (page - 1) * limit;
+      const result = await getRegistrations(limit, offset);
+      
+      setData(Array.isArray(result.data) ? result.data : []);
+      setTotalData(result.total || 0);
+      setHasMore(result.hasMore || false);
+      
+      // Simpan semua data untuk export (ambil sekali)
+      if (page === 1 && allDataForExport.length === 0) {
+        try {
+          const allData = await getAllRegistrations();
+          setAllDataForExport(allData);
+        } catch (e) {
+          console.warn('Gagal ambil semua data untuk export');
+        }
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       Swal.fire('Error', 'Gagal mengambil data dari server', 'error');
       setData([]);
+      setTotalData(0);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Refresh data (ambil ulang dari server)
+  const handleRefreshData = async () => {
+    // Reset cache dengan timestamp
+    await fetchData(currentPage);
+    // Reset all data untuk export
+    try {
+      const allData = await getAllRegistrations();
+      setAllDataForExport(allData);
+    } catch (e) {
+      console.warn('Gagal ambil semua data untuk export');
+    }
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchData(newPage);
   };
 
   const handleLogout = () => {
@@ -185,7 +220,13 @@ export default function AdminDashboard() {
 
       await updateStatus(noPendaftaran, newStatus, alasan);
       
+      // Update local data
       setData(prev => prev.map(item => 
+        item && item['No Pendaftaran'] === noPendaftaran ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan } : item
+      ));
+
+      // Update all data for export
+      setAllDataForExport(prev => prev.map(item => 
         item && item['No Pendaftaran'] === noPendaftaran ? { ...item, Status: newStatus as any, 'Alasan Penolakan': alasan } : item
       ));
 
@@ -206,45 +247,45 @@ export default function AdminDashboard() {
     }
   };
 
- const handleSaveSettings = async () => {
-  if (!localSettings) return;
-  
-  setIsSavingSettings(true);
-  try {
-    await updateSettings(localSettings);
-    await refreshSettings();
+  const handleSaveSettings = async () => {
+    if (!localSettings) return;
     
-    // Update cache
-    if (localSettings.maintenanceMode !== undefined) {
-      localStorage.setItem('maintenanceMode', String(localSettings.maintenanceMode));
+    setIsSavingSettings(true);
+    try {
+      await updateSettings(localSettings);
+      await refreshSettings();
+      
+      if (localSettings.maintenanceMode !== undefined) {
+        localStorage.setItem('maintenanceMode', String(localSettings.maintenanceMode));
+      }
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: 'Pengaturan berhasil disimpan',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        window.location.reload();
+      });
+      
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      Swal.fire('Error', 'Gagal menyimpan pengaturan', 'error');
+    } finally {
+      setIsSavingSettings(false);
     }
-    
-    // Refresh halaman agar efek langsung terlihat
-    Swal.fire({
-      icon: 'success',
-      title: 'Berhasil',
-      text: 'Pengaturan berhasil disimpan',
-      timer: 1500,
-      showConfirmButton: false
-    }).then(() => {
-      window.location.reload();
-    });
-    
-  } catch (error) {
-    console.error('Error saving settings:', error);
-    Swal.fire('Error', 'Gagal menyimpan pengaturan', 'error');
-  } finally {
-    setIsSavingSettings(false);
-  }
-};
+  };
 
   const exportToExcel = () => {
-    if (!data || data.length === 0) {
+    const exportData = allDataForExport.length > 0 ? allDataForExport : data;
+    
+    if (!exportData || exportData.length === 0) {
       Swal.fire('Info', 'Tidak ada data untuk diekspor', 'info');
       return;
     }
     
-    const exportData = data.map(item => {
+    const formattedData = exportData.map(item => {
       const formattedItem: any = { ...item };
       
       const tglLahir = getFieldValue(item, 'Tanggal Lahir');
@@ -266,7 +307,7 @@ export default function AdminDashboard() {
       return formattedItem;
     });
     
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    const ws = XLSX.utils.json_to_sheet(formattedData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Data Pendaftar");
     XLSX.writeFile(wb, `Data_SPMB_${new Date().toISOString().split('T')[0]}.xlsx`);
@@ -339,6 +380,7 @@ export default function AdminDashboard() {
     doc.save(`Kartu_SPMB_${student['No Pendaftaran']}.pdf`);
   };
 
+  // Filter data local (search & status filter)
   const filteredData = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) {
       return [];
@@ -373,8 +415,7 @@ export default function AdminDashboard() {
     });
   }, [data, searchTerm, statusFilter, getFieldValue]);
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil(totalData / itemsPerPage);
 
   const getStatusBadge = (status: string) => {
     const safeStatus = safeToString(status);
@@ -422,7 +463,7 @@ export default function AdminDashboard() {
             {/* Statistics */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               {[
-                { label: 'Total Pendaftar', value: Array.isArray(data) ? data.length : 0, color: 'bg-blue-500 text-white' },
+                { label: 'Total Pendaftar', value: totalData || 0, color: 'bg-blue-500 text-white' },
                 { label: 'Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Lulus').length : 0, color: 'bg-green-500 text-white' },
                 { label: 'Tidak Lulus', value: Array.isArray(data) ? data.filter(item => item && safeToString(item.Status) === 'Tidak Lulus').length : 0, color: 'bg-red-500 text-white' },
                 { label: 'Laki-laki', value: Array.isArray(data) ? data.filter(item => { const jk = item ? safeToString(getFieldValue(item, 'Jenis Kelamin')).toLowerCase() : ''; return jk.includes('laki'); }).length : 0, color: 'bg-indigo-500 text-white' },
@@ -454,7 +495,7 @@ export default function AdminDashboard() {
                     <option value="Tidak Lulus">Tidak Lulus</option>
                   </select>
                 </div>
-                <button onClick={fetchData} disabled={isLoading} className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm whitespace-nowrap disabled:opacity-70">
+                <button onClick={handleRefreshData} disabled={isLoading} className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm whitespace-nowrap disabled:opacity-70">
                   <RefreshCw size={16} className={cn(isLoading && "animate-spin")} /> Segarkan
                 </button>
                 <button onClick={exportToExcel} className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm whitespace-nowrap">
@@ -481,10 +522,10 @@ export default function AdminDashboard() {
                   <tbody className={cn("divide-y", isDarkMode ? "divide-slate-700" : "divide-slate-200")}>
                     {isLoading ? (
                       <tr><td colSpan={7} className="px-6 py-12 text-center"><Loader2 className="animate-spin h-8 w-8 mx-auto text-blue-500 mb-4" /><p>Memuat data...</p></td></tr>
-                    ) : !currentData || currentData.length === 0 ? (
+                    ) : !filteredData || filteredData.length === 0 ? (
                       <tr><td colSpan={7} className="px-6 py-12 text-center"><FileText size={48} className="mx-auto text-slate-400 mb-4" /><p>Tidak ada data ditemukan</p>{(searchTerm || statusFilter !== 'Semua') && (<button onClick={() => { setSearchTerm(''); setStatusFilter('Semua'); }} className="mt-2 text-blue-500 hover:underline text-sm">Reset filter</button>)}</td></tr>
                     ) : (
-                      currentData.map((item, idx) => (
+                      filteredData.map((item, idx) => (
                         <tr key={item?.['No Pendaftaran'] || idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{safeToString(item?.['No Pendaftaran'])}</td>
                           <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium">{getFieldValue(item, 'Nama Lengkap') || '-'}</div><div className="text-xs text-slate-500">{getFieldValue(item, 'Tempat Lahir') || '-'}, {formatDate(getFieldValue(item, 'Tanggal Lahir'))}</div></td>
@@ -507,12 +548,29 @@ export default function AdminDashboard() {
                 </table>
               </div>
               
-              {!isLoading && filteredData.length > 0 && (
-                <div className="px-6 py-4 border-t flex justify-between items-center">
-                  <div className="text-sm text-slate-500">Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredData.length)} dari {filteredData.length} data</div>
-                  <div className="flex gap-2">
-                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded disabled:opacity-50">Sebelumnya</button>
-                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded disabled:opacity-50">Selanjutnya</button>
+              {!isLoading && totalData > 0 && (
+                <div className="px-6 py-4 border-t flex justify-between items-center flex-wrap gap-2">
+                  <div className="text-sm text-slate-500">
+                    Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalData)} dari {totalData} data
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <button 
+                      onClick={() => handlePageChange(currentPage - 1)} 
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      Sebelumnya
+                    </button>
+                    <span className="px-3 py-1 text-sm">
+                      Halaman {currentPage} dari {Math.max(1, totalPages)}
+                    </span>
+                    <button 
+                      onClick={() => handlePageChange(currentPage + 1)} 
+                      disabled={!hasMore}
+                      className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      Selanjutnya
+                    </button>
                   </div>
                 </div>
               )}
@@ -586,7 +644,6 @@ export default function AdminDashboard() {
                 >
                   Panduan
                 </button>
-                {/* TAB MAINTENANCE */}
                 <button
                   onClick={() => setSettingsTab('maintenance')}
                   className={cn("px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap", 
@@ -1215,7 +1272,6 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         
-                        {/* Toggle Switch */}
                         <div className="flex flex-col items-end gap-2">
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -1247,7 +1303,6 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* Preview Maintenance Page */}
                     <div className="border rounded-xl p-6 dark:border-slate-700">
                       <h4 className="font-semibold mb-4">👁️ Preview Halaman Maintenance</h4>
                       <div className={cn("rounded-lg p-4 border", isDarkMode ? "bg-slate-900 border-slate-700" : "bg-slate-50 border-slate-200")}>
@@ -1268,7 +1323,6 @@ export default function AdminDashboard() {
                       </p>
                     </div>
 
-                    {/* Informasi Penting */}
                     <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                       <p className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2">
                         <span className="text-lg">⚠️</span>
@@ -1280,7 +1334,6 @@ export default function AdminDashboard() {
                       </p>
                     </div>
 
-                    {/* Cara Kerja */}
                     <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                       <h5 className="font-medium text-blue-800 dark:text-blue-300 text-sm mb-2">📌 Cara Kerja</h5>
                       <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1.5">
