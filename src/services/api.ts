@@ -204,6 +204,7 @@ export const submitRegistration = async (data: RegistrationData) => {
   }
 };
 
+// ✅ SATU FUNGSI getRegistrations (TANPA pagination)
 export const getRegistrations = async (): Promise<AdminData[]> => {
   if (registrationsCache && (Date.now() - registrationsCacheTime) < REGISTRATION_CACHE_DURATION) {
     console.log('📦 Pakai cache registrations (2 menit)');
