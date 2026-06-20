@@ -27,7 +27,7 @@ export default function MaintenancePage() {
         </h1>
         
         <p className="text-slate-600 mb-6">
-          Mohon maaf, website <strong>{settings?.schoolName || 'SMAN 4 Pagar Alam'}</strong> sedang dalam perbaikan 
+          Mohon maaf, website <strong>{settings?.namaSekolah || 'SMAN 4 Pagar Alam'}</strong> sedang dalam perbaikan 
           untuk memberikan layanan yang lebih baik. Kami akan segera kembali!
         </p>
 
@@ -40,22 +40,22 @@ export default function MaintenancePage() {
           <p className="text-sm text-slate-500 mb-3">Butuh bantuan? Hubungi kami:</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a 
-              href={`mailto:${settings?.schoolEmail || 'info@sman4pagaralam.sch.id'}`}
+              href={`mailto:${settings?.email || 'info@sman4pagaralam.sch.id'}`}
               className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
             >
               <Mail size={18} />
-              {settings?.schoolEmail || 'info@sman4pagaralam.sch.id'}
+              {settings?.email || 'info@sman4pagaralam.sch.id'}
             </a>
             <a 
-              href={`tel:${settings?.schoolPhone || '(0711) 123456'}`}
+              href={`tel:${settings?.telepon || '(0711) 123456'}`}
               className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
             >
               <Phone size={18} />
-              {settings?.schoolPhone || '(0711) 123456'}
+              {settings?.telepon || '(0711) 123456'}
             </a>
           </div>
           <p className="text-xs text-slate-400 mt-4">
-            {settings?.schoolAddress || 'Jl. Pendidikan No. 123, Pagar Alam'}
+            {settings?.alamat || 'Jl. Pendidikan No. 123, Pagar Alam'}
           </p>
         </div>
       </motion.div>
