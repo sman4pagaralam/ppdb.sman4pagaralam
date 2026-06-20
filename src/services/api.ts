@@ -111,15 +111,15 @@ const getDefaultSettings = (): AppSettings => ({
 // Fallback data jika API tidak bisa diakses
 let fallbackData: AdminData[] = [];
 
-export const getSettings = async (): Promise<AppSettings> => {
-  // ✅ Cek cache dulu
-  if (settingsCache && (Date.now() - settingsCacheTime) < CACHE_DURATION) {
-    console.log('📦 Pakai cache settings (5 menit)');
-    return settingsCache;
+export const getRegistrations = async (): Promise<AdminData[]> => {
+  // Cek cache dulu
+  if (registrationsCache && (Date.now() - registrationsCacheTime) < REGISTRATION_CACHE_DURATION) {
+    console.log('📦 Pakai cache registrations (2 menit)');
+    return registrationsCache;
   }
 
   try {
-    const response = await fetch(`${GAS_WEB_APP_URL}?action=getSettings&t=${Date.now()}`, {
+    const response = await fetch(`${GAS_WEB_APP_URL}?t=${Date.now()}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -128,34 +128,27 @@ export const getSettings = async (): Promise<AppSettings> => {
     
     if (response.ok) {
       const result = await response.json();
-      if (result.status === "success") {
-        let formFields = result.data.formFields;
-        if (typeof formFields === 'string') {
-          try {
-            formFields = JSON.parse(formFields);
-          } catch (e) {
-            formFields = getDefaultSettings().formFields;
-          }
-        }
+      if (result.status === "success" && Array.isArray(result.data)) {
+        const validData = result.data.filter(item => 
+          item && 
+          item['No Pendaftaran'] && 
+          item['No Pendaftaran'].toString().trim() !== "" &&
+          item['No Pendaftaran'] !== "No Pendaftaran"
+        );
+        fallbackData = validData;
         
-        const settings = { ...result.data, formFields };
-        if (settings.maintenanceMode === undefined) {
-          settings.maintenanceMode = false;
-        }
+        // Simpan ke cache
+        registrationsCache = validData;
+        registrationsCacheTime = Date.now();
         
-        // ✅ Simpan ke cache
-        settingsCache = settings;
-        settingsCacheTime = Date.now();
-        
-        return settings;
+        return validData;
       }
     }
-    throw new Error("Failed to fetch settings");
+    throw new Error("Failed to fetch registrations");
   } catch (error) {
-    console.warn("Using default settings (API unavailable):", error);
-    // ✅ Pakai cache lama atau default
-    if (settingsCache) return settingsCache;
-    return getDefaultSettings();
+    console.warn("Using fallback data (API unavailable):", error);
+    if (registrationsCache) return registrationsCache;
+    return fallbackData;
   }
 };
 
