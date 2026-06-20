@@ -7,57 +7,49 @@ import MaintenancePage from './components/MaintenancePage.tsx';
 import { getSettings } from './services/api.ts';
 
 function MainApp() {
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // 1. Baca dari localStorage DULU (langsung tampil, tanpa loading)
+  const [maintenanceMode, setMaintenanceMode] = useState(() => {
+    return localStorage.getItem('maintenanceMode') === 'true';
+  });
+  
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    async function checkMaintenance() {
+    // 2. Ambil dari server di BACKGROUND (tidak nge-blok tampilan)
+    async function syncFromServer() {
       try {
-        // 1. AMBIL DARI SERVER DULU
-        console.log('📥 Fetching settings from server...');
         const settings = await getSettings();
-        console.log('📥 Settings dari server:', settings);
+        const serverValue = settings.maintenanceMode || false;
         
-        const serverMaintenance = settings.maintenanceMode || false;
-        console.log('🔍 maintenanceMode dari server:', serverMaintenance);
-        
-        // 2. SIMPAN KE LOCALSTORAGE (cache)
-        localStorage.setItem('maintenanceMode', String(serverMaintenance));
-        console.log('✅ localStorage diupdate ke:', serverMaintenance);
-        
-        setMaintenanceMode(serverMaintenance);
+        // Update localStorage & state
+        localStorage.setItem('maintenanceMode', String(serverValue));
+        setMaintenanceMode(serverValue);
       } catch (error) {
-        console.warn('⚠️ Gagal ambil dari server, pakai localStorage:', error);
-        // 3. FALLBACK KE LOCALSTORAGE
-        const saved = localStorage.getItem('maintenanceMode');
-        console.log('🔍 Fallback ke localStorage:', saved);
-        setMaintenanceMode(saved === 'true');
+        console.warn('Gagal sync dari server, pakai localStorage:', error);
       } finally {
-        setIsLoading(false);
+        setIsReady(true);
       }
     }
-
-    checkMaintenance();
+    
+    syncFromServer();
   }, []);
 
-  if (isLoading) {
+  // Tampilkan loading hanya jika belum siap dan localStorage kosong
+  // Tapi maksimal 1 detik
+  if (!isReady && localStorage.getItem('maintenanceMode') === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-500">Memuat pengaturan...</p>
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-slate-500">Memuat...</p>
         </div>
       </div>
     );
   }
 
   const isAdminPage = window.location.pathname.startsWith('/admin');
-  console.log('🔍 [MainApp] maintenanceMode:', maintenanceMode);
-  console.log('🔍 [MainApp] isAdminPage:', isAdminPage);
-  console.log('🔍 [MainApp] pathname:', window.location.pathname);
 
   if (maintenanceMode && !isAdminPage) {
-    console.log('✅ Menampilkan MaintenancePage');
     return (
       <SettingsProvider>
         <MaintenancePage />
@@ -65,7 +57,6 @@ function MainApp() {
     );
   }
 
-  console.log('✅ Menampilkan App normal');
   return (
     <SettingsProvider>
       <App />
