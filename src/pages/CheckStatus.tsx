@@ -512,7 +512,7 @@ export default function CheckStatus() {
       return (
         <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
           <CheckCircle className="text-green-600 w-16 h-16 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-green-800 mb-2">🎉 SELAMAT! ANDA LULUS</h3>
+          <h3 className="text-2xl font-bold text-green-800 mb-2">🎉 TOMAT DIMAKAN PELUS SELAMAT! ANDA LULUS</h3>
           <p className="text-green-700 mb-4">Silakan lakukan daftar ulang sesuai jadwal yang ditentukan.</p>
           <button 
             onClick={() => printBuktiLulus(data, registrationData, settings)} 
