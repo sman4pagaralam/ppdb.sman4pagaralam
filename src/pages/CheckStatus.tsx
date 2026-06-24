@@ -317,17 +317,34 @@ const printProof = async (data: any, settings: any) => {
   doc.setFont("helvetica", "bold");
   doc.text("STATUS PENDAFTARAN", pageWidth / 2, y, { align: "center" });
   y += 10;
-  const status = toStr(data['Status'] || 'Proses');
-  let statusColor = [255, 193, 7];
-  if (status === 'Lulus') statusColor = [40, 167, 69];
-  if (status === 'Tidak Lulus') statusColor = [220, 53, 69];
+  
+  // ✅ PERBAIKAN: Gunakan proteksi status berdasarkan tanggal pengumuman
+  const originalStatus = toStr(data['Status'] || 'Proses');
+  const displayInfo = getDisplayStatus(originalStatus, settings);
+  const status = displayInfo.status;
+  const statusMessage = displayInfo.message;
+  
+  let statusColor = [255, 193, 7]; // Kuning untuk Proses
+  if (status === 'Lulus') statusColor = [40, 167, 69];   // Hijau
+  if (status === 'Tidak Lulus') statusColor = [220, 53, 69]; // Merah
+  
   doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
   doc.roundedRect(70, y - 5, 70, 10, 3, 3, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.text(status, pageWidth / 2, y + 2, { align: "center" });
   doc.setTextColor(0, 0, 0);
-  y += 20;
+  y += 15;
+  
+  // ✅ Tambahkan pesan jika belum waktunya pengumuman
+  if (statusMessage) {
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont("helvetica", "italic");
+    const splitMsg = doc.splitTextToSize(statusMessage, pageWidth - 40);
+    doc.text(splitMsg, pageWidth / 2, y, { align: "center" });
+    y += splitMsg.length * 5 + 5;
+  }
 
   doc.setDrawColor(200, 200, 200);
   doc.line(20, y, 190, y);
@@ -343,6 +360,12 @@ const printProof = async (data: any, settings: any) => {
 // ========== BUKTI KELULUSAN (TEMPLATE GAMBAR + OVERLAY TEKS) ==========
 const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
   if (!data) return;
+  
+  // ✅ CEK APAKAH SUDAH MELEWATI TANGGAL PENGUMUMAN
+  if (!isAfterPengumuman(settings)) {
+    alert(`⚠️ Pengumuman kelulusan belum tersedia. Tunggu tanggal ${formatTanggalPengumuman(settings?.tanggalPengumuman)}`);
+    return;
+  }
   
   const doc = new jsPDF({
     orientation: 'portrait',
