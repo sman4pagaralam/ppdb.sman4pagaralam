@@ -71,12 +71,19 @@ const getDisplayStatus = (originalStatus: string, settings: any): { status: stri
   if (!isAfterPengumuman(settings)) {
     const tanggal = formatTanggalPengumuman(settings?.tanggalPengumuman);
     return { 
-      status: 'Proses', 
+      status: 'Proses',
+      message: `📢 Pengumuman kelulusan akan tersedia pada tanggal ${tanggal}`
     };
   }
   
   // Sudah melewati tanggal pengumuman, tampilkan status asli
   return { status: originalStatus, message: '' };
+};
+
+// Helper untuk memastikan string (digunakan di kedua fungsi cetak)
+const toStr = (val: any): string => {
+  if (val === null || val === undefined) return '-';
+  return String(val);
 };
 
 // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
@@ -148,12 +155,12 @@ const printProof = async (data: any, settings: any) => {
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
   doc.text(settings?.namaSekolah || "SMAN 4 PAGAR ALAM", 115, 34, { align: "center" });
-  doc.text(`No. Pendaftaran: ${data['No Pendaftaran'] || '-'}`, 115, 46, { align: "center" });
+  doc.text(`No. Pendaftaran: ${toStr(data['No Pendaftaran'])}`, 115, 46, { align: "center" });
 
   y = 62;
   
   // JALUR (center)
-  const jalur = data['Jalur'] || '-';
+  const jalur = toStr(data['Jalur'] || '-');
   
   doc.setDrawColor(0, 0, 0);
   doc.line(14, y - 2, 196, y - 2);
@@ -166,7 +173,7 @@ const printProof = async (data: any, settings: any) => {
   doc.setFontSize(14);
   doc.setTextColor(37, 99, 235);
   doc.setFont("helvetica", "bold");
-  doc.text(String(jalur), 105, y + 18, { align: "center" });
+  doc.text(jalur, 105, y + 18, { align: "center" });
   
   doc.setTextColor(0, 0, 0);
   let garisBawahY = y + 28;
@@ -184,12 +191,6 @@ const printProof = async (data: any, settings: any) => {
   const colLabelKanan = 115;
   const colTitikDuaKanan = 156;
   const colValueKanan = 158;
-
-  // Helper untuk memastikan string
-  const toStr = (val: any): string => {
-    if (val === null || val === undefined) return '-';
-    return String(val);
-  };
 
   // Data untuk kolom kiri
   const leftLabels = [
@@ -265,11 +266,11 @@ const printProof = async (data: any, settings: any) => {
 
   // ========== ALAMAT ==========
   doc.setFont("helvetica", "bold");
-  doc.text("Alamat Domisli", colLabelKiri, y);
+  doc.text("Alamat Domisili", colLabelKiri, y);
   doc.setFont("helvetica", "normal");
   doc.text(":", colTitikDuaKiri, y);
   y += 5;
-  const alamat = toStr(data['Alamat Domisili Lengkap']);
+  const alamat = toStr(data['Alamat Domisili Lengkap'] || data['Alamat'] || '-');
   const splitAlamat = doc.splitTextToSize(alamat, pageWidth - colValueKiri - 10);
   doc.text(splitAlamat, colValueKiri, y);
   y += splitAlamat.length * 5 + 10;
@@ -350,7 +351,7 @@ const printProof = async (data: any, settings: any) => {
   y += 5;
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString()}`, pageWidth / 2, y + 10, { align: "center" });
+  doc.text(`Bukti pendaftaran ini dicetak pada: ${new Date().toLocaleString('id-ID')}`, pageWidth / 2, y + 10, { align: "center" });
   doc.text("Simpan bukti ini untuk mengecek status kelulusan.", pageWidth / 2, y + 17, { align: "center" });
 
   doc.save(`Bukti_Pendaftaran_${toStr(data['No Pendaftaran'])}.pdf`);
@@ -397,9 +398,11 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
     doc.text("Gambar template tidak ditemukan", 105, 50, { align: "center" });
   }
   
-  const namaSiswa = fullData?.['Nama Lengkap'] || data.namaLengkap || '-';
-  const nisn = fullData?.['NISN'] || data.nisn || '-';
-  const asalSekolah = fullData?.['Asal Sekolah'] || '-';
+  // ✅ PERBAIKAN: Gunakan toStr() untuk semua teks
+  const namaSiswa = toStr(fullData?.['Nama Lengkap'] || data.namaLengkap || '-');
+  const nisn = toStr(fullData?.['NISN'] || data.nisn || '-');
+  const asalSekolah = toStr(fullData?.['Asal Sekolah'] || '-');
+  const noPendaftaran = toStr(data.noPendaftaran || fullData?.['No Pendaftaran'] || '-');
   
   doc.setFontSize(11);
   doc.setFont("times", "bold");
@@ -413,7 +416,7 @@ const printBuktiLulus = async (data: any, fullData: any, settings: any) => {
   doc.setTextColor(150, 150, 150);
   doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, 285, { align: "center" });
   
-  doc.save(`Surat_Keterangan_Lulus_${data.noPendaftaran}.pdf`);
+  doc.save(`Surat_Keterangan_Lulus_${noPendaftaran}.pdf`);
 };
 
 export default function CheckStatus() {
@@ -512,7 +515,7 @@ export default function CheckStatus() {
       return (
         <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
           <CheckCircle className="text-green-600 w-16 h-16 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-green-800 mb-2">TOMAT DIMAKAN PELUS SELAMAT! ANDA LULUS🎉</h3>
+          <h3 className="text-2xl font-bold text-green-800 mb-2">🎉 SELAMAT! ANDA LULUS</h3>
           <p className="text-green-700 mb-4">Silakan lakukan daftar ulang sesuai jadwal yang ditentukan.</p>
           <button 
             onClick={() => printBuktiLulus(data, registrationData, settings)} 
@@ -563,6 +566,7 @@ export default function CheckStatus() {
             {tanggalPengumuman && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg text-center">
                 <p className="text-sm text-blue-700">
+                  📢 Pengumuman kelulusan: <strong>{tanggalPengumuman}</strong>
                 </p>
               </div>
             )}
