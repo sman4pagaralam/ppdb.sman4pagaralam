@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Search, CheckCircle, XCircle, Clock, Loader2, ArrowLeft, Printer, Download, FileText, UserCheck } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Clock, Loader2, ArrowLeft, Printer, Download, FileText, UserCheck, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { checkStatus, getRegistrationByNo } from '../services/api';
 import { cn } from '../lib/utils';
@@ -61,16 +61,23 @@ const isAfterPengumuman = (settings: any): boolean => {
 };
 
 // Helper: dapatkan status yang benar berdasarkan tanggal pengumuman
-const getDisplayStatus = (originalStatus: string, settings: any): string => {
+const getDisplayStatus = (originalStatus: string, settings: any): { status: string; message: string } => {
+  // Jika status asli bukan Lulus/Tidak Lulus, kembalikan apa adanya
   if (originalStatus !== 'Lulus' && originalStatus !== 'Tidak Lulus') {
-    return originalStatus;
+    return { status: originalStatus, message: '' };
   }
   
+  // Jika BELUM melewati tanggal pengumuman, ubah menjadi "Proses"
   if (!isAfterPengumuman(settings)) {
-    return 'Proses';
+    const tanggal = formatTanggalPengumuman(settings?.tanggalPengumuman);
+    return { 
+      status: 'Proses', 
+      message: `📢 Pengumuman kelulusan akan tersedia pada tanggal ${tanggal}` 
+    };
   }
   
-  return originalStatus;
+  // Sudah melewati tanggal pengumuman, tampilkan status asli
+  return { status: originalStatus, message: '' };
 };
 
 // ========== BUKTI PENDAFTARAN (F4 - 210x330mm) ==========
@@ -418,11 +425,13 @@ export default function CheckStatus() {
           setRegistrationData(fullData);
         }
         
-        const displayStatus = getDisplayStatus(response.data.status, settings);
+        // ✅ Dapatkan status yang benar berdasarkan tanggal pengumuman
+        const displayInfo = getDisplayStatus(response.data.status, settings);
         
         setResult({
           ...response.data,
-          status: displayStatus,
+          status: displayInfo.status,
+          statusMessage: displayInfo.message,
           asalSekolah: fullData?.['Asal Sekolah'] || '-',
         });
       } else {
@@ -436,11 +445,52 @@ export default function CheckStatus() {
   };
 
   const getStatusDisplay = (status: string, data?: any) => {
+    // Jika status "Proses" dan ada pesan (belum waktu pengumuman)
+    if (status === 'Proses' && data?.statusMessage) {
+      return (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+          <Clock className="text-amber-600 w-16 h-16 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold text-amber-800 mb-2">⏳ Menunggu Pengumuman</h3>
+          <p className="text-amber-700 text-lg font-semibold">{data.statusMessage}</p>
+          <p className="text-amber-600 mt-4 text-sm">
+            Status saat ini: <strong>Proses</strong>
+          </p>
+          {registrationData && (
+            <button 
+              onClick={() => printProof(registrationData, settings)} 
+              className="mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition"
+            >
+              <Download className="inline mr-2" size={18} /> Unduh Bukti Pendaftaran
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    // Jika status "Proses" (normal, tanpa pesan)
+    if (status === 'Proses') {
+      return (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+          <Clock className="text-amber-600 w-16 h-16 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold text-amber-800 mb-2">Data Sedang Diproses</h3>
+          <p className="text-amber-700 mb-4">Status kelulusan akan segera diumumkan.</p>
+          {registrationData && (
+            <button 
+              onClick={() => printProof(registrationData, settings)} 
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition"
+            >
+              <Download className="inline mr-2" size={18} /> Unduh Bukti Pendaftaran
+            </button>
+          )}
+        </div>
+      );
+    }
+    
     if (status === 'Lulus') {
       return (
         <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
           <CheckCircle className="text-green-600 w-16 h-16 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-green-800 mb-2">TOMAT DIMAKAN PELUS SELAMAT ANDA LULUS</h3>
+          <h3 className="text-2xl font-bold text-green-800 mb-2">🎉 SELAMAT! ANDA LULUS</h3>
           <p className="text-green-700 mb-4">Silakan lakukan daftar ulang sesuai jadwal yang ditentukan.</p>
           <button 
             onClick={() => printBuktiLulus(data, registrationData, settings)} 
@@ -464,18 +514,10 @@ export default function CheckStatus() {
     }
     
     return (
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-        <Clock className="text-amber-600 w-16 h-16 mx-auto mb-4" />
-        <h3 className="text-2xl font-bold text-amber-800 mb-2">Data Sedang Diproses</h3>
-        <p className="text-amber-700 mb-4">Status kelulusan akan segera diumumkan.</p>
-        {registrationData && (
-          <button 
-            onClick={() => printProof(registrationData, settings)} 
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition"
-          >
-            <Download className="inline mr-2" size={18} /> Unduh Bukti Pendaftaran
-          </button>
-        )}
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center">
+        <AlertCircle className="text-slate-400 w-16 h-16 mx-auto mb-4" />
+        <h3 className="text-xl font-bold text-slate-700 mb-2">Status Tidak Diketahui</h3>
+        <p className="text-slate-500">Silakan hubungi panitia SPMB.</p>
       </div>
     );
   };
