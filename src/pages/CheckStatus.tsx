@@ -72,7 +72,6 @@ const getDisplayStatus = (originalStatus: string, settings: any): { status: stri
     const tanggal = formatTanggalPengumuman(settings?.tanggalPengumuman);
     return { 
       status: 'Proses', 
-      message: `📢 Pengumuman kelulusan akan tersedia pada tanggal ${tanggal}` 
     };
   }
   
@@ -564,7 +563,6 @@ export default function CheckStatus() {
             {tanggalPengumuman && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg text-center">
                 <p className="text-sm text-blue-700">
-                  📢 Pengumuman kelulusan: <strong>{tanggalPengumuman}</strong>
                 </p>
               </div>
             )}
