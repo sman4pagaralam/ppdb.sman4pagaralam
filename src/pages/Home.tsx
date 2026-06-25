@@ -80,7 +80,7 @@ export default function Home() {
             📢 PENGUMUMAN PENTING
           </p>
           <p className="text-xs text-blue-100">
-            Klik gambar untuk melihat jadwal tes SPMB 2026
+            Klik gambar untuk melihat jadwal Registrasi Ulang 2026
           </p>
         </div>
       </a>
